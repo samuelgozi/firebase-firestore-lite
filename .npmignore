@@ -63,5 +63,5 @@ typings/
 # Sensitive data needed for testing.
 config.js
 
-# Distribution build files
-dist/
+# Source files
+src/
