@@ -26,13 +26,25 @@ const logInPromise = auth.signIn('test@test.com', '123456');
  */
 const db = new Database({ config, auth });
 
-// test('Try to add to the database', () => {
+test('Get', () => {
+	expect.assertions(1);
+
+	return logInPromise.then(() => {
+		db.get('entries').then(entries => {
+			console.log(entries);
+		});
+	});
+});
+
+// test('Add', () => {
 // 	expect.assertions(1);
 
 // 	return logInPromise.then(() => {
-// 		db.get('entries').then(entries => {
+// 		db.add('entries', {
+// 			name: 'Slim Shady',
+// 			realName: 'Slim Shady!'
+// 		}).then(entries => {
 // 			console.log(entries);
 // 		});
 // 	});
 // });
-
