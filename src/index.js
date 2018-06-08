@@ -1,23 +1,10 @@
-import errors from './errors';
+import Document from './Document';
 
 /*
  * The REST API reference for the firestore database can be found here:
  * https://firebase.google.com/docs/firestore/reference/rest/
  */
 
-function getHumanReadableError(error) {
-	// First check if the user is connected to the internet(this check does not fully reflect the user connection status).
-	if(!navigator.onLine) return 'You are not connected to the Internet.';
-
-	// Try to get the correct message(sometimes in different places).
-	let errorMessage = error.error ? error.error.message : error.message;
-
-	/*
-	 * Check if we have a more readable error for this error code in our language files.
-	 * If we do have one, return it, else return what we have.
-	 */
-	return errors[errorMessage] || errorMessage;
-}
 
 /*
  * The Fetch API throws only when there is a network connection issue, therefore
@@ -26,66 +13,11 @@ function getHumanReadableError(error) {
  * This function checkes that that the response object returns with the 'ok' boolean set to true,
  * thats Fetch API's way of telling us that the response status is in the "successful" range.
  */
-function handleRequestErrors(response) {
+async function handleRequestErrors(response) {
 	if (!response.ok) {
-		throw Error(response.statusText);
+		throw (await response.json()).error.message;
 	}
 	return response;
-}
-
-function convertRawFieldToType(rawField) {
-	/*
-	 * Each "raw" field is an Object with a key and a value, and the key tels us the type of the value.
-	 * Here I use Object.keys in order to get an array of the keys in the "raw" field, there should only be one so we only need the first.
-	 * This way we can later convert the value in to the right type.
-	 */
-	const fieldType = Object.keys(rawField)[0];
-	let field;
-
-	// Now here we convert the value into the right type.
-	switch (fieldType) {
-		case 'integerValue':
-			field = Number(rawField[fieldType]);
-			break;
-
-		case 'arrayValue':
-			field = processRawFields(rawField[fieldType].values);
-			break;
-
-		case 'mapValue':
-			field = processRawFields(rawField[fieldType].fields);
-			break;
-
-		default:
-			field = rawField[fieldType];
-			// fields[fieldName] = rawField;
-			break;
-	}
-
-	return field;
-}
-
-/*
- * Proccesses the "raw" fields of a document from the REST response and returns them with the correct types.
- * the raw fields can be within an object, or within an array, it'll handle both cases.
- */
-function processRawFields(rawFields) {
-	const  rawFieldsIsArray = Array.isArray(rawFields);
-	const fields = rawFieldsIsArray ? [] : {};
-
-	if(rawFieldsIsArray) {
-		for(let field of rawFields) {
-			// convert the right field into the right type.
-			fields.push(convertRawFieldToType(field));
-		}
-	}
-
-	for(let fieldName in rawFields) {
-		// convert the right field into the right type.
-		fields[fieldName] = convertRawFieldToType(rawFields[fieldName]);
-	}
-
-	return fields;
 }
 
 /*
@@ -93,7 +25,8 @@ function processRawFields(rawFields) {
  */
 export default class {
 	constructor({ config, auth, databaseName = '(default)'}) {
-		this._endpoint = 'https://firestore.googleapis.com/v1beta1/projects/' + config.projectId + '/databases/' + databaseName + '/documents/';
+		this._rootPath = '/projects/' + config.projectId + '/databases/' + databaseName + '/documents/';
+		this._endpoint = 'https://firestore.googleapis.com/v1beta1' + this._rootPath;
 		this._sessionKey = config.projectId + ':' + config.apiKey;
 		this._auth = auth;
 	}
@@ -127,7 +60,7 @@ export default class {
 
 		} catch(error) {
 			// Try to get a "human readable" error.
-			throw Error(getHumanReadableError(error));
+			throw Error(error);
 		}
 	}
 
@@ -139,9 +72,9 @@ export default class {
 			return {
 				$name: name,
 				$id: name.split('/').pop(),
-				$createTime: createTime,
-				$updateTime: updateTime,
-				...processRawFields(fields)
+				$createTime: Date.parse(createTime),
+				$updateTime: Date.parse(updateTime),
+				...Document.parse(fields)
 			};
 		}));
 	}
@@ -149,11 +82,7 @@ export default class {
 	/*
 	 * Add a document to the database.
 	 */
-	// async add(documentPath, documentBody) {
-	// 	let request = this.request(this._endpoint + documentPath, 'POST', documentBody).then(response => {
-	// 		console.log(response);
-	// 	}).catch(error => {
-	// 		console.log(error);
-	// 	});
-	// }
+	async add(documentPath, fields) {
+		this.request(this._endpoint + documentPath, 'POST', Document.from(fields)).then(response => response);
+	}
 }

@@ -1,6 +1,7 @@
 import Database from '../src/index.js';
 import Auth from 'firebase-auth-lite';
 import config from '../config';
+
 /*
  * In order to test this package you need to create a config.js file in the root folder
  * that exports a firebase web configuration object with the apiKey and projectId.
@@ -30,8 +31,8 @@ test('Get', () => {
 	expect.assertions(1);
 
 	return logInPromise.then(() => {
-		db.get('entries').then(entries => {
-			console.log(entries);
+		return db.get('entries').then(entries => {
+			expect(entries).toContainObject({$id: 'B56uA12AqrrY5NWkiXj6'});
 		});
 	});
 });
@@ -40,11 +41,11 @@ test('Get', () => {
 // 	expect.assertions(1);
 
 // 	return logInPromise.then(() => {
-// 		db.add('entries', {
+// 		return db.add('entries', {
+// 			hi: 'My Name is',
 // 			name: 'Slim Shady',
-// 			realName: 'Slim Shady!'
-// 		}).then(entries => {
-// 			console.log(entries);
+// 			subObj: {testing: 'should work!'},
+// 			arr: ['hi', 'there!', 11, 1.1]
 // 		});
 // 	});
 // });

@@ -31,6 +31,7 @@
     "setupFiles": [
       "jest-localstorage-mock",
       "jest-fetch-mock"
-    ]
+    ],
+    "setupTestFrameworkScriptFile": "<rootDir>/tests/jest/custom-matchers.js"
   }
 }
