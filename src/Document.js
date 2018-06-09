@@ -29,7 +29,7 @@ export default class {
 				break;
 
 			case 'mapValue':
-				field = this.parse(fireValue[fieldType].fields);
+				field = this.parse(fireValue[fieldType]);
 				break;
 
 			default:
@@ -49,16 +49,33 @@ export default class {
 		const  fireDocumentIsArray = Array.isArray(fireDocument);
 		const fields = fireDocumentIsArray ? [] : {};
 
+		// If we are dealing with an array.
 		if(fireDocumentIsArray) {
 			for(let field of fireDocument) {
 				// convert the right field into the right type.
 				fields.push(this.parseValue(field));
 			}
+
+			return fields;
 		}
 
+		// From now on we assume we are dealing with an object or "map".
+		// All the top level properties should be private, copy them and then append a $ to their name.
 		for(let fieldName in fireDocument) {
+			// If this field is 'fields' then skip, will deal with it later.
+			if(fieldName === 'fields') continue;
+
+			// If the field is 'createTime' or 'updateTime' then convert it first to a date.
+			fields['$' + fieldName] = (fieldName === 'createTime' || fieldName === 'updateTime') ? Date.parse(fireDocument[fieldName]) : fireDocument[fieldName];
+		}
+
+		/*
+		 * Now all the properties inside the 'fields' property are the ones that describe our document,
+		 * so now we hoist them to the root of the document for conviniece.
+		 */
+		for(let fieldName in fireDocument.fields) {
 			// convert the right field into the right type.
-			fields[fieldName] = this.parseValue(fireDocument[fieldName]);
+			fields[fieldName] = this.parseValue(fireDocument.fields[fieldName]);
 		}
 
 		return fields;
