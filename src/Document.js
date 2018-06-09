@@ -25,11 +25,11 @@ export default class {
 				break;
 
 			case 'arrayValue':
-				field = this.parse(fireValue[fieldType].values);
+				field = fireValue.arrayValue.values.map(subField => this.parseValue(subField));
 				break;
 
 			case 'mapValue':
-				field = this.parse(fireValue[fieldType]);
+				field = this.parse(fireValue.mapValue);
 				break;
 
 			default:
@@ -46,20 +46,12 @@ export default class {
 	 * The raw fields can be within an object, or within an array, it'll handle both cases.
 	 */
 	static parse(fireDocument) {
-		const  fireDocumentIsArray = Array.isArray(fireDocument);
-		const fields = fireDocumentIsArray ? [] : {};
+		// Validate that we got an object.
+		if(Object.prototype.toString.call(fireDocument) !== '[object Object]') throw Error('The argument is not a valid firestore document.');
 
-		// If we are dealing with an array.
-		if(fireDocumentIsArray) {
-			for(let field of fireDocument) {
-				// convert the right field into the right type.
-				fields.push(this.parseValue(field));
-			}
+		// Will hold the exported object.
+		const fields = {};
 
-			return fields;
-		}
-
-		// From now on we assume we are dealing with an object or "map".
 		// All the top level properties should be private, copy them and then append a $ to their name.
 		for(let fieldName in fireDocument) {
 			// If this field is 'fields' then skip, will deal with it later.
@@ -79,6 +71,13 @@ export default class {
 		}
 
 		return fields;
+	}
+
+	/*
+	 * Will parse an array of documents.
+	 */
+	static parseArray(documentsArray) {
+		return documentsArray.map(document => this.parse(document));
 	}
 
 	/*

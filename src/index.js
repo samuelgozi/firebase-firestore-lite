@@ -68,15 +68,7 @@ export default class {
 	 * Read documents from the database.
 	 */
 	get(documentPath) {
-		return this.request(this._endpoint + documentPath, 'GET').then(response => response.documents.map(({name, fields, createTime, updateTime}) => {
-			return {
-				$name: name,
-				$id: name.split('/').pop(),
-				$createTime: Date.parse(createTime),
-				$updateTime: Date.parse(updateTime),
-				...Document.parse(fields)
-			};
-		}));
+		return this.request(this._endpoint + documentPath, 'GET').then(response => Document.parseArray(response.documents));
 	}
 
 	/*

@@ -32,7 +32,7 @@ test('Get', () => {
 
 	return logInPromise.then(() => {
 		return db.get('entries').then(entries => {
-			expect(entries).toContainObject({$id: 'B56uA12AqrrY5NWkiXj6'});
+			expect(entries).toContainObject({$name: 'projects/void-cms/databases/(default)/documents/entries/B56uA12AqrrY5NWkiXj6'});
 		});
 	});
 });
