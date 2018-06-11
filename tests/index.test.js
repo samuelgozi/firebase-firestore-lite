@@ -32,7 +32,7 @@ test('Get', () => {
 
 	return logInPromise.then(() => {
 		return db.get('entries').then(entries => {
-			expect(entries).toContainObject({$name: 'projects/void-cms/databases/(default)/documents/entries/B56uA12AqrrY5NWkiXj6'});
+			expect(entries[0]).toHaveProperty('__meta__.name', 'projects/void-cms/databases/(default)/documents/entries/B56uA12AqrrY5NWkiXj6');
 		});
 	});
 });
@@ -46,6 +46,14 @@ test('Get', () => {
 // 			name: 'Slim Shady',
 // 			subObj: {testing: 'should work!'},
 // 			arr: ['hi', 'there!', 11, 1.1]
+// 		});
+// 	});
+// });
+
+// test('Update', () => {
+// 	return logInPromise.then(() => {
+// 		return db.get('entries').then(entries => {
+// 			db.update(entries[0]);
 // 		});
 // 	});
 // });

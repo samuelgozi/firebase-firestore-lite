@@ -33,5 +33,9 @@
       "jest-fetch-mock"
     ],
     "setupTestFrameworkScriptFile": "<rootDir>/tests/jest/custom-matchers.js"
+  },
+  "dependencies": {
+    "deep-copy": "^1.4.2",
+    "fast-deep-equal": "^2.0.1"
   }
 }

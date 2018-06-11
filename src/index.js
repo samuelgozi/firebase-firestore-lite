@@ -25,8 +25,8 @@ async function handleRequestErrors(response) {
  */
 export default class {
 	constructor({ config, auth, databaseName = '(default)'}) {
-		this._rootPath = '/projects/' + config.projectId + '/databases/' + databaseName + '/documents/';
-		this._endpoint = 'https://firestore.googleapis.com/v1beta1' + this._rootPath;
+		this._rootPath = 'projects/' + config.projectId + '/databases/' + databaseName + '/documents/';
+		this._endpoint = 'https://firestore.googleapis.com/v1beta1/';
 		this._sessionKey = config.projectId + ':' + config.apiKey;
 		this._auth = auth;
 	}
@@ -68,13 +68,21 @@ export default class {
 	 * Read documents from the database.
 	 */
 	get(documentPath) {
-		return this.request(this._endpoint + documentPath, 'GET').then(response => Document.parseArray(response.documents));
+		return this.request(this._endpoint + this._rootPath + documentPath, 'GET')
+			.then(response => response.documents.map(fireDoc => new Document(fireDoc)));
 	}
 
 	/*
 	 * Add a document to the database.
 	 */
-	async add(documentPath, fields) {
-		this.request(this._endpoint + documentPath, 'POST', Document.from(fields)).then(response => response);
+	add(documentPath, fields) {
+		this.request( this._endpoint + this._rootPath + documentPath, 'POST', new Document(fields));
+	}
+
+	update(fields) {
+		this.request(
+			this._endpoint + fields.$name,
+			'PATCH',
+			(new Document(fields)).diff());
 	}
 }
