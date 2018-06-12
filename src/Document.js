@@ -1,10 +1,12 @@
 /*
- * Documents received from the REST api of a Firestore databaseare not plain JS objects and have to be "proccesed"
- * or "parsed" into ones.
+ * Documents received from the REST api of a Firestore database are not plain JS
+ * objects and have to be into ones.
  *
- * The same needs to hapen when you want to add/edit/update an existing one. Since the REST api doesnt deal with plain objects.
+ * The same needs to happen when you want to add/edit/update an existing one.
+ * Since the REST api doesn't deal with plain objects.
  *
- * This file exports the static "document" class which helps you convert firestore's "documents" into plain Js Objects, and the other way around.
+ * This file exports the static "document" class which helps you convert
+ * Firestore's "documents" into plain Js Objects, and the other way around.
  */
 
 import equal from 'fast-deep-equal';
@@ -24,7 +26,7 @@ function isFirestoreDocument(obj) {
 
 class Document {
 	/*
-   * the constructor creates a Document class from a firestore document, or a plain object.
+   * the constructor creates a Document class from a Firestore document, or a plain object.
    */
 	constructor(data = {}) {
 		// Validate that data is an object
@@ -59,8 +61,12 @@ class Document {
    * Create an array of fieldMasks of the modified fields.
    */
 	fieldsMask(obj = this.diff()) {
-		// Create an array of with the keys of the reference object.
-		const masks = Object.keys(obj);
+		/*
+		 * Create an array of the fields inside the Document instance, but without private props.
+		 */
+		const masks = Object.keys(obj).filter(
+			value => value !== '__reference__' && value !== '__meta__'
+		);
 
 		// Loop over the values in the mask array, each value is an existing key in 'obj'.
 		masks.forEach((value, index) => {
@@ -93,7 +99,7 @@ class Document {
 		const diffObj = {};
 
 		for (let key in modified) {
-			// Skip privare properties.
+			// Skip private properties.
 			if (key === '__meta__' || key === '__reference__') continue;
 
 			// If this is an object then recursively run this function on it.
@@ -115,6 +121,7 @@ class Document {
 		// Copy the __meta__ and __reference__ if exists.
 		if ('__meta__' in modified)
 			diffObj.__meta__ = Object.assign({}, modified.__meta__);
+
 		if ('__reference__' in modified)
 			diffObj.__reference__ = Object.assign({}, modified.__reference__);
 
@@ -128,8 +135,10 @@ class Document {
    */
 
 	/*
-   * Each "raw" field(or "fireValue") is an Object with a key and a value, and the key tels us the type of the value.
-   * Here I use Object.keys in order to get an array of the keys in the "raw" field, there should only be one so we only need the first.
+   * Each "raw" field(or "fireValue") is an Object with a key and a value,
+	 * and the key tells us the type of the value.
+   * Here I use Object.keys in order to get an array of the keys in the "raw"
+	 * field, there should only be one so we only need the first.
    * This way we can later convert the value in to the right type.
    */
 	static parseValue(fireValue) {
@@ -163,8 +172,11 @@ class Document {
 	}
 
 	/*
-   * Proccesses the "raw" document(or fireDocument) from the REST response and returns them as plain JS objects.
-   * The raw fields can be within an object, or within an array, it'll handle both cases.
+   * Processes the "raw" document(or fireDocument) from the REST response and
+	 * returns them as plain JS objects.
+   * The raw fields can be within an object, or within an array, it'll handle
+	 * both cases.
+	 *
    * TODO: better input validation.
    */
 	static parse(fireDocument, targetObj = {}) {
@@ -191,8 +203,9 @@ class Document {
 		}
 
 		/*
-		 * Now all the properties inside the 'fields' property are the ones that describe our document,
-		 * so now we hoist them to the root of the document for conviniece.
+		 * Now all the properties inside the 'fields' property are the ones that
+		 * describe our document, so now we hoist them to the root of the document
+		 * for convenience.
 		 */
 		for (let fieldName in fireDocument.fields) {
 			// convert the right field into the right type.
@@ -208,7 +221,7 @@ class Document {
 	static composeValue(property) {
 		const propType = Object.prototype.toString.call(property);
 		let type =
-      propType.substring(8, propType.length - 1).toLowerCase() + 'Value';
+			propType.substring(8, propType.length - 1).toLowerCase() + 'Value';
 
 		// Will hold the final value.
 		const value = {};
@@ -251,12 +264,12 @@ class Document {
 	static compose(obj) {
 		const document = { fields: {} };
 
-		// Coppy all the properties.
+		// Copy all the properties.
 		for (let key in obj) {
 			// If the current prop is __reference__ or __meta__ then dont copy them.
 			if (key === '__reference__' || key === '__meta__') continue;
 
-			// Copy the mata properties(if exist) to the root of the new doc.
+			// Copy the meta properties(if exist) to the root of the new doc.
 			if ('__meta__' in obj) {
 				for (let key in obj.__meta__) {
 					// If it is a key, then first convert it to ISO string. else just copy.
