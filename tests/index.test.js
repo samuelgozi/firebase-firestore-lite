@@ -13,7 +13,7 @@ import config from '../config';
  * Also you need to have a username with the email: test@test.com
  * And a password: 123456
  *
- * This will be required untill i have time to mock the API.
+ * This will be required until i have time to mock the API.
  */
 
 /*
@@ -23,37 +23,19 @@ const auth = new Auth(config);
 const logInPromise = auth.signIn('test@test.com', '123456');
 
 /*
- * Initilize the database API.
+ * Initialized the database API.
  */
 const db = new Database({ config, auth });
 
-test('Get', () => {
+test('Get single document', () => {
 	expect.assertions(1);
 
 	return logInPromise.then(() => {
-		return db.get('entries').then(entries => {
-			expect(entries[0]).toHaveProperty('__meta__.name', 'projects/void-cms/databases/(default)/documents/entries/B56uA12AqrrY5NWkiXj6');
+		return db.get('entries/B56uA12AqrrY5NWkiXj6').then(doc => {
+			expect(doc).toHaveProperty(
+				'__meta__.name',
+				'projects/void-cms/databases/(default)/documents/entries/B56uA12AqrrY5NWkiXj6'
+			);
 		});
 	});
 });
-
-// test('Add', () => {
-// 	expect.assertions(1);
-
-// 	return logInPromise.then(() => {
-// 		return db.add('entries', {
-// 			hi: 'My Name is',
-// 			name: 'Slim Shady',
-// 			subObj: {testing: 'should work!'},
-// 			arr: ['hi', 'there!', 11, 1.1]
-// 		});
-// 	});
-// });
-
-// test('Update', () => {
-// 	return logInPromise.then(() => {
-// 		return db.get('entries').then(entries => {
-// 			db.update(entries[0]);
-// 		});
-// 	});
-// });

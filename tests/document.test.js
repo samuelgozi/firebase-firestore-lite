@@ -123,7 +123,7 @@ test('Correctly parses and instantiates a firestore document from a REST respons
 	expect(expected).toHaveProperty('cars', ['buggati', 'porsche']);
 });
 
-test('FieldsMask should show all the fields on locally created documents', () => {
+test('The mask method shows all the fields on locally created documents', () => {
 	const car = new Document({
 		manufacturer: 'Bugatti Automobiles S.A.S',
 		model: 'Veyron EB 16.4',
@@ -138,7 +138,8 @@ test('FieldsMask should show all the fields on locally created documents', () =>
 	car.model = 'Chiron';
 	car.horsePower = 1479;
 
-	const expected = car.fieldsMask();
+	const modifiedProps = Document.diff(car);
+	const expected = Document.mask(modifiedProps);
 
 	expect(expected).toEqual([
 		'manufacturer',
@@ -149,7 +150,7 @@ test('FieldsMask should show all the fields on locally created documents', () =>
 	]);
 });
 
-test('FieldsMask includes only changed fields when the Document is linked to an existing one.', () => {
+test('The mask method includes only changed fields when the Document is linked to an existing one.', () => {
 	const car = new Document({
 		name:
 			'projects/void-cms/databases/(default)/documents/entries/B56uA12AqrrY5NWkiXj6',
@@ -186,7 +187,8 @@ test('FieldsMask includes only changed fields when the Document is linked to an 
 	car.dimensions.length = 4400;
 	car.newprop = ['cool'];
 
-	const expected = car.fieldsMask();
+	const modifiedProps = Document.diff(car);
+	const expected = Document.mask(modifiedProps);
 
 	expect(expected).toEqual([
 		'model',

@@ -12,16 +12,8 @@
 import equal from 'fast-deep-equal';
 import deepCopy from 'deep-copy';
 
-/*
- * Checks if an object is a firestore document.
- * returns a boolean.
- */
-function isFirestoreDocument(obj) {
-	for (let fieldName of ['name', 'createTime', 'updateTime']) {
-		if (!(fieldName in obj)) return false;
-	}
-
-	return true;
+function isObjectLiteral(obj) {
+	return Object.prototype.toString.call(obj) === '[object Object]';
 }
 
 class Document {
@@ -30,11 +22,11 @@ class Document {
    */
 	constructor(data = {}) {
 		// Validate that data is an object
-		if (Object.prototype.toString.call(data) !== '[object Object]')
+		if (!isObjectLiteral(data))
 			throw Error('Document constructor should receive an Object.');
 
 		// If data is a plain object and not a Firestore document.
-		if (!isFirestoreDocument(data)) {
+		if (!Document.isDocument(data)) {
 			// Merge the data with the new instance.
 			Object.assign(this, data);
 
@@ -57,12 +49,73 @@ class Document {
 		this.__reference__ = docCopy;
 	}
 
+
 	/*
-   * Create an array of fieldMasks of the modified fields.
+   * In order to avoid conflicts with field names, all the methods
+	 * in the Document class are static.
    */
-	fieldsMask(obj = this.diff()) {
+
+	/*
+	 * Checks if an instance of Document or compatible with its methods.
+	 * returns a boolean.
+	 */
+	static isDocument(obj) {
+		for (let fieldName of ['name', 'createTime', 'updateTime']) {
+			if (!(fieldName in obj)) return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Compares two objects, and returns an object with the changed properties.
+	 */
+	static diff(modified, reference = modified.__reference__) {
+		// TODO: add check for - reference is only optional when modified is a Document instance.
+
+		const diffObj = {};
+
+		for (let key in modified) {
+			// Skip private properties.
+			if (key === '__meta__' || key === '__reference__') continue;
+
+			/*
+			 * If the current property is an object on both the modified,
+			 * and the reference object then recursively check them using this diff method.
+			 */
+			if (isObjectLiteral(modified[key]) && isObjectLiteral(reference[key])) {
+				// Diff this sub Object.
+				const subObjDiff = Document.diff(modified[key], reference[key]);
+
+				// Only add prop if the diff of the sub object is not empty.
+				if (Object.keys(subObjDiff).length !== 0) diffObj[key] = subObjDiff;
+				continue;
+			}
+
+			// Diff the rest.
+			if (!equal(modified[key], reference[key])) {
+				diffObj[key] = modified[key];
+			}
+		}
+
+		// TODO: Return an actual instance it the modified object was one.
+		// Copy the __meta__ and __reference__ if exists.
+		if ('__meta__' in modified)
+			diffObj.__meta__ = Object.assign({}, modified.__meta__);
+
+		if ('__reference__' in modified)
+			diffObj.__reference__ = Object.assign({}, modified.__reference__);
+
+		return diffObj;
+	}
+
+	/*
+   * Create an array of fieldMasks of all fields ans sub fields in an object.
+   */
+	static mask(obj) {
 		/*
-		 * Create an array of the fields inside the Document instance, but without private props.
+		 * Create an array of the fields inside object,
+		 * but without private props that exits inside Document instances.
 		 */
 		const masks = Object.keys(obj).filter(
 			value => value !== '__reference__' && value !== '__meta__'
@@ -71,9 +124,9 @@ class Document {
 		// Loop over the values in the mask array, each value is an existing key in 'obj'.
 		masks.forEach((value, index) => {
 			// If the property holds an Object then recursively run this function on it.
-			if (Object.prototype.toString.call(obj[value]) === '[object Object]') {
+			if (isObjectLiteral(obj[value])) {
 				// Create a mask for the sub object.
-				const subObjMask = this.fieldsMask(obj[value]);
+				const subObjMask = Document.mask(obj[value]);
 
 				// If there is more than one item in the mask then we need to copy the current 'value'.
 				subObjMask.forEach((subValue, subIndex) => {
@@ -91,48 +144,6 @@ class Document {
 
 		return masks;
 	}
-
-	/*
-   * Returns a Document instance but only with the diffed fields.
-   */
-	diff(modified = this, reference = this.__reference__) {
-		const diffObj = {};
-
-		for (let key in modified) {
-			// Skip private properties.
-			if (key === '__meta__' || key === '__reference__') continue;
-
-			// If this is an object then recursively run this function on it.
-			if (Object.prototype.toString.call(this[key]) === '[object Object]') {
-				// Diff this sub Object.
-				const subObjDiff = this.diff(modified[key], reference[key]);
-
-				// Only create add prop if the diff of the sub object is not empty.
-				if (Object.keys(subObjDiff).length !== 0) diffObj[key] = subObjDiff;
-				continue;
-			}
-
-			// Diff the rest.
-			if (!equal(modified[key], reference[key])) {
-				diffObj[key] = modified[key];
-			}
-		}
-
-		// Copy the __meta__ and __reference__ if exists.
-		if ('__meta__' in modified)
-			diffObj.__meta__ = Object.assign({}, modified.__meta__);
-
-		if ('__reference__' in modified)
-			diffObj.__reference__ = Object.assign({}, modified.__reference__);
-
-		return diffObj;
-	}
-
-	/*
-   * ====================================== *
-   * From now on all the methods are static *
-   * ====================================== *
-   */
 
 	/*
    * Each "raw" field(or "fireValue") is an Object with a key and a value,
@@ -181,11 +192,11 @@ class Document {
    */
 	static parse(fireDocument, targetObj = {}) {
 		// Validate that the firebase document is an object.
-		if (Object.prototype.toString.call(fireDocument) !== '[object Object]')
+		if (!isObjectLiteral(fireDocument))
 			throw Error('The argument is not a valid firestore document.');
 
 		// Validate that we got an object for the target.
-		if (Object.prototype.toString.call(targetObj) !== '[object Object]')
+		if (!isObjectLiteral(targetObj))
 			throw Error('The target object must be an object.');
 
 		// All the top level properties should be private, copy them into the __meta__ prop.
