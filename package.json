@@ -1,6 +1,6 @@
 {
   "name": "firebase-firestore-lite",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A lightweight cloud firestore library for the browser",
   "main": "dist/index.js",
   "author": "Samuel Elgozi <samu.elgozi@gmail.com>",
