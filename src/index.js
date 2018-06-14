@@ -85,7 +85,7 @@ export default class {
 	 * Add a document to the database.
 	 */
 	add(path, document) {
-		if (!Document.isDocument(document)) throw Error('The document passed must be an instance of the Document Object');
+		if (!(document instanceof Document)) throw Error('The document passed must be an instance of the Document Object');
 
 		this.request(
 			this._endpoint + this._rootPath + path,
@@ -94,17 +94,26 @@ export default class {
 		);
 	}
 
-	update(document) {
-		if (!Document.isDocument(document)) throw Error('The document passed must be an instance of the Document Object');
+	patch(document) {
+		if (!(document instanceof Document)) throw Error('The document passed must be an instance of the Document Object');
+
+		// Create a new document that includes only the modified properties.
+		const modifiedDoc = Document.diff(document);
+		// Create a DocumentMap of the changed fields.
+		const docMask = Document.mask(modifiedDoc);
+		// Create a query string from the document mask.
+		const docMaskQuery = docMask.map(fieldMask => 'updateMask.fieldPaths=' + fieldMask).join('&');
 
 		this.request(
-			this._endpoint + document.__meta__.name,
+			this._endpoint + document.__meta__.name + '?' + docMaskQuery,
 			'PATCH',
-			Document.compose(Document.diff(document))
+			JSON.stringify(Document.compose(modifiedDoc))
 		);
 	}
 
 	delete(document) {
+		if (!(document instanceof Document)) throw Error('The document passed must be an instance of the Document Object');
+
 		this.request(
 			this._endpoint + document.__meta__.name,
 			'DELETE'

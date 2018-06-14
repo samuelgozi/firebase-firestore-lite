@@ -25,8 +25,8 @@ class Document {
 		if (!isObjectLiteral(data))
 			throw Error('Document constructor should receive an Object.');
 
-		// If data is a plain object and not a Firestore document.
-		if (!Document.isDocument(data)) {
+		// If data is a plain object and not a raw Firestore document.
+		if (!Document.isRawDocument(data)) {
 			// Merge the data with the new instance.
 			Object.assign(this, data);
 
@@ -56,10 +56,11 @@ class Document {
    */
 
 	/*
-	 * Checks if an instance of Document or compatible with its methods.
+	 * Checks if an object is an *un-parsed* firebase document.
+	 * By "un-parsed" I mean a "raw" document, like the ones you receive from the rest response.
 	 * returns a boolean.
 	 */
-	static isDocument(obj) {
+	static isRawDocument(obj) {
 		for (let fieldName of ['name', 'createTime', 'updateTime']) {
 			if (!(fieldName in obj)) return false;
 		}
