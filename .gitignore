@@ -65,3 +65,6 @@ config.js
 
 # Distribution build files
 dist/
+
+# Temporary cache
+.cache/

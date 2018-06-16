@@ -63,5 +63,12 @@ typings/
 # Sensitive data needed for testing.
 config.js
 
+
+# Temporary cache
+.cache/
+
 # Source files
 src/
+
+# Development files
+dev/

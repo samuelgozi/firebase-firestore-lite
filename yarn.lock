@@ -120,6 +120,12 @@ ansi-styles@^3.2.0, ansi-styles@^3.2.1:
   dependencies:
     color-convert "^1.9.0"
 
+ansi-to-html@^0.6.4:
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/ansi-to-html/-/ansi-to-html-0.6.4.tgz#8b14ace87f8b3d25367d03cd5300d60be17cf9e0"
+  dependencies:
+    entities "^1.1.1"
+
 ansicolors@~0.3.2:
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/ansicolors/-/ansicolors-0.3.2.tgz#665597de86a9ffe3aa9bfbe6cae5c6ea426b4979"
@@ -732,7 +738,7 @@ babel-polyfill@^6.26.0:
     core-js "^2.5.0"
     regenerator-runtime "^0.10.5"
 
-babel-preset-env@^1.6.1, babel-preset-env@^1.7.0:
+babel-preset-env@^1.7.0:
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/babel-preset-env/-/babel-preset-env-1.7.0.tgz#dea79fa4ebeb883cd35dab07e260c1c9c04df77a"
   dependencies:
@@ -1341,6 +1347,10 @@ clone@^1.0.2:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/clone/-/clone-1.0.4.tgz#da309cc263df15994c688ca902179ca3c7cd7c7e"
 
+clone@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.1.tgz#d217d1e961118e3ac9a4b8bba3285553bf647cdb"
+
 clones@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/clones/-/clones-1.1.0.tgz#87e904132d6140c5c0b72006c08c0d05bd7b63b3"
@@ -1453,6 +1463,10 @@ commander@^2.11.0, commander@^2.9.0:
 commander@~2.13.0:
   version "2.13.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.13.0.tgz#6964bca67685df7c1f1430c584f07d7597885b9c"
+
+commander@~2.14.1:
+  version "2.14.1"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-2.14.1.tgz#2235123e37af8ca3c65df45b026dbd357b01b9aa"
 
 compare-versions@^3.1.0:
   version "3.2.1"
@@ -1727,7 +1741,7 @@ date-now@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/date-now/-/date-now-0.1.4.tgz#eaf439fd4d4848ad74e5cc7dbef200672b9e345b"
 
-deasync@^0.1.12:
+deasync@^0.1.13:
   version "0.1.13"
   resolved "https://registry.yarnpkg.com/deasync/-/deasync-0.1.13.tgz#815c2b69bbd1117cae570152cd895661c09f20ea"
   dependencies:
@@ -2540,6 +2554,12 @@ fstream@^1.0.0, fstream@^1.0.2:
     inherits "~2.0.0"
     mkdirp ">=0.5 0"
     rimraf "2"
+
+fswatcher-child@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/fswatcher-child/-/fswatcher-child-1.0.3.tgz#c89076126a3004909f6f68c0ea5c9d9143b237fd"
+  dependencies:
+    chokidar "^2.0.3"
 
 function-bind@^1.1.0, function-bind@^1.1.1:
   version "1.1.1"
@@ -4930,16 +4950,17 @@ parallel-transform@^1.1.0:
     inherits "^2.0.3"
     readable-stream "^2.1.5"
 
-parcel-bundler@^1.8.1:
-  version "1.8.1"
-  resolved "https://registry.yarnpkg.com/parcel-bundler/-/parcel-bundler-1.8.1.tgz#ac62d0690786f51d7f309694bab6856f685a6986"
+parcel-bundler@^1.9.0:
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/parcel-bundler/-/parcel-bundler-1.9.0.tgz#be0fe5937c8cf423c06bbddfe64830ac77cd4687"
   dependencies:
+    ansi-to-html "^0.6.4"
     babel-code-frame "^6.26.0"
     babel-core "^6.25.0"
     babel-generator "^6.25.0"
     babel-plugin-transform-es2015-modules-commonjs "^6.26.0"
     babel-plugin-transform-react-jsx "^6.24.1"
-    babel-preset-env "^1.6.1"
+    babel-preset-env "^1.7.0"
     babel-template "^6.26.0"
     babel-traverse "^6.26.0"
     babel-types "^6.26.0"
@@ -4947,14 +4968,15 @@ parcel-bundler@^1.8.1:
     babylon-walk "^1.0.2"
     browserslist "^3.2.6"
     chalk "^2.1.0"
-    chokidar "^2.0.3"
+    clone "^2.1.1"
     command-exists "^1.2.6"
     commander "^2.11.0"
     cross-spawn "^6.0.4"
     cssnano "^3.10.0"
-    deasync "^0.1.12"
+    deasync "^0.1.13"
     dotenv "^5.0.0"
     filesize "^3.6.0"
+    fswatcher-child "^1.0.3"
     get-port "^3.2.0"
     glob "^7.1.2"
     grapheme-breaker "^0.3.2"
@@ -4979,9 +5001,9 @@ parcel-bundler@^1.8.1:
     serve-static "^1.12.4"
     source-map "0.6.1"
     strip-ansi "^4.0.0"
+    terser "^3.7.3"
     toml "^2.3.3"
     tomlify-j0.4 "^3.0.0"
-    uglify-es "^3.2.1"
     v8-compile-cache "^2.0.0"
     ws "^5.1.1"
 
@@ -6521,6 +6543,13 @@ term-size@^1.2.0:
   dependencies:
     execa "^0.7.0"
 
+terser@^3.7.3:
+  version "3.7.6"
+  resolved "https://registry.yarnpkg.com/terser/-/terser-3.7.6.tgz#0b3c609f22278c089780ac1cdc63627071e3b96a"
+  dependencies:
+    commander "~2.14.1"
+    source-map "~0.6.1"
+
 test-exclude@^4.2.1:
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/test-exclude/-/test-exclude-4.2.1.tgz#dfa222f03480bca69207ca728b37d74b45f724fa"
@@ -6656,7 +6685,7 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
-uglify-es@^3.2.1, uglify-es@^3.3.9:
+uglify-es@^3.3.9:
   version "3.3.9"
   resolved "https://registry.yarnpkg.com/uglify-es/-/uglify-es-3.3.9.tgz#0c1c4f0700bed8dbc124cdb304d2592ca203e677"
   dependencies:
