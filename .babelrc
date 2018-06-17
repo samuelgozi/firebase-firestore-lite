@@ -1,4 +1,5 @@
 {
-  "presets": ["env"],
-  "plugins": ["transform-runtime"]
+  "presets": ["env", "minify"],
+  "plugins": ["transform-runtime"],
+  "comments": false
 }
