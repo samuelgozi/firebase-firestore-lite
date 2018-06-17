@@ -1,4 +1,5 @@
 import Document from './Document';
+import Query from './Query';
 
 /*
  * The REST API reference for the firestore database can be found here:
@@ -78,7 +79,15 @@ export default class {
 		return this.request(
 			this._endpoint + this._rootPath + path,
 			'GET'
-		).then(response => new Document(response));
+		).then(response => {
+			// If there are multiple results.
+			if(Array.isArray(response.documents)) {
+				return response.documents.map(doc => new Document(doc));
+			}
+
+			// It it is a single document
+			return new Document(response);
+		});
 	}
 
 	/*
@@ -118,6 +127,21 @@ export default class {
 			this._endpoint + document.__meta__.name,
 			'DELETE'
 		);
+	}
+
+	get query() {
+		const db = this;
+
+		// Add a 'send' method class.
+		Query.prototype.send = function() {
+			return db.request(
+				db._endpoint + db._rootPath + ':runQuery',
+				'POST',
+				this.compose()
+			);
+		};
+
+		return new Query();
 	}
 
 	/*

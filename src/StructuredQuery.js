@@ -72,9 +72,8 @@ class StructuredQuery {
 
 			return {
 				unaryFilter: {
-					field,
-					op: opString,
-					value: Document.composeValue(value)
+					field: { fieldPath: field },
+					op: opString
 				}
 			};
 		}
@@ -85,7 +84,7 @@ class StructuredQuery {
 
 		return {
 			fieldFilter: {
-				field,
+				field: { fieldPath: field },
 				op: opString,
 				value: Document.composeValue(value)
 			}
