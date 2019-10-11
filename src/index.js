@@ -1,4 +1,4 @@
-import Document from './Document';
+import Document from './Document.old';
 import Query from './Query';
 
 /*
@@ -20,16 +20,17 @@ async function handleRequestErrors(response) {
 	return response;
 }
 
+const APIEndpoint = 'https://firestore.googleapis.com/v1beta1/';
+
 /*
  * The public API
  */
-export default class {
+export default class Database {
 	constructor({ config, auth, databaseName = '(default)' }) {
-		const { projectId, apiKey } = config;
+		if (!('projectId' in config) && !config.projectId)
+			throw Error('Database constructor expected the "config" argument to have a valid "projectId" property');
 
-		this._rootPath = `projects/${projectId}/databases/${databaseName}/documents/`;
-		this._endpoint = 'https://firestore.googleapis.com/v1beta1/';
-		this._sessionKey = projectId + ':' + apiKey;
+		this._rootPath = `projects/${config.projectId}/databases/${databaseName}/documents/`;
 		this._auth = auth;
 	}
 
@@ -38,9 +39,9 @@ export default class {
 	 * returns a promise.
 	 */
 	async request(url, method = 'GET', body) {
-		// Validate the the method is valid.
-		if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method))
-			throw Error('Invalid method');
+		// Validate the HTTP Method.
+		if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) throw Error('Invalid method');
+
 		// Validate that the body argument is an object.
 		if (body && Object.prototype.toString.call(body) !== '[object Object]')
 			throw Error("The request 'body' argument should be an object");
@@ -76,12 +77,9 @@ export default class {
 	 * Read documents from the database.
 	 */
 	get(path) {
-		return this.request(
-			this._endpoint + this._rootPath + path,
-			'GET'
-		).then(response => {
+		return this.request(APIEndpoint + this._rootPath + path, 'GET').then(response => {
 			// If there are multiple results.
-			if(Array.isArray(response.documents)) {
+			if (Array.isArray(response.documents)) {
 				return response.documents.map(doc => new Document(doc));
 			}
 
@@ -96,11 +94,7 @@ export default class {
 	add(path, document) {
 		if (!(document instanceof Document)) throw Error('The document passed must be an instance of the Document Object');
 
-		this.request(
-			this._endpoint + this._rootPath + path,
-			'POST',
-			Document.compose(document)
-		);
+		this.request(APIEndpoint + this._rootPath + path, 'POST', Document.compose(document));
 	}
 
 	patch(document) {
@@ -114,7 +108,7 @@ export default class {
 		const docMaskQuery = docMask.map(fieldMask => 'updateMask.fieldPaths=' + fieldMask).join('&');
 
 		this.request(
-			this._endpoint + document.__meta__.name + '?' + docMaskQuery,
+			APIEndpoint + document.__meta__.name + '?' + docMaskQuery,
 			'PATCH',
 			JSON.stringify(Document.compose(modifiedDoc))
 		);
@@ -123,10 +117,7 @@ export default class {
 	delete(document) {
 		if (!(document instanceof Document)) throw Error('The document passed must be an instance of the Document Object');
 
-		this.request(
-			this._endpoint + document.__meta__.name,
-			'DELETE'
-		);
+		this.request(APIEndpoint + document.__meta__.name, 'DELETE');
 	}
 
 	get query() {
@@ -134,11 +125,7 @@ export default class {
 
 		// Add a 'send' method class.
 		Query.prototype.send = function() {
-			return db.request(
-				db._endpoint + db._rootPath + ':runQuery',
-				'POST',
-				this.compose()
-			);
+			return db.request(APIEndpoint + db._rootPath + ':runQuery', 'POST', this.compose());
 		};
 
 		return new Query();

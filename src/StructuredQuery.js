@@ -1,4 +1,4 @@
-import Document from './Document';
+import Document from './Document.old';
 
 /*
  * All the static methods in this class are supposed to be for internal use.
@@ -56,16 +56,12 @@ class StructuredQuery {
 		const operators = ['<', '<=', '>', '>=', '=='];
 
 		// Validate inputs.
-		if (!operators.includes(op))
-			throw Error(`The operator '${op}' is not valid`);
+		if (!operators.includes(op)) throw Error(`The operator '${op}' is not valid`);
 
 		// If the value is null or NaN then we need to compose a Unary Filter.
 		if (value === null || Number.isNaN(value)) {
 			// If value is 'null' or 'NaN' then the operator can only be '=='
-			if (op !== '==')
-				throw Error(
-					`The operator '${op} can't be used with the value '${value}'`
-				);
+			if (op !== '==') throw Error(`The operator '${op} can't be used with the value '${value}'`);
 
 			// Choose the right unary operator based on the type of the value.
 			let opString = Number.isNaN(value) ? 'IS_NAN' : 'IS_NULL';
