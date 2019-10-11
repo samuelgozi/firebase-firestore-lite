@@ -49,7 +49,7 @@ About browser support, I'm thinking about targeting only "evergreen" ones, but i
 - [x] double (native)
 - [x] timestamp (All JS Dates are auto converted to Timestamps)
 - [x] string (native)
-- [-] bytes - **It wont be supported for now**
+- [ ] bytes - **It wont be supported for now**
 - [x] reference (Custom class)
 - [x] geoPoint (Custom class)
 - [x] array (native)
