@@ -1,4 +1,5 @@
 import { isRawDocument } from './utils.js';
+import { Reference, GeoPoint } from './customTypes.js';
 
 export default class Document {
 	/**
@@ -71,9 +72,17 @@ export default class Document {
 	 * @returns {Object}
 	 */
 	static encodeMap(object) {
+		const keys = Object.keys(object);
+
+		// If the object has no keys, then we don't
+		// need to add a 'fields' property.
+		// I'm not sure this matters, if I knew it didn't
+		// I would remove this if statement.
+		if (keys.length === 0) return {};
+
 		const map = { fields: {} };
 
-		for (const key in object) {
+		for (const key of keys) {
 			map.fields[key] = this.encodeValue(object[key]);
 		}
 
@@ -89,18 +98,30 @@ export default class Document {
 		const objectClass = Object.prototype.toString.call(value);
 		let valueType = objectClass.substring(8, objectClass.length - 1).toLowerCase() + 'Value';
 
-		if (valueType === 'numberValue') {
-			valueType = Number.isInteger(value) ? 'integerValue' : 'doubleValue';
-			value = String(value);
-		}
+		switch (valueType) {
+			case 'numberValue':
+				valueType = Number.isInteger(value) ? 'integerValue' : 'doubleValue';
+				value = String(value);
+				break;
 
-		if (valueType === 'arrayValue') {
-			value = { values: value.map(this.encodeValue) };
-		}
+			case 'arrayValue':
+				value = { values: value.map(this.encodeValue) };
+				break;
 
-		if (valueType === 'objectValue') {
-			valueType = 'mapValue';
-			value = this.encodeMap(value);
+			case 'dateValue':
+				valueType = 'timestampValue';
+				value = value.toISOString();
+				break;
+
+			case 'objectValue':
+				// If the object is a custom type, then use its built in encoder
+				// and return it.
+				if ([Reference, GeoPoint].includes(value.constructor)) return value.toJSON();
+
+				// Else assume its intended to be a Map value.
+				valueType = 'mapValue';
+				value = this.encodeMap(value);
+				break;
 		}
 
 		return {

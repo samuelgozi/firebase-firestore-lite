@@ -1,4 +1,5 @@
-import Document from '../src/Document';
+import Document from '../src/Document.js';
+import { Reference, GeoPoint } from '../src/customTypes.js';
 
 describe('Decode', () => {
 	test('Throws when the passed object is not a raw document', () => {
@@ -199,6 +200,36 @@ describe('EncodeValue', () => {
 
 		expect(Document.encodeValue(obj)).toEqual(expected);
 	});
+
+	test('Timestamps', () => {
+		const time = new Date();
+		const expected = {
+			timestampValue: time.toISOString()
+		};
+
+		expect(Document.encodeValue(time)).toEqual(expected);
+	});
+
+	test('References', () => {
+		const ref = new Reference('/path/to/document');
+		const expected = {
+			referenceValue: '/path/to/document'
+		};
+
+		expect(Document.encodeValue(ref)).toEqual(expected);
+	});
+
+	test('GeoPoints', () => {
+		const geoPoint = new GeoPoint(50, 23);
+		const expected = {
+			geoPointValue: {
+				latitude: 50,
+				longitude: 23
+			}
+		};
+
+		expect(Document.encodeValue(geoPoint)).toEqual(expected);
+	});
 });
 
 describe('EncodeMap', () => {
@@ -220,7 +251,7 @@ describe('EncodeMap', () => {
 			}
 		};
 
-		// expect(Document.decodeMap({})).toEqual({});
+		expect(Document.encodeMap({})).toEqual({});
 		expect(Document.encodeMap(obj)).toEqual(expected);
 	});
 });
