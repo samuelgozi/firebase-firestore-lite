@@ -1,5 +1,6 @@
 import {
 	isDocumentPath,
+	isValidPath,
 	maskFromObject,
 	isRawDocument,
 	encode,
@@ -8,7 +9,7 @@ import {
 	decodeValue,
 	decodeMap
 } from '../src/utils.js';
-import { Reference, GeoPoint } from '../src/customTypes.js';
+import { ReferenceType, GeoPoint } from '../src/customTypes.js';
 
 test('isDocumentPath', () => {
 	// slashes will be removed by the document constructor
@@ -18,6 +19,19 @@ test('isDocumentPath', () => {
 
 	expect(isDocumentPath('users/username/posts')).toEqual(false);
 	expect(isDocumentPath('users/username/posts/entry')).toEqual(true);
+});
+
+describe('isValidPath', () => {
+	test('Good path', () => {
+		expect(isValidPath('something/something/something')).toEqual(true);
+		expect(isValidPath('something/something')).toEqual(true);
+		expect(isValidPath('something')).toEqual(true);
+	});
+
+	test('Bad paths', () => {
+		expect(isValidPath('')).toEqual(false);
+		expect(isValidPath('/')).toEqual(false);
+	});
 });
 
 describe('maskFromObject', () => {
@@ -315,7 +329,7 @@ describe('EncodeValue', () => {
 	});
 
 	test('References', () => {
-		const ref = new Reference('/path/to/document');
+		const ref = new ReferenceType('/path/to/document');
 		const expected = {
 			referenceValue: '/path/to/document'
 		};

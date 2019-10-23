@@ -1,4 +1,4 @@
-import { Reference, GeoPoint } from './customTypes.js';
+import { ReferenceType, GeoPoint } from './customTypes.js';
 
 /*
  * This function checks that that the response object returns with the 'ok' boolean set to true,
@@ -19,6 +19,17 @@ export async function handleRequest(response) {
 export function isDocumentPath(path) {
 	const segments = path.split('/');
 	return segments.length % 2 === 0;
+}
+
+/**
+ * Returns true if the given path is a valid path
+ * and not a path to the root, or a badly formatted path.
+ */
+export function isValidPath(path) {
+	if (path === '' || path === '/') return false;
+
+	const segments = path.split('/');
+	return segments.length > 0;
 }
 
 /**
@@ -173,7 +184,7 @@ export function encodeValue(value) {
 		case 'objectValue':
 			// If the object is a custom type, then use its built in encoder
 			// and return it.
-			if ([Reference, GeoPoint].includes(value.constructor)) return value.toJSON();
+			if ([ReferenceType, GeoPoint].includes(value.constructor)) return value.toJSON();
 
 			// Else assume its intended to be a Map value.
 			valueType = 'mapValue';

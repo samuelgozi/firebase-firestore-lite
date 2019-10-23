@@ -1,4 +1,5 @@
 import { handleRequest } from './utils.js';
+import Reference from './Reference.js';
 const ENDPOINT = 'https://firestore.googleapis.com/v1beta1/';
 
 /*
@@ -29,5 +30,9 @@ export default class Database {
 		}
 
 		return fetch(request).then(handleRequest);
+	}
+
+	ref(path) {
+		return new Reference(path, this);
 	}
 }

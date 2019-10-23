@@ -1,4 +1,4 @@
-export class Reference {
+export class ReferenceType {
 	constructor(path) {
 		this.path = path;
 	}
