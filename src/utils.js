@@ -1,4 +1,5 @@
-import { ReferenceType, GeoPoint } from './customTypes.js';
+import { GeoPoint } from './customTypes.js';
+import Reference from './Reference.js';
 
 /*
  * This function checks that that the response object returns with the 'ok' boolean set to true,
@@ -184,7 +185,7 @@ export function encodeValue(value) {
 		case 'objectValue':
 			// If the object is a custom type, then use its built in encoder
 			// and return it.
-			if ([ReferenceType, GeoPoint].includes(value.constructor)) return value.toJSON();
+			if ([Reference, GeoPoint].includes(value.constructor)) return value.toJSON();
 
 			// Else assume its intended to be a Map value.
 			valueType = 'mapValue';

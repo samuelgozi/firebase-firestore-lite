@@ -12,6 +12,7 @@ export default class Reference {
 
 		this.db = db;
 		this.path = path;
+		this.endpoint = `${db.endpoint}/${path}`;
 		this.isRoot = path.split('/').length === 1;
 		this.isCollection = !isDocumentPath(path);
 	}
@@ -37,11 +38,11 @@ export default class Reference {
 
 	get() {
 		if (this.isCollection) throw Error("Can't get a collection");
-		return this.db.fetch(this.db.endpoint + this.path);
+		return this.db.fetch(this.endpoint);
 	}
 
 	set(object) {
-		this.db.fetch(this.db.endpoint + this.path, {
+		this.db.fetch(this.endpoint, {
 			// If this is a path to a specific document use
 			// patch instead, else, create a new document.
 			method: this.isCollection ? 'POST' : 'PATCH',
@@ -53,7 +54,7 @@ export default class Reference {
 		if (this.isCollection) throw Error("Can't update a collection");
 		const mask = `?updateMask=${maskFromObject(object).join(',')}`;
 
-		this.db.fetch(this.db.endpoint + this.path + mask, {
+		this.db.fetch(this.endpoint + mask, {
 			method: 'PATCH',
 			body: JSON.stringify(object)
 		});
@@ -61,6 +62,12 @@ export default class Reference {
 
 	delete() {
 		if (this.isCollection) throw Error("Can't delete a collection");
-		this.db.fetch(this.db.endpoint + this.path, { method: 'DELETE' });
+		this.db.fetch(this.endpoint, { method: 'DELETE' });
+	}
+
+	toJSON() {
+		return {
+			referenceValue: `${this.db.rootPath}/${this.path}`
+		};
 	}
 }

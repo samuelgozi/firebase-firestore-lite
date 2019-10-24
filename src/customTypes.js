@@ -1,15 +1,3 @@
-export class ReferenceType {
-	constructor(path) {
-		this.path = path;
-	}
-
-	toJSON() {
-		return {
-			referenceValue: this.path
-		};
-	}
-}
-
 export class GeoPoint {
 	constructor(lat, lon) {
 		if (lat >= 90 && lat <= -90) throw Error("Geopoint's latitude should be within the range of -90.0 and 90.0");

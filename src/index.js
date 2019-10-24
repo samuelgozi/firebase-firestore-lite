@@ -11,7 +11,8 @@ export default class Database {
 			throw Error('Database constructor expected the "config" argument to have a valid "projectId" property');
 
 		this.name = databaseName;
-		this.endpoint = `${ENDPOINT}projects/${projectId}/databases/${databaseName}/documents/`;
+		this.rootPath = `projects/${projectId}/databases/${databaseName}/documents`;
+		this.endpoint = ENDPOINT + this.rootPath;
 		this.auth = auth;
 	}
 
@@ -32,7 +33,30 @@ export default class Database {
 		return fetch(request).then(handleRequest);
 	}
 
-	ref(path) {
+	/**
+	 * Gets multiple documents.
+	 * Documents returned are not guaranteed to be in th same order as requested.
+	 * @param {Reference[]} referencesArray Array of references to retrieve.
+	 * @returns {Promise}
+	 */
+	batchGet(referencesArray) {
+		const documents = referencesArray.map(ref => {
+			if ('path' in ref) throw Error('batchGet expects an array of references');
+			return ref.path;
+		});
+
+		return this.fetch(this.endpoint + ':batchGet', {
+			method: 'POST',
+			body: JSON.stringify({ documents })
+		});
+	}
+
+	/**
+	 * Returns a reference to a document or a collection.
+	 * @param {string} path Path to the collection or document.
+	 * @returns {Reference} instance of a reference.
+	 */
+	reference(path) {
 		return new Reference(path, this);
 	}
 }

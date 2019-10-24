@@ -9,7 +9,8 @@ import {
 	decodeValue,
 	decodeMap
 } from '../src/utils.js';
-import { ReferenceType, GeoPoint } from '../src/customTypes.js';
+import { GeoPoint } from '../src/customTypes.js';
+import Reference from '../src/Reference.js';
 
 test('isDocumentPath', () => {
 	// slashes will be removed by the document constructor
@@ -329,7 +330,7 @@ describe('EncodeValue', () => {
 	});
 
 	test('References', () => {
-		const ref = new ReferenceType('/path/to/document');
+		const ref = new Reference('/path/to/document', { rootPath: '' });
 		const expected = {
 			referenceValue: '/path/to/document'
 		};
