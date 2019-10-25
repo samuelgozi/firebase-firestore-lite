@@ -1,4 +1,4 @@
-import { isDocumentPath, isValidPath, maskFromObject } from './utils.js';
+import { objectToQuery, isDocumentPath, isValidPath, maskFromObject } from './utils.js';
 
 export default class Reference {
 	constructor(path, db) {
@@ -37,8 +37,13 @@ export default class Reference {
 	}
 
 	get() {
-		if (this.isCollection) throw Error("Can't get a collection");
+		if (this.isCollection) throw Error("Can't get a collection, try the `list` method");
 		return this.db.fetch(this.endpoint);
+	}
+
+	list(options) {
+		if (!this.isCollection) throw Error("Can't list a document, try the `get` method");
+		return this.db.fetch(this.endpoint + objectToQuery(options));
 	}
 
 	set(object) {
@@ -52,9 +57,9 @@ export default class Reference {
 
 	update(object) {
 		if (this.isCollection) throw Error("Can't update a collection");
-		const mask = `?updateMask=${maskFromObject(object).join(',')}`;
+		const query = objectToQuery({ updateMask: maskFromObject(object) });
 
-		this.db.fetch(this.endpoint + mask, {
+		this.db.fetch(this.endpoint + query, {
 			method: 'PATCH',
 			body: JSON.stringify(object)
 		});

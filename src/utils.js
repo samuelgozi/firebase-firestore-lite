@@ -1,6 +1,28 @@
 import { GeoPoint } from './customTypes.js';
 import Reference from './Reference.js';
 
+/**
+ * Converts an Object to a URI query String.
+ * @param {Object} obj
+ * @returns {string}
+ */
+export function objectToQuery(obj = {}) {
+	let propsArr = [];
+
+	for (let prop in obj) {
+		if (obj[prop] === undefined) continue; // Skip over undefined props.
+
+		// If it is an array then we should encode each value in separate, and then join.
+		const encodedValue = Array.isArray(obj[prop])
+			? obj[prop].map(val => encodeURIComponent(val)).join()
+			: encodeURIComponent(obj[prop]);
+
+		propsArr.push(`${prop}=${encodedValue}`);
+	}
+
+	return propsArr.length === 0 ? '' : `?${propsArr.join('&')}`;
+}
+
 /*
  * This function checks that that the response object returns with the 'ok' boolean set to true,
  * thats Fetch API's way of telling us that the response status is in the "successful" range.
