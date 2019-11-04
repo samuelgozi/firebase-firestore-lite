@@ -12,6 +12,7 @@ export default class Reference {
 
 		this.db = db;
 		this.path = path;
+		this.id = `${db.rootPath}/${path}`;
 		this.endpoint = `${db.endpoint}/${path}`;
 		this.isRoot = path.split('/').length === 1;
 		this.isCollection = !isDocumentPath(path);
@@ -72,7 +73,7 @@ export default class Reference {
 
 	toJSON() {
 		return {
-			referenceValue: `${this.db.rootPath}/${this.path}`
+			referenceValue: this.id
 		};
 	}
 }
