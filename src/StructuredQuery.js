@@ -1,4 +1,5 @@
 import Reference from './Reference.js';
+import { encodeValue } from './utils.js';
 
 /**
  * Options object for a Query class.
@@ -31,6 +32,14 @@ import Reference from './Reference.js';
  * @property {number} [limit] The max amount of documents to return.
  */
 
+function isReference(val) {
+	return val instanceof Reference;
+}
+
+function isValidNumber(val) {
+	return Number.isInteger(val) && val >= 0;
+}
+
 const operators = {
 	'<': 'LESS_THAN',
 	'<=': 'LESS_THAN_OR_EQUAL',
@@ -38,24 +47,6 @@ const operators = {
 	'>=': 'GREATER_THAN_OR_EQUAL',
 	'==': 'EQUAL',
 	contains: 'ARRAY_CONTAINS'
-};
-
-const filters = {
-	// Used when multiple filters need to be chained.
-	compositeFilter: {
-		op: 'AND',
-		filters: ['nested filter']
-	},
-	// Used when the user uses the supported operators
-	fieldFilter: {
-		field: { fieldPath: 'field.path' },
-		op: 'operator',
-		value: 'encodedValue'
-	},
-	// Used when the user uses the supported operators
-	unaryFilter: {
-		op: 'IS_NAN or IS_NULL'
-	}
 };
 
 /**
@@ -71,9 +62,33 @@ const encoders = {
 	 * @returns {Object}
 	 */
 	from(val) {
+		return val.map(ref => ({
+			collectionId: ref.id,
+			allDescendants: false
+		}));
+	},
+
+	/**
+	 * Converts a Query filter(array with three items), into an encoded filter.
+	 * @param {FilterOption} filter - The filter.
+	 * @returns {Object}
+	 */
+	encodeFilter([fieldPath, op, value]) {
+		if (Number.isNaN(value) || value === null) {
+			return {
+				unaryFilter: {
+					field: { fieldPath },
+					op: Number.isNaN(value) ? 'IS_NAN' : 'IS_NULL'
+				}
+			};
+		}
+
 		return {
-			collectionId: val.id || val.collection.id,
-			allDescendants: val.allDescendants || false
+			fieldFilter: {
+				field: { fieldPath },
+				op: operators[op],
+				value: encodeValue(value)
+			}
 		};
 	},
 
@@ -83,33 +98,29 @@ const encoders = {
 	 * @param {FilterOption[]} val Array of filters.
 	 * @returns {Object}
 	 */
-	where(val) {
-		return {};
+	where(option) {
+		if (option.length === 1) {
+			return this.encodeFilter(option[0]);
+		}
+
+		// If there are more than one filters then this is a composite filter.
+		return {
+			compositeFilter: {
+				op: 'AND',
+				filters: option.map(this.encodeFilter)
+			}
+		};
 	},
 
 	orderBy(val) {
 		return {
-			orderBy: {
-				field: {
-					fieldPath: typeof val === 'string' ? val : val.field
-				},
-				direction: val.direction !== undefined ? val.direction.toUpperCase() : 'ASCENDING'
-			}
+			field: {
+				fieldPath: typeof val === 'string' ? val : val.field
+			},
+			direction: val.direction !== undefined ? val.direction.toUpperCase() : 'ASCENDING'
 		};
 	}
 };
-
-function encodeOptions(options) {
-	const allowedProps = ['from', 'where', 'orderBy', 'startAt', 'endAt', 'offset', 'limit'];
-	const query = {};
-
-	for (const argName of allowedProps) {
-		// For each argument, encode it and save it to the query object.
-		query[argName] = encoders[argName](options[argName]);
-	}
-
-	return query;
-}
 
 const validators = {
 	from(val) {
@@ -119,10 +130,9 @@ const validators = {
 
 	where(val) {
 		if (!Array.isArray(val)) return false;
-		for (const [fieldPath, op, value] of val) {
-			if (typeof fieldPath !== 'string' || !operators.includes(op) || value === undefined) return false;
-			return true;
-		}
+		return !val.some(([fieldPath, op, value]) => {
+			return typeof fieldPath !== 'string' || !(op in operators) || value === undefined;
+		});
 	},
 
 	orderBy(val) {
@@ -134,7 +144,12 @@ const validators = {
 		}
 
 		return typeof val === 'string';
-	}
+	},
+
+	startAt: isReference,
+	endAt: isReference,
+	offset: isValidNumber,
+	limit: isValidNumber
 };
 
 /**
@@ -165,12 +180,29 @@ export default class Query {
 		if (!('from' in options)) throw Error('"From" is required when building a new query');
 	}
 
+	encode() {
+		const encoded = {};
+
+		for (const option in this.options) {
+			const optionValue = this.options[option];
+
+			if (option in encoders) {
+				encoded[option] = encoders[option](optionValue);
+				continue;
+			}
+
+			encoded[option] = optionValue;
+		}
+
+		return {
+			structuredQuery: encoded
+		};
+	}
+
 	run() {
 		this.reference.db.fetch(this.reference.endpoint, {
 			method: 'POST',
-			body: JSON.stringify({
-				structuredQuery: this.options
-			})
+			body: JSON.stringify(this.encode())
 		});
 	}
 }
