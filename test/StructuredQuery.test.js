@@ -257,4 +257,22 @@ describe('Encode', () => {
 		expect(queryShort.encode().structuredQuery.orderBy).toEqual(expectedShort);
 		expect(queryFull.encode().structuredQuery.orderBy).toEqual(expectedFull);
 	});
+
+	test('startAt and endAt', () => {
+		const startAtQuery = new Query({
+			from: [colRef],
+			startAt: colRef
+		});
+
+		const expectedStartAt = {
+			values: [
+				{
+					__name__: colRef.id
+				}
+			],
+			before: false
+		};
+
+		expect(startAtQuery.encode().structuredQuery.startAt).toEqual(expectedStartAt);
+	});
 });

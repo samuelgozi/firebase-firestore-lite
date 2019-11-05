@@ -1,5 +1,5 @@
 import Reference from './Reference.js';
-import { encodeValue } from './utils.js';
+import { encodeValue, isReference, isValidNumber } from './utils.js';
 
 /**
  * Options object for a Query class.
@@ -31,14 +31,6 @@ import { encodeValue } from './utils.js';
  * @property {number} [offset] The number of results to skip.
  * @property {number} [limit] The max amount of documents to return.
  */
-
-function isReference(val) {
-	return val instanceof Reference;
-}
-
-function isValidNumber(val) {
-	return Number.isInteger(val) && val >= 0;
-}
 
 const operators = {
 	'<': 'LESS_THAN',
@@ -112,6 +104,17 @@ const encoders = {
 		};
 	},
 
+	referenceToCursor(ref) {
+		return {
+			values: [
+				{
+					__name__: ref.id
+				}
+			],
+			before: false
+		};
+	},
+
 	orderBy(val) {
 		return {
 			field: {
@@ -119,6 +122,14 @@ const encoders = {
 			},
 			direction: val.direction !== undefined ? val.direction.toUpperCase() : 'ASCENDING'
 		};
+	},
+
+	startAt(ref) {
+		return this.referenceToCursor(ref);
+	},
+
+	endAt(ref) {
+		return this.referenceToCursor(ref);
 	}
 };
 

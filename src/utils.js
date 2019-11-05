@@ -2,6 +2,24 @@ import { GeoPoint } from './customTypes.js';
 import Reference from './Reference.js';
 
 /**
+ * Checks if a variable is a Reference inctance.
+ * @param {*} val A the value to check
+ * @returns {boolean}
+ */
+export function isReference(val) {
+	return val instanceof Reference;
+}
+
+/**
+ * Checks if a value is a number that is not negative and is an integer.
+ * @param {*} val the value to check
+ * @returns {boolean}
+ */
+export function isValidNumber(val) {
+	return Number.isInteger(val) && val >= 0;
+}
+
+/**
  * Converts an Object to a URI query String.
  * @param {Object} obj
  * @returns {string}
