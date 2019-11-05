@@ -264,7 +264,12 @@ describe('Encode', () => {
 			startAt: colRef
 		});
 
-		const expectedStartAt = {
+		const endAtQuery = new Query({
+			from: [colRef],
+			endAt: colRef
+		});
+
+		const expected = {
 			values: [
 				{
 					__name__: colRef.id
@@ -273,6 +278,7 @@ describe('Encode', () => {
 			before: false
 		};
 
-		expect(startAtQuery.encode().structuredQuery.startAt).toEqual(expectedStartAt);
+		expect(startAtQuery.encode().structuredQuery.startAt).toEqual(expected);
+		expect(endAtQuery.encode().structuredQuery.endAt).toEqual(expected);
 	});
 });
