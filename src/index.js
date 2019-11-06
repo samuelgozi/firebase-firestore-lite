@@ -1,5 +1,6 @@
 import { handleRequest } from './utils.js';
 import Reference from './Reference.js';
+
 const ENDPOINT = 'https://firestore.googleapis.com/v1beta1/';
 
 /*

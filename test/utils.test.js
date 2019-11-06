@@ -1,7 +1,6 @@
 import {
 	objectToQuery,
 	isDocumentPath,
-	isValidPath,
 	maskFromObject,
 	isRawDocument,
 	encode,
@@ -54,19 +53,6 @@ test('isDocumentPath', () => {
 
 	expect(isDocumentPath('users/username/posts')).toEqual(false);
 	expect(isDocumentPath('users/username/posts/entry')).toEqual(true);
-});
-
-describe('isValidPath', () => {
-	test('Good path', () => {
-		expect(isValidPath('something/something/something')).toEqual(true);
-		expect(isValidPath('something/something')).toEqual(true);
-		expect(isValidPath('something')).toEqual(true);
-	});
-
-	test('Bad paths', () => {
-		expect(isValidPath('')).toEqual(false);
-		expect(isValidPath('/')).toEqual(false);
-	});
 });
 
 describe('maskFromObject', () => {

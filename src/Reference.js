@@ -1,4 +1,5 @@
-import { objectToQuery, isDocumentPath, isValidPath, maskFromObject } from './utils.js';
+import Query from './Query.js';
+import { objectToQuery, isDocumentPath, maskFromObject } from './utils.js';
 
 export default class Reference {
 	constructor(path, db) {
@@ -6,16 +7,24 @@ export default class Reference {
 		// the beginning or the end.
 		path = path.replace(/^\/?/, '').replace(/\/?$/, '');
 
-		if (!isValidPath(path)) {
-			throw Error('The path must point to a document or a collection');
-		}
-
+		this.id = path.split('/').pop();
 		this.db = db;
 		this.path = path;
-		this.id = `${db.rootPath}/${path}`;
+		this.name = `${db.rootPath}/${path}`;
 		this.endpoint = `${db.endpoint}/${path}`;
-		this.isRoot = path.split('/').length === 1;
+		this.isRoot = path === '';
 		this.isCollection = !isDocumentPath(path);
+	}
+
+	get parent() {
+		if (this.isRoot) throw Error("Can't get parent of a root collection");
+		return new Reference(this.path.replace(/\/([^/]+)\/?$/, ''), this.db);
+	}
+
+	get parentCollection() {
+		if (this.isRoot) throw Error("Can't get parent of a root collection");
+		if (this.isCollection) return new Reference(this.path.replace(/(\/([^/]+)\/?){2}$|^([^/]+)$/, ''), this.db);
+		return this.parent();
 	}
 
 	child(path) {
@@ -24,17 +33,6 @@ export default class Reference {
 
 		// Return a newly created document with the new sub path.
 		return new Reference(`${this.path}/${path}`, this.db);
-	}
-
-	parent() {
-		if (this.isRoot) throw Error("Can't get parent of a root collection");
-		return new Reference(this.path.replace(/\/([^/]+)\/?$/, ''), this.db);
-	}
-
-	parentCollection() {
-		if (this.isRoot) throw Error("Can't get parent of a root collection");
-		if (this.isCollection) return new Reference(this.path.replace(/(\/([^/]+)\/?){2}$/, ''), this.db);
-		return this.parent();
 	}
 
 	get() {
@@ -71,9 +69,16 @@ export default class Reference {
 		this.db.fetch(this.endpoint, { method: 'DELETE' });
 	}
 
+	query(options = {}) {
+		return new Query({
+			from: [this],
+			...options
+		});
+	}
+
 	toJSON() {
 		return {
-			referenceValue: this.id
+			referenceValue: this.name
 		};
 	}
 }

@@ -2,12 +2,21 @@ import { GeoPoint } from './customTypes.js';
 import Reference from './Reference.js';
 
 /**
- * Checks if a variable is a Reference inctance.
+ * Checks if a value is a Reference to a Document.
  * @param {*} val A the value to check
  * @returns {boolean}
  */
-export function isReference(val) {
-	return val instanceof Reference;
+export function isDocReference(val) {
+	return val instanceof Reference && !val.isCollection;
+}
+
+/**
+ * Checks if a value is a Reference to a Collection.
+ * @param {*} val A the value to check
+ * @returns {boolean}
+ */
+export function isColReference(val) {
+	return val instanceof Reference && val.isCollection;
 }
 
 /**
@@ -60,17 +69,6 @@ export async function handleRequest(response) {
 export function isDocumentPath(path) {
 	const segments = path.split('/');
 	return segments.length % 2 === 0;
-}
-
-/**
- * Returns true if the given path is a valid path
- * and not a path to the root, or a badly formatted path.
- */
-export function isValidPath(path) {
-	if (path === '' || path === '/') return false;
-
-	const segments = path.split('/');
-	return segments.length > 0;
 }
 
 /**
