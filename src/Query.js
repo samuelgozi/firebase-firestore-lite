@@ -1,4 +1,3 @@
-import Reference from './Reference.js';
 import { encodeValue, isDocReference, isColReference, isValidNumber } from './utils.js';
 
 /**

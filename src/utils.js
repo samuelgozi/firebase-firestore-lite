@@ -1,5 +1,11 @@
 import { GeoPoint } from './customTypes.js';
+import Document from './Document.js';
 import Reference from './Reference.js';
+
+/**
+ * A symbol used to get the metadata of a document.
+ */
+export const metadataSymbol = Symbol('metadata');
 
 /**
  * Checks if a value is a Reference to a Document.
@@ -55,11 +61,24 @@ export function objectToQuery(obj = {}) {
  * thats Fetch API's way of telling us that the response status is in the "successful" range.
  */
 export async function handleRequest(response) {
+	const data = await response.json();
+
 	if (!response.ok) {
-		throw (await response.json()).error.message;
+		if (Array.isArray[data] && data.length === 1) throw data[0];
+		throw data;
 	}
 
-	return await response.json();
+	if (isRawDocument(data)) {
+		return decode(data);
+	}
+
+	if (Array.isArray(data)) {
+		if ('documents' in data) {
+			return data.documents.map(rawDoc => new Document(rawDoc, this));
+		}
+	}
+
+	return data;
 }
 
 /**
@@ -101,7 +120,7 @@ export function isRawDocument(document) {
 	// A Firestore document must have these three keys.
 	// The fields key is optional.
 	// https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents
-	for (let fieldName of ['name', 'fields', 'createTime', 'updateTime']) {
+	for (let fieldName of ['name', 'createTime', 'updateTime']) {
 		if (!(fieldName in document)) return false;
 	}
 
@@ -115,7 +134,7 @@ export function isRawDocument(document) {
  * @returns {Document}
  */
 export function decode(document) {
-	if (!isRawDocument(document)) throw Error('Decode expect a valid Document');
+	if (!isRawDocument(document)) throw Error('Decode expects a RawDocument');
 	return decodeMap(document.fields || {});
 }
 

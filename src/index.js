@@ -31,7 +31,7 @@ export default class Database {
 			this.auth.authorizeRequest(request);
 		}
 
-		return fetch(request).then(handleRequest);
+		return fetch(request).then(handleRequest.bind(this));
 	}
 
 	/**

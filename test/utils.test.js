@@ -159,9 +159,9 @@ describe('Decode', () => {
 			fields: {},
 			createTime: '2014-10-02T15:01:23.045123456Z'
 		};
-		expect(() => decode(missingName)).toThrow('Decode expect a valid Document');
-		expect(() => decode(missingCreate)).toThrow('Decode expect a valid Document');
-		expect(() => decode(missingUpdate)).toThrow('Decode expect a valid Document');
+		expect(() => decode(missingName)).toThrow('Decode expects a RawDocument');
+		expect(() => decode(missingCreate)).toThrow('Decode expects a RawDocument');
+		expect(() => decode(missingUpdate)).toThrow('Decode expects a RawDocument');
 	});
 });
 
