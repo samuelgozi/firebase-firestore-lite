@@ -1,5 +1,5 @@
 import Query from './Query.js';
-import { objectToQuery, isDocumentPath, maskFromObject } from './utils.js';
+import { encode, objectToQuery, isDocumentPath, maskFromObject } from './utils.js';
 
 export default class Reference {
 	constructor(path, db) {
@@ -46,11 +46,11 @@ export default class Reference {
 	}
 
 	set(object) {
-		this.db.fetch(this.endpoint, {
+		return this.db.fetch(this.endpoint, {
 			// If this is a path to a specific document use
 			// patch instead, else, create a new document.
 			method: this.isCollection ? 'POST' : 'PATCH',
-			body: JSON.stringify(object)
+			body: JSON.stringify(encode(object))
 		});
 	}
 
@@ -58,15 +58,15 @@ export default class Reference {
 		if (this.isCollection) throw Error("Can't update a collection");
 		const query = objectToQuery({ updateMask: maskFromObject(object) });
 
-		this.db.fetch(this.endpoint + query, {
+		return this.db.fetch(this.endpoint + query, {
 			method: 'PATCH',
-			body: JSON.stringify(object)
+			body: JSON.stringify(encode(object))
 		});
 	}
 
 	delete() {
 		if (this.isCollection) throw Error("Can't delete a collection");
-		this.db.fetch(this.endpoint, { method: 'DELETE' });
+		return this.db.fetch(this.endpoint, { method: 'DELETE' });
 	}
 
 	query(options = {}) {

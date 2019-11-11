@@ -27,9 +27,5 @@
 		"jest": "^24.9.0",
 		"jest-fetch-mock": "^2.1.2",
 		"regenerator-runtime": "^0.13.3"
-	},
-	"dependencies": {
-		"deep-copy": "^1.4.2",
-		"dequal": "^1.0.0"
 	}
 }

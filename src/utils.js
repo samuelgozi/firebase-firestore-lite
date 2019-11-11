@@ -2,10 +2,39 @@ import { GeoPoint } from './customTypes.js';
 import Document from './Document.js';
 import Reference from './Reference.js';
 
-/**
- * A symbol used to get the metadata of a document.
+/*
+ * Creates an Error object from a firebase response.
  */
-export const metadataSymbol = Symbol('metadata');
+function extractError(data) {
+	return Error(`${data.error.status}: ${data.error.message}`);
+}
+
+/*
+ * This function checks that that the response object returns with the 'ok' boolean set to true,
+ * thats Fetch API's way of telling us that the response status is in the "successful" range.
+ */
+export async function handleRequest(response) {
+	const data = await response.json();
+
+	if (!response.ok) {
+		if (Array.isArray[data]) {
+			throw data.length === 1 ? extractError(data[0]) : data;
+		}
+		throw extractError(data);
+	}
+
+	if (isRawDocument(data)) {
+		return decode(data);
+	}
+
+	if (Array.isArray(data)) {
+		if ('documents' in data) {
+			return data.documents.map(rawDoc => new Document(rawDoc, this));
+		}
+	}
+
+	return data;
+}
 
 /**
  * Checks if a value is a Reference to a Document.
@@ -54,31 +83,6 @@ export function objectToQuery(obj = {}) {
 	}
 
 	return propsArr.length === 0 ? '' : `?${propsArr.join('&')}`;
-}
-
-/*
- * This function checks that that the response object returns with the 'ok' boolean set to true,
- * thats Fetch API's way of telling us that the response status is in the "successful" range.
- */
-export async function handleRequest(response) {
-	const data = await response.json();
-
-	if (!response.ok) {
-		if (Array.isArray[data] && data.length === 1) throw data[0];
-		throw data;
-	}
-
-	if (isRawDocument(data)) {
-		return decode(data);
-	}
-
-	if (Array.isArray(data)) {
-		if ('documents' in data) {
-			return data.documents.map(rawDoc => new Document(rawDoc, this));
-		}
-	}
-
-	return data;
 }
 
 /**

@@ -1,15 +1,9 @@
-import { decode, metaSymbol } from './utils.js';
-import Reference from './Reference.js';
+import { decode } from './utils.js';
 
 export default class Document {
-	static metadata(document) {
-		if (!(document instanceof Document)) throw Error('"metadata" expects its argument to be an instance of a Document');
-		return document[metaSymbol];
-	}
-
 	constructor(rawDocument, db) {
 		const { name, createTime, updateTime } = rawDocument;
-		this[metaSymbol] = {
+		const meta = {
 			db,
 			name,
 			createTime,
@@ -18,10 +12,10 @@ export default class Document {
 			id: name.split('/').pop()
 		};
 
-		this.data = decode(rawDocument);
-	}
+		Object.defineProperty(this, '__meta__', {
+			value: meta
+		});
 
-	get ref() {
-		return new Reference(this.path, this.db);
+		Object.assign(this, decode(rawDocument));
 	}
 }

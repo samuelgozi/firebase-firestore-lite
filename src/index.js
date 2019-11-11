@@ -1,5 +1,6 @@
 import { handleRequest } from './utils.js';
 import Reference from './Reference.js';
+import Document from './Document';
 
 const ENDPOINT = 'https://firestore.googleapis.com/v1beta1/';
 
@@ -54,10 +55,11 @@ export default class Database {
 
 	/**
 	 * Returns a reference to a document or a collection.
-	 * @param {string} path Path to the collection or document.
+	 * @param {(string|Document)} path Path to the collection or document.
 	 * @returns {Reference} instance of a reference.
 	 */
 	reference(path) {
+		if (path instanceof Document) path = path.__meta__.path;
 		return new Reference(path, this);
 	}
 }
