@@ -35,23 +35,22 @@ export default class Reference {
 		return new Reference(`${this.path}/${path}`, this.db);
 	}
 
-	get() {
-		if (this.isCollection) throw Error("Can't get a collection, try the `list` method");
-		return this.db.fetch(this.endpoint);
-	}
-
-	list(options) {
-		if (!this.isCollection) throw Error("Can't list a document, try the `get` method");
-		return this.db.fetch(this.endpoint + objectToQuery(options));
-	}
-
-	set(object) {
-		return this.db.fetch(this.endpoint, {
-			// If this is a path to a specific document use
-			// patch instead, else, create a new document.
-			method: this.isCollection ? 'POST' : 'PATCH',
-			body: JSON.stringify(encode(object))
+	get(options) {
+		return this.db.fetch(this.endpoint + objectToQuery(options)).then(data => {
+			if (this.isCollection && 'documents' in data) return data.documents.map(rawDoc => new Document(rawDoc, this.db));
+			return new Document(data);
 		});
+	}
+
+	async set(object) {
+		return this.db
+			.fetch(this.endpoint, {
+				// If this is a path to a specific document use
+				// patch instead, else, create a new document.
+				method: this.isCollection ? 'POST' : 'PATCH',
+				body: JSON.stringify(encode(object))
+			})
+			.then(rawDoc => new Document(rawDoc));
 	}
 
 	update(object) {
@@ -64,9 +63,9 @@ export default class Reference {
 		});
 	}
 
-	delete() {
+	async delete() {
 		if (this.isCollection) throw Error("Can't delete a collection");
-		return this.db.fetch(this.endpoint, { method: 'DELETE' });
+		return await this.db.fetch(this.endpoint, { method: 'DELETE' });
 	}
 
 	query(options = {}) {
