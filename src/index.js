@@ -40,7 +40,7 @@ export default class Database {
 				// If the request failed due to outdated auth credentials,
 				// and authentication was used to make the request, then try to
 				// refresh the credentials and then remake the request.
-				if (shouldAuthorize && error.message === 'Missing or invalid permissions.') {
+				if (shouldAuthorize && error.message === 'Missing or invalid authentication.') {
 					await this.auth.refreshIdToken();
 					return this.fetch(request);
 				}
