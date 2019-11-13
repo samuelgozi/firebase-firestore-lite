@@ -1,6 +1,7 @@
 import Query from './Query.js';
 import Document from './Document';
 import { objectToQuery, maskFromObject } from './utils.js';
+import List from './List.js';
 
 export default class Reference {
 	constructor(path, db) {
@@ -41,8 +42,7 @@ export default class Reference {
 
 	get(options) {
 		return this.db.fetch(this.endpoint + objectToQuery(options)).then(data => {
-			if (this.isCollection && 'documents' in data) return data.documents.map(rawDoc => new Document(rawDoc, this.db));
-			return new Document(data, this.db);
+			return this.isCollection ? new List(data, this, options) : new Document(data, this.db);
 		});
 	}
 

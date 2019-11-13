@@ -1,12 +1,16 @@
+/**
+ * Represents a collection list response, with functionality
+ * for getting the next page when available.
+ * @param {Object} rawList The response "raw" list object.
+ * @param {Reference} ref A reference to the collection.
+ * @param {Object} options Any options that were passed at first to the get request.
+ */
 export default class List {
-	static isRawList(data) {
-		return 'documents' in data && 'nextPageToken' in data;
-	}
-
-	constructor(rawList, ref, options) {
+	constructor(rawList, ref, options = {}) {
 		this.ref = ref;
 		this.options = options;
 		this.documents = rawList.documents.map(rawDoc => new Document(rawDoc), ref.db);
+		this.options.pageToken = rawList.nextPageToken;
 	}
 
 	getNextPage() {
