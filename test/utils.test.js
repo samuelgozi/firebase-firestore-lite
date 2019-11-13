@@ -6,8 +6,7 @@ import {
 	encode,
 	encodeValue,
 	decode,
-	decodeValue,
-	decodeMap
+	decodeValue
 } from '../src/utils.js';
 import { GeoPoint } from '../src/customTypes.js';
 import Reference from '../src/Reference.js';
@@ -140,31 +139,6 @@ describe('isRawDocument', () => {
 	});
 });
 
-describe('Decode', () => {
-	test('Throws when the passed object is not a raw document', () => {
-		const missingName = {
-			fields: {},
-			createTime: '2014-10-02T15:01:23.045123456Z',
-			updateTime: '2014-10-02T15:01:23.045123456Z'
-		};
-
-		const missingCreate = {
-			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
-			fields: {},
-			updateTime: '2014-10-02T15:01:23.045123456Z'
-		};
-
-		const missingUpdate = {
-			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
-			fields: {},
-			createTime: '2014-10-02T15:01:23.045123456Z'
-		};
-		expect(() => decode(missingName)).toThrow('Decode expects a RawDocument');
-		expect(() => decode(missingCreate)).toThrow('Decode expects a RawDocument');
-		expect(() => decode(missingUpdate)).toThrow('Decode expects a RawDocument');
-	});
-});
-
 describe('DecodeValue', () => {
 	test('Throws on invalid value', () => {
 		const invalid = {
@@ -238,7 +212,7 @@ describe('DecodeValue', () => {
 	});
 });
 
-describe('DecodeMap', () => {
+describe('Decode', () => {
 	test('Decodes a valid map', () => {
 		const map = {
 			fields: {
@@ -257,8 +231,8 @@ describe('DecodeMap', () => {
 			meaningOfLife: 42
 		};
 
-		expect(decodeMap({})).toEqual({});
-		expect(decodeMap(map)).toEqual(expected);
+		expect(decode({})).toEqual({});
+		expect(decode(map)).toEqual(expected);
 	});
 });
 

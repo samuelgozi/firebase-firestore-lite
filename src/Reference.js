@@ -1,5 +1,6 @@
 import Query from './Query.js';
-import { encode, objectToQuery, isDocumentPath, maskFromObject } from './utils.js';
+import Document from './Document';
+import { objectToQuery, maskFromObject } from './utils.js';
 
 export default class Reference {
 	constructor(path, db) {
@@ -13,7 +14,6 @@ export default class Reference {
 		this.name = `${db.rootPath}/${path}`;
 		this.endpoint = `${db.endpoint}/${path}`;
 		this.isRoot = path === '';
-		this.isCollection = !isDocumentPath(path);
 	}
 
 	get parent() {
@@ -27,6 +27,10 @@ export default class Reference {
 		return this.parent();
 	}
 
+	get isCollection() {
+		return this.path.split('/').length % 2 === 1;
+	}
+
 	child(path) {
 		// Remove starting forward slash
 		path = path.replace(/^\/?/, '');
@@ -38,34 +42,35 @@ export default class Reference {
 	get(options) {
 		return this.db.fetch(this.endpoint + objectToQuery(options)).then(data => {
 			if (this.isCollection && 'documents' in data) return data.documents.map(rawDoc => new Document(rawDoc, this.db));
-			return new Document(data);
+			return new Document(data, this.db);
 		});
 	}
 
-	async set(object) {
+	set(object) {
 		return this.db
 			.fetch(this.endpoint, {
 				// If this is a path to a specific document use
 				// patch instead, else, create a new document.
 				method: this.isCollection ? 'POST' : 'PATCH',
-				body: JSON.stringify(encode(object))
+				body: JSON.stringify(Document.encode(object))
 			})
-			.then(rawDoc => new Document(rawDoc));
+			.then(rawDoc => new Document(rawDoc, this.db));
 	}
 
 	update(object) {
 		if (this.isCollection) throw Error("Can't update a collection");
-		const query = objectToQuery({ updateMask: maskFromObject(object) });
 
-		return this.db.fetch(this.endpoint + query, {
-			method: 'PATCH',
-			body: JSON.stringify(encode(object))
-		});
+		return this.db
+			.fetch(`${this.endpoint}?${maskFromObject(object)}`, {
+				method: 'PATCH',
+				body: JSON.stringify(Document.encode(object))
+			})
+			.then(rawDoc => new Document(rawDoc, this.db));
 	}
 
-	async delete() {
+	delete() {
 		if (this.isCollection) throw Error("Can't delete a collection");
-		return await this.db.fetch(this.endpoint, { method: 'DELETE' });
+		return this.db.fetch(this.endpoint, { method: 'DELETE' });
 	}
 
 	query(options = {}) {
