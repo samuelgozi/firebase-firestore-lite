@@ -1,5 +1,5 @@
 import Query from './Query.js';
-import Document from './Document';
+import Document from './Document.js';
 import { objectToQuery, maskFromObject } from './utils.js';
 import List from './List.js';
 

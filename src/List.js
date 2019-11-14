@@ -1,3 +1,4 @@
+import Document from './Document.js';
 /**
  * Represents a collection list response, with functionality
  * for getting the next page when available.
@@ -9,7 +10,7 @@ export default class List {
 	constructor(rawList, ref, options = {}) {
 		this.ref = ref;
 		this.options = options;
-		this.documents = rawList.documents.map(rawDoc => new Document(rawDoc), ref.db);
+		this.documents = rawList.documents.map(rawDoc => new Document(rawDoc, ref.db));
 		this.options.pageToken = rawList.nextPageToken;
 	}
 
