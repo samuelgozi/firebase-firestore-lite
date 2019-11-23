@@ -84,6 +84,19 @@ describe('maskFromObject', () => {
 
 		expect(maskFromObject(obj)).toEqual(expected);
 	});
+
+	test('Arrays', () => {
+		const obj = {
+			one: ['one'],
+			two: {
+				one: 'one',
+				two: []
+			}
+		};
+		const expected = 'updateMask.fieldPaths=one&updateMask.fieldPaths=two.one&updateMask.fieldPaths=two.two';
+
+		expect(maskFromObject(obj)).toEqual(expected);
+	});
 });
 
 // describe('isRawDocument', () => {
