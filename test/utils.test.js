@@ -1,65 +1,55 @@
-import {
-	objectToQuery,
-	isDocumentPath,
-	maskFromObject,
-	isRawDocument,
-	encode,
-	encodeValue,
-	decode,
-	decodeValue
-} from '../src/utils.js';
-import { GeoPoint } from '../src/customTypes.js';
+import { maskFromObject } from '../src/utils.js';
+import GeoPoint from '../src/GeoPoint.js';
 import Reference from '../src/Reference.js';
 
-describe('objectToQuery', () => {
-	test('Returns an empty string when an empty object is passed', () => {
-		expect(objectToQuery({})).toEqual('');
-	});
+// describe('objectToQuery', () => {
+// 	test('Returns an empty string when an empty object is passed', () => {
+// 		expect(objectToQuery({})).toEqual('');
+// 	});
 
-	test('Returns an empty string when no nothing is passed', () => {
-		expect(objectToQuery()).toEqual('');
-	});
+// 	test('Returns an empty string when no nothing is passed', () => {
+// 		expect(objectToQuery()).toEqual('');
+// 	});
 
-	test('Returns correct string for one argument', () => {
-		expect(objectToQuery({ name: 'Samuel' })).toEqual('?name=Samuel');
-	});
+// 	test('Returns correct string for one argument', () => {
+// 		expect(objectToQuery({ name: 'Samuel' })).toEqual('?name=Samuel');
+// 	});
 
-	test('Returns correct string for multiple argument', () => {
-		expect(objectToQuery({ name: 'Samuel', address: 'somewhere' })).toEqual('?name=Samuel&address=somewhere');
-		expect(objectToQuery({ name: 'Samuel', address: 'somewhere', color: 'green' })).toEqual(
-			'?name=Samuel&address=somewhere&color=green'
-		);
-	});
+// 	test('Returns correct string for multiple argument', () => {
+// 		expect(objectToQuery({ name: 'Samuel', address: 'somewhere' })).toEqual('?name=Samuel&address=somewhere');
+// 		expect(objectToQuery({ name: 'Samuel', address: 'somewhere', color: 'green' })).toEqual(
+// 			'?name=Samuel&address=somewhere&color=green'
+// 		);
+// 	});
 
-	test('Skips over undefined values', () => {
-		expect(objectToQuery({ name: 'Samuel', address: undefined })).toEqual('?name=Samuel');
-	});
+// 	test('Skips over undefined values', () => {
+// 		expect(objectToQuery({ name: 'Samuel', address: undefined })).toEqual('?name=Samuel');
+// 	});
 
-	test('Encodes characters to URI standards', () => {
-		expect(objectToQuery({ path: 'such/path/much/escape?' })).toEqual('?path=such%2Fpath%2Fmuch%2Fescape%3F');
-	});
+// 	test('Encodes characters to URI standards', () => {
+// 		expect(objectToQuery({ path: 'such/path/much/escape?' })).toEqual('?path=such%2Fpath%2Fmuch%2Fescape%3F');
+// 	});
 
-	test('Encodes array into coma separated list', () => {
-		expect(objectToQuery({ list: ['one', 'two', 'three'] })).toEqual('?list=one,two,three');
-	});
-});
+// 	test('Encodes array into coma separated list', () => {
+// 		expect(objectToQuery({ list: ['one', 'two', 'three'] })).toEqual('?list=one,two,three');
+// 	});
+// });
 
-test('isDocumentPath', () => {
-	// slashes will be removed by the document constructor
-	// from the beginning and the end of a path string.
-	expect(isDocumentPath('users')).toEqual(false);
-	expect(isDocumentPath('users/username')).toEqual(true);
+// test('isDocumentPath', () => {
+// 	// slashes will be removed by the document constructor
+// 	// from the beginning and the end of a path string.
+// 	expect(isDocumentPath('users')).toEqual(false);
+// 	expect(isDocumentPath('users/username')).toEqual(true);
 
-	expect(isDocumentPath('users/username/posts')).toEqual(false);
-	expect(isDocumentPath('users/username/posts/entry')).toEqual(true);
-});
+// 	expect(isDocumentPath('users/username/posts')).toEqual(false);
+// 	expect(isDocumentPath('users/username/posts/entry')).toEqual(true);
+// });
 
 describe('maskFromObject', () => {
 	test('Empty object', () => {
 		const obj = {};
-		const expected = [];
+		const expected = '';
 
-		expect(isDocumentPath('users')).toEqual(false);
 		expect(maskFromObject(obj)).toEqual(expected);
 	});
 
@@ -70,9 +60,9 @@ describe('maskFromObject', () => {
 			three: 'three',
 			four: 'four'
 		};
-		const expected = ['one', 'two', 'three', 'four'];
+		const expected =
+			'updateMask.fieldPaths=one&updateMask.fieldPaths=two&updateMask.fieldPaths=three&updateMask.fieldPaths=four';
 
-		expect(isDocumentPath('users')).toEqual(false);
 		expect(maskFromObject(obj)).toEqual(expected);
 	});
 
@@ -89,282 +79,282 @@ describe('maskFromObject', () => {
 				}
 			}
 		};
-		const expected = ['one', 'two.one', 'two.two', 'three.one.one'];
+		const expected =
+			'updateMask.fieldPaths=one&updateMask.fieldPaths=two.one&updateMask.fieldPaths=two.two&updateMask.fieldPaths=three.one.one';
 
-		expect(isDocumentPath('users')).toEqual(false);
 		expect(maskFromObject(obj)).toEqual(expected);
 	});
 });
 
-describe('isRawDocument', () => {
-	test('Returns true for a valid document', () => {
-		const raw = {
-			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
-			fields: {},
-			createTime: '2014-10-02T15:01:23.045123456Z',
-			updateTime: '2014-10-02T15:01:23.045123456Z'
-		};
+// describe('isRawDocument', () => {
+// 	test('Returns true for a valid document', () => {
+// 		const raw = {
+// 			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
+// 			fields: {},
+// 			createTime: '2014-10-02T15:01:23.045123456Z',
+// 			updateTime: '2014-10-02T15:01:23.045123456Z'
+// 		};
 
-		const obj = {
-			test: 'testing...',
-			other: 'prop'
-		};
+// 		const obj = {
+// 			test: 'testing...',
+// 			other: 'prop'
+// 		};
 
-		expect(isRawDocument(raw)).toEqual(true);
-		expect(isRawDocument(obj)).toEqual(false);
-	});
+// 		expect(isRawDocument(raw)).toEqual(true);
+// 		expect(isRawDocument(obj)).toEqual(false);
+// 	});
 
-	test('Returns false when a document has missing props', () => {
-		const missingName = {
-			fields: {},
-			createTime: '2014-10-02T15:01:23.045123456Z',
-			updateTime: '2014-10-02T15:01:23.045123456Z'
-		};
+// 	test('Returns false when a document has missing props', () => {
+// 		const missingName = {
+// 			fields: {},
+// 			createTime: '2014-10-02T15:01:23.045123456Z',
+// 			updateTime: '2014-10-02T15:01:23.045123456Z'
+// 		};
 
-		const missingCreate = {
-			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
-			fields: {},
-			updateTime: '2014-10-02T15:01:23.045123456Z'
-		};
+// 		const missingCreate = {
+// 			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
+// 			fields: {},
+// 			updateTime: '2014-10-02T15:01:23.045123456Z'
+// 		};
 
-		const missingUpdate = {
-			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
-			fields: {},
-			createTime: '2014-10-02T15:01:23.045123456Z'
-		};
+// 		const missingUpdate = {
+// 			name: 'projects/{project_id}/databases/{database_id}/documents/{document_path}.',
+// 			fields: {},
+// 			createTime: '2014-10-02T15:01:23.045123456Z'
+// 		};
 
-		expect(isRawDocument(missingName)).toEqual(false);
-		expect(isRawDocument(missingCreate)).toEqual(false);
-		expect(isRawDocument(missingUpdate)).toEqual(false);
-	});
-});
+// 		expect(isRawDocument(missingName)).toEqual(false);
+// 		expect(isRawDocument(missingCreate)).toEqual(false);
+// 		expect(isRawDocument(missingUpdate)).toEqual(false);
+// 	});
+// });
 
-describe('DecodeValue', () => {
-	test('Throws on invalid value', () => {
-		const invalid = {
-			invalidType: 'eww...'
-		};
+// describe('DecodeValue', () => {
+// 	test('Throws on invalid value', () => {
+// 		const invalid = {
+// 			invalidType: 'eww...'
+// 		};
 
-		expect(() => decodeValue(invalid)).toThrow('Invalid Firestore value_type "invalidType"');
-	});
+// 		expect(() => decodeValue(invalid)).toThrow('Invalid Firestore value_type "invalidType"');
+// 	});
 
-	test('Simple Types', () => {
-		const string = {
-			stringValue: 'hello world!'
-		};
+// 	test('Simple Types', () => {
+// 		const string = {
+// 			stringValue: 'hello world!'
+// 		};
 
-		const integer = {
-			integerValue: 42
-		};
+// 		const integer = {
+// 			integerValue: 42
+// 		};
 
-		const double = {
-			integerValue: 42.2
-		};
+// 		const double = {
+// 			integerValue: 42.2
+// 		};
 
-		const nullVal = {
-			nullValue: null
-		};
+// 		const nullVal = {
+// 			nullValue: null
+// 		};
 
-		expect(decodeValue(string)).toEqual('hello world!');
-		expect(decodeValue(integer)).toEqual(42);
-		expect(decodeValue(double)).toEqual(42.2);
-		expect(decodeValue(nullVal)).toEqual(null);
-	});
+// 		expect(decodeValue(string)).toEqual('hello world!');
+// 		expect(decodeValue(integer)).toEqual(42);
+// 		expect(decodeValue(double)).toEqual(42.2);
+// 		expect(decodeValue(nullVal)).toEqual(null);
+// 	});
 
-	test('Array', () => {
-		const array = {
-			arrayValue: {
-				values: [
-					{
-						stringValue: 'hey there!'
-					},
-					{
-						integerValue: '42'
-					}
-				]
-			}
-		};
+// 	test('Array', () => {
+// 		const array = {
+// 			arrayValue: {
+// 				values: [
+// 					{
+// 						stringValue: 'hey there!'
+// 					},
+// 					{
+// 						integerValue: '42'
+// 					}
+// 				]
+// 			}
+// 		};
 
-		expect(decodeValue(array)).toEqual(['hey there!', 42]);
-	});
+// 		expect(decodeValue(array)).toEqual(['hey there!', 42]);
+// 	});
 
-	test('Map', () => {
-		const map = {
-			mapValue: {
-				fields: {
-					hello: {
-						stringValue: 'world'
-					},
+// 	test('Map', () => {
+// 		const map = {
+// 			mapValue: {
+// 				fields: {
+// 					hello: {
+// 						stringValue: 'world'
+// 					},
 
-					meaningOfLife: {
-						integerValue: '42'
-					}
-				}
-			}
-		};
+// 					meaningOfLife: {
+// 						integerValue: '42'
+// 					}
+// 				}
+// 			}
+// 		};
 
-		const expected = {
-			hello: 'world',
-			meaningOfLife: 42
-		};
+// 		const expected = {
+// 			hello: 'world',
+// 			meaningOfLife: 42
+// 		};
 
-		expect(decodeValue(map)).toEqual(expected);
-	});
-});
+// 		expect(decodeValue(map)).toEqual(expected);
+// 	});
+// });
 
-describe('Decode', () => {
-	test('Decodes a valid map', () => {
-		const map = {
-			fields: {
-				hello: {
-					stringValue: 'world'
-				},
+// describe('Decode', () => {
+// 	test('Decodes a valid map', () => {
+// 		const map = {
+// 			fields: {
+// 				hello: {
+// 					stringValue: 'world'
+// 				},
 
-				meaningOfLife: {
-					integerValue: '42'
-				}
-			}
-		};
+// 				meaningOfLife: {
+// 					integerValue: '42'
+// 				}
+// 			}
+// 		};
 
-		const expected = {
-			hello: 'world',
-			meaningOfLife: 42
-		};
+// 		const expected = {
+// 			hello: 'world',
+// 			meaningOfLife: 42
+// 		};
 
-		expect(decode({})).toEqual({});
-		expect(decode(map)).toEqual(expected);
-	});
-});
+// 		expect(decode({})).toEqual({});
+// 		expect(decode(map)).toEqual(expected);
+// 	});
+// });
 
-describe('EncodeValue', () => {
-	test('Encodes simple values', () => {
-		const string = {
-			stringValue: 'hello world'
-		};
+// describe('EncodeValue', () => {
+// 	test('Encodes simple values', () => {
+// 		const string = {
+// 			stringValue: 'hello world'
+// 		};
 
-		const integer = {
-			integerValue: '42'
-		};
+// 		const integer = {
+// 			integerValue: '42'
+// 		};
 
-		const double = {
-			doubleValue: '42.2'
-		};
+// 		const double = {
+// 			doubleValue: '42.2'
+// 		};
 
-		const nullVal = {
-			nullValue: null
-		};
+// 		const nullVal = {
+// 			nullValue: null
+// 		};
 
-		expect(encodeValue('hello world')).toEqual(string);
-		expect(encodeValue(42)).toEqual(integer);
-		expect(encodeValue(42.2)).toEqual(double);
-		expect(encodeValue(null)).toEqual(nullVal);
-	});
+// 		expect(encodeValue('hello world')).toEqual(string);
+// 		expect(encodeValue(42)).toEqual(integer);
+// 		expect(encodeValue(42.2)).toEqual(double);
+// 		expect(encodeValue(null)).toEqual(nullVal);
+// 	});
 
-	test('Arrays', () => {
-		const expected = {
-			arrayValue: {
-				values: [
-					{
-						stringValue: 'hello world'
-					},
-					{
-						integerValue: '42'
-					},
-					{
-						doubleValue: '42.2'
-					},
-					{
-						nullValue: null
-					}
-				]
-			}
-		};
+// 	test('Arrays', () => {
+// 		const expected = {
+// 			arrayValue: {
+// 				values: [
+// 					{
+// 						stringValue: 'hello world'
+// 					},
+// 					{
+// 						integerValue: '42'
+// 					},
+// 					{
+// 						doubleValue: '42.2'
+// 					},
+// 					{
+// 						nullValue: null
+// 					}
+// 				]
+// 			}
+// 		};
 
-		expect(encodeValue(['hello world', 42, 42.2, null])).toEqual(expected);
-		expect(encodeValue([])).toEqual({ arrayValue: { values: [] } });
-	});
+// 		expect(encodeValue(['hello world', 42, 42.2, null])).toEqual(expected);
+// 		expect(encodeValue([])).toEqual({ arrayValue: { values: [] } });
+// 	});
 
-	test('Maps', () => {
-		const obj = {
-			string: 'hello world',
-			integer: 42,
-			double: 42.2,
-			nullVal: null
-		};
+// 	test('Maps', () => {
+// 		const obj = {
+// 			string: 'hello world',
+// 			integer: 42,
+// 			double: 42.2,
+// 			nullVal: null
+// 		};
 
-		const expected = {
-			mapValue: {
-				fields: {
-					string: {
-						stringValue: 'hello world'
-					},
-					integer: {
-						integerValue: '42'
-					},
-					double: {
-						doubleValue: '42.2'
-					},
-					nullVal: {
-						nullValue: null
-					}
-				}
-			}
-		};
+// 		const expected = {
+// 			mapValue: {
+// 				fields: {
+// 					string: {
+// 						stringValue: 'hello world'
+// 					},
+// 					integer: {
+// 						integerValue: '42'
+// 					},
+// 					double: {
+// 						doubleValue: '42.2'
+// 					},
+// 					nullVal: {
+// 						nullValue: null
+// 					}
+// 				}
+// 			}
+// 		};
 
-		expect(encodeValue(obj)).toEqual(expected);
-	});
+// 		expect(encodeValue(obj)).toEqual(expected);
+// 	});
 
-	test('Timestamps', () => {
-		const time = new Date();
-		const expected = {
-			timestampValue: time.toISOString()
-		};
+// 	test('Timestamps', () => {
+// 		const time = new Date();
+// 		const expected = {
+// 			timestampValue: time.toISOString()
+// 		};
 
-		expect(encodeValue(time)).toEqual(expected);
-	});
+// 		expect(encodeValue(time)).toEqual(expected);
+// 	});
 
-	test('References', () => {
-		const ref = new Reference('/path/to/document', { rootPath: '' });
-		const expected = {
-			referenceValue: '/path/to/document'
-		};
+// 	test('References', () => {
+// 		const ref = new Reference('/path/to/document', { rootPath: '' });
+// 		const expected = {
+// 			referenceValue: '/path/to/document'
+// 		};
 
-		expect(encodeValue(ref)).toEqual(expected);
-	});
+// 		expect(encodeValue(ref)).toEqual(expected);
+// 	});
 
-	test('GeoPoints', () => {
-		const geoPoint = new GeoPoint(50, 23);
-		const expected = {
-			geoPointValue: {
-				latitude: 50,
-				longitude: 23
-			}
-		};
+// 	test('GeoPoints', () => {
+// 		const geoPoint = new GeoPoint(50, 23);
+// 		const expected = {
+// 			geoPointValue: {
+// 				latitude: 50,
+// 				longitude: 23
+// 			}
+// 		};
 
-		expect(encodeValue(geoPoint)).toEqual(expected);
-	});
-});
+// 		expect(encodeValue(geoPoint)).toEqual(expected);
+// 	});
+// });
 
-describe('EncodeMap', () => {
-	test('Encodes a valid map', () => {
-		const obj = {
-			hello: 'world',
-			meaningOfLife: 42
-		};
+// describe('EncodeMap', () => {
+// 	test('Encodes a valid map', () => {
+// 		const obj = {
+// 			hello: 'world',
+// 			meaningOfLife: 42
+// 		};
 
-		const expected = {
-			fields: {
-				hello: {
-					stringValue: 'world'
-				},
+// 		const expected = {
+// 			fields: {
+// 				hello: {
+// 					stringValue: 'world'
+// 				},
 
-				meaningOfLife: {
-					integerValue: '42'
-				}
-			}
-		};
+// 				meaningOfLife: {
+// 					integerValue: '42'
+// 				}
+// 			}
+// 		};
 
-		expect(encode({})).toEqual({});
-		expect(encode(obj)).toEqual(expected);
-	});
-});
+// 		expect(encode({})).toEqual({});
+// 		expect(encode(obj)).toEqual(expected);
+// 	});
+// });

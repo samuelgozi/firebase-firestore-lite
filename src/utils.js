@@ -33,7 +33,7 @@ export function isValidNumber(val) {
  * @returns {string}
  */
 export function objectToQuery(obj = {}) {
-	let propsArr = [];
+	let props = [];
 
 	for (let prop in obj) {
 		if (obj[prop] === undefined) continue; // Skip over undefined props.
@@ -43,29 +43,42 @@ export function objectToQuery(obj = {}) {
 			? obj[prop].map(val => encodeURIComponent(val)).join()
 			: encodeURIComponent(obj[prop]);
 
-		propsArr.push(`${prop}=${encodedValue}`);
+		props.push(`${prop}=${encodedValue}`);
 	}
 
-	return propsArr.length === 0 ? '' : `?${propsArr.join('&')}`;
+	return props.length === 0 ? '' : `?${props.join('&')}`;
 }
 
 /**
- * Returns an array of field paths
- * for a provided object.
+ * Returns an array of keyPaths of an object.
+ * Skips over arrays values.
+ * @param {Object} object The object to return its key paths.
+ * @param {string} parentPath The parent path. used on recursive calls.
+ * @returns {string[]}
  */
-export function maskFromObject(object, parentPath) {
+function getKeyPaths(object, parentPath) {
 	let mask = [];
 
 	for (const key in object) {
 		const keyPath = parentPath ? `${parentPath}.${key}` : key;
 
-		if (typeof object[key] === 'object') {
-			mask = [...mask, ...maskFromObject(object[key], keyPath)];
+		if (typeof object[key] === 'object' && !Array.isArray(object[key])) {
+			mask = mask.concat(getKeyPaths(object[key], keyPath));
 			continue;
 		}
 
 		mask.push(keyPath);
 	}
 
-	return mask.map(p => `updateMask.fieldPaths=${p}`).join('&');
+	return mask;
+}
+
+/**
+ * Returns a string that represents a query parameter field mask.
+ * @param {Object} object
+ */
+export function maskFromObject(object = {}) {
+	return getKeyPaths(object)
+		.map(p => `updateMask.fieldPaths=${p}`)
+		.join('&');
 }
