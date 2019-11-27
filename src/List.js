@@ -8,10 +8,11 @@ import Document from './Document.js';
  */
 export default class List {
 	constructor(rawList, ref, options = {}) {
+		const { documents, nextPageToken } = rawList;
 		this.ref = ref;
 		this.options = options;
-		this.documents = rawList.documents.map(rawDoc => new Document(rawDoc, ref.db));
-		this.options.pageToken = rawList.nextPageToken;
+		this.documents = documents ? rawList.documents.map(rawDoc => new Document(rawDoc, ref.db)) : [];
+		this.options.pageToken = nextPageToken;
 	}
 
 	getNextPage() {

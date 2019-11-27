@@ -1,5 +1,6 @@
 import Reference from './Reference.js';
 import Document from './Document';
+import { isDocReference } from './utils.js';
 
 const ENDPOINT = 'https://firestore.googleapis.com/v1beta1/';
 
@@ -58,19 +59,21 @@ export default class Database {
 	/**
 	 * Gets multiple documents.
 	 * Documents returned are not guaranteed to be in th same order as requested.
-	 * @param {Reference[]} referencesArray Array of references to retrieve.
+	 * @param {Reference[]} references Array of references to retrieve.
 	 * @returns {Promise}
 	 */
-	batchGet(referencesArray) {
-		const documents = referencesArray.map(ref => {
-			if ('path' in ref) throw Error('batchGet expects an array of references');
-			return ref.path;
+	async batchGet(references) {
+		const documents = references.map(ref => {
+			if (!isDocReference(ref)) throw Error('Array contains something other then References to documents');
+			return ref.name;
 		});
 
-		return this.fetch(this.endpoint + ':batchGet', {
+		const response = await this.fetch(this.endpoint + ':batchGet', {
 			method: 'POST',
 			body: JSON.stringify({ documents })
 		});
+
+		return response.map(entry => ('found' in entry ? new Document(entry.found, this) : entry));
 	}
 
 	/**
