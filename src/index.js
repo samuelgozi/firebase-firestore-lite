@@ -25,35 +25,12 @@ export default class Database {
 	 * @param {Request|Object|string} resource the resource to send the request to, or an options object.
 	 * @param {Object} init an options object.
 	 */
-	fetch(resource, init) {
-		const request = resource instanceof Request ? resource : new Request(resource, init);
-		const shouldAuthorize = this.auth && this.auth.authorizeRequest;
-
-		if (shouldAuthorize) {
-			this.auth.authorizeRequest(request);
+	fetch() {
+		if (this.auth && this.auth.authorizedRequest) {
+			return this.auth.authorizedRequest(...arguments).then(response => response.json());
 		}
 
-		return fetch(request.clone()).then(async response => {
-			const data = await response.json();
-
-			if (!response.ok) {
-				const error = data.error;
-				// If the request failed due to outdated auth credentials,
-				// and authentication was used to make the request, then try to
-				// refresh the credentials and then remake the request.
-				if (shouldAuthorize && error.message === 'Missing or invalid authentication.') {
-					await this.auth.refreshIdToken();
-					return this.fetch(request);
-				}
-
-				if (Array.isArray[data]) {
-					throw data.length === 1 ? Error(data[0].error.message) : data;
-				}
-				throw Error(data.error.message);
-			}
-
-			return data;
-		});
+		return fetch(...arguments).then(response => response.json());
 	}
 
 	/**
