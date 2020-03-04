@@ -80,7 +80,7 @@ yarn add firebase-firestore-lite
 
 ### Import and initialize an instance
 
-You don't have to use authentication in order to use this library.
+It is possible to use authentication but not neccesary.
 First I'll show you how to use it without it:
 
 ```js
@@ -92,7 +92,7 @@ const db = new Firestore({ projectId: 'nano-inventory' });
 
 Now you can start working with the Firestore database, but of course, only if the firebase permissions allow it.
 
-Most apps don't let anyone access the database. If you want to access the database as an authenticated user it can be done with the ["firebase-auth-lite"](https://github.com/samuelgozi/firebase-auth-lite) package. Here's how:
+Most apps don't let everyone access the database. If you want to access the database as an authenticated user it can be done with the ["firebase-auth-lite"](https://github.com/samuelgozi/firebase-auth-lite) package. Here's how:
 
 ```js
 import Firestore from 'firebase-firestore-lite';
