@@ -10,7 +10,10 @@ import { isDocReference, isColReference, isValidNumber } from './utils.js';
 
 /**
  * Options object for a Query class.
- * @typedef {[string, string, string]} FilterOption
+ * @typedef {array} FilterOption
+ * @property {string} 0 - property name
+ * @property {string} 1 - operator
+ * @property {string} 2 - value to compare
  */
 
 /**
@@ -72,7 +75,7 @@ function isFilter(filter) {
 	].some((fn, i) => fn(filter[i]));
 }
 
-/**
+/*
  * A map of functions used to encode each argument for a query.
  * Each function receives the Library arguments and returns an object
  * that will be converted to Json and sent to the Firestore REST API.

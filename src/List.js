@@ -15,6 +15,10 @@ export default class List {
 		this.options.pageToken = nextPageToken;
 	}
 
+	/**
+	 * Fetches the next page in the query.
+	 * @returns {List} Next page results.
+	 */
 	getNextPage() {
 		return this.ref.get(this.options);
 	}

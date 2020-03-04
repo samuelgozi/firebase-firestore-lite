@@ -19,6 +19,7 @@ export default class Database {
 	}
 
 	/**
+	 * For internal use only.
 	 * Uses native fetch, but adds authorization headers
 	 * if the Reference was instantiated with an auth instance.
 	 * The API is exactly the same as native fetch.
