@@ -26,9 +26,8 @@ export default class Database {
 	 * @param {Object} init an options object.
 	 */
 	fetch() {
-		if (this.auth && this.auth.authorizedRequest) {
+		if (this.auth && this.auth.authorizedRequest)
 			return this.auth.authorizedRequest(...arguments).then(response => response.json());
-		}
 
 		return fetch(...arguments).then(response => response.json());
 	}
