@@ -112,7 +112,7 @@ const db = new Firestore({ projectId: 'nano-inventory', auth });
 
 Now you are ready to go with authentication.
 
-# API
+## API Reference
 
 The API reference can be found in the wiki of this repo.
 
@@ -124,6 +124,6 @@ And lastly there are "Helper types" which are classes that represent results fro
 
 Don't worry, there is not much to learn, and most of it is pretty intuitive anyways.
 
-# Contributing
+## Contributing
 
 I very much welcome any contribution. Grammar issues, docs, examples, features requests, and code. Please feel free to open an issue and ask anything.
