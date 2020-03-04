@@ -112,6 +112,49 @@ const db = new Firestore({ projectId: 'nano-inventory', auth });
 
 Now you are ready to go with authentication.
 
+### Working with references
+
+In order to work with data on the database, we need to use and understand the "Reference" instance.
+A Reference represents a document in the database that we didn't necessarily download, and it doesn't really have to exist.
+We can create a reference to a document or a collection that doesn't exist and later create them, and we can also create a reference to a document that exists and delete or update it without reading it.
+
+A reference can point to a document or a collection, and after creating one we will have some methods and properties that will help us manipulate and navigate the data it represents.
+
+Lets create one:
+
+```js
+// Reference to a collection
+const usersCollection = db.reference('users');
+
+// Reference to a document
+const samuel = db.reference('users/samuel');
+```
+
+Some times you don't want to write the whole path. You can also get a reference by the using child method or parent prop.
+
+```js
+// Get the parent collection/document.
+// Returns a reference.
+const root = usersCollection.parent; // Now point to the root of the database.
+
+// Or you can get a child collection/document
+const daniel = usersCollection.child('daniel'); // Same as doing db.reference('users/daniel');
+```
+
+You can also jump right away to the nearest parent collection:
+
+```js
+daniel.parentCollection; // Points to "users"
+```
+
+If you are not sure whether your reference point to an object or a collection you can always check it with the `isCollection` prop.
+
+```js
+daniel.isCollection; // will be false.
+```
+
+### Writing data
+
 ## API Reference
 
 The API reference can be found in the wiki of this repo.
