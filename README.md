@@ -1,14 +1,16 @@
 # Firebase Cloud Firestore lite (currently being built)
 
 This project goal is to provide an alternative library to the official Firestore JS SDK.
-The problem with the official library is that it is too heavy (30kb at the time of the writing),
-and if you include the Auth library as well, and firebase.app(which you have too), then it could add up to hundreds
-of kilobytes without any app logic...
+The problem with the official library is that it is too heavy ([92kb at the time of writing](https://bundlephobia.com/result?p=@firebase/firestore@1.11.2)),
+and if you include the Auth library as well, and `firebase/app`(which you have too), then it could [add up to hundreds
+of kilobytes without any app logic](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks#sizes-and-loading-times)...
+
+[Our Alternative SDK performs in average 13 times better and is 27 times smaller than the official ones](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks).
 
 ## What will we give up for a lighter bundle?
 
-Hopefully nothing, but as it seems right now I will leave the "real time" part for last, and the API might be a bit different.
-About browser support, I'm thinking about targeting only "evergreen" ones, but im not sure about that yet.
+Hopefully nothing, but as it seems right now I will leave the "real time" and "offline support" parts for last, and the API might be a bit different.
+And the browser support, will be targeting only "evergreen" ones.
 
 ## Roadmap
 
@@ -153,7 +155,8 @@ If you are not sure whether your reference point to an object or a collection yo
 daniel.isCollection; // will be false.
 ```
 
-### Writing data
+### Reading and Writing data
+[TODO]
 
 ## API Reference
 
