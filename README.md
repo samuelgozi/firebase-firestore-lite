@@ -1,4 +1,4 @@
-# Firebase Cloud Firestore lite (currently being built)
+# Firebase Cloud Firestore lite(WIP)
 
 This project goal is to provide an alternative library to the official Firestore JS SDK.
 The problem with the official library is that it is too heavy ([92kb at the time of writing](https://bundlephobia.com/result?p=@firebase/firestore@1.11.2)),
