@@ -1056,7 +1056,6 @@ ajv@^6.10.0, ajv@^6.10.2, ajv@^6.5.5:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-
 ansi-escapes@^4.2.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/ansi-escapes/-/ansi-escapes-4.3.1.tgz#a5c47cc43181f1f38ffd7076837700d395522a61"
@@ -2774,6 +2773,18 @@ jest-message-util@^25.1.0:
     micromatch "^4.0.2"
     slash "^3.0.0"
     stack-utils "^1.0.1"
+
+jest-mock-fetch@^1.0.9:
+  version "1.0.9"
+  resolved "https://registry.yarnpkg.com/jest-mock-fetch/-/jest-mock-fetch-1.0.9.tgz#e27b803ce770664de9644d393db158a0cb7ec3ff"
+  integrity sha512-v0QVQDIz7YcQRUNJSK1g8uYYb2Ab/sjezS4VydejlRUo/QT7oryDmPwiHBOrzWRmYCx8HefZl9A08EBAjWUPTA==
+  dependencies:
+    jest-mock-promise "^1.1.2"
+
+jest-mock-promise@^1.1.2:
+  version "1.1.10"
+  resolved "https://registry.yarnpkg.com/jest-mock-promise/-/jest-mock-promise-1.1.10.tgz#ab51bb15de62b8be4ad1527f7f519d9f2f2a912a"
+  integrity sha512-3TiZuTliAlF8xDeSbJGdCz+qCz2fQ1NH71Xw3meX9LC84D19dtMlG9Y1HNYQPk1FMji35SOMiwMZYR12NaKVpQ==
 
 jest-mock@^25.1.0:
   version "25.1.0"

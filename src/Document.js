@@ -142,13 +142,11 @@ export default class Document {
 			name,
 			createTime: new Date(createTime),
 			updateTime: new Date(updateTime),
-			path: name.replace(db.endpoint, ''),
+			path: name.replace(db.rootPath, ''),
 			id: name.split('/').pop()
 		};
 
-		Object.defineProperty(this, '__meta__', {
-			value: meta
-		});
+		Object.defineProperty(this, '__meta__', { value: meta });
 
 		Object.assign(this, Document.decode(rawDoc));
 	}
