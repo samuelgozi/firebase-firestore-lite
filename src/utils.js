@@ -2,15 +2,6 @@ import Reference from './Reference.js';
 import GeoPoint from './GeoPoint.js';
 
 /**
- * Checks if a value is a Reference to a Document.
- * @param {*} val A the value to check
- * @returns {boolean}
- */
-export function isDocReference(val) {
-	return val instanceof Reference && !val.isCollection;
-}
-
-/**
  * Returns true if an object is a "raw" firebase document.
  * @param {Object} document the object/document to test
  * @returns {boolean}
@@ -29,6 +20,15 @@ export function isRawDocument(document) {
 }
 
 /**
+ * Checks if a value is a Reference to a Document.
+ * @param {*} val A the value to check
+ * @returns {boolean}
+ */
+export function isDocReference(val) {
+	return val instanceof Reference && !val.isCollection;
+}
+
+/**
  * Checks if a value is a Reference to a Collection.
  * @param {*} val A the value to check
  * @returns {boolean}
@@ -42,7 +42,7 @@ export function isColReference(val) {
  * @param {*} val the value to check
  * @returns {boolean}
  */
-export function isValidNumber(val) {
+export function isPositiveInteger(val) {
 	return Number.isInteger(val) && val >= 0;
 }
 
@@ -52,7 +52,7 @@ export function isValidNumber(val) {
  * @returns {string}
  */
 export function objectToQuery(obj = {}) {
-	let props = [];
+	const props = [];
 
 	for (let prop in obj) {
 		if (obj[prop] === undefined) continue; // Skip over undefined props.
@@ -109,8 +109,6 @@ export function maskFromObject(object = {}) {
  * @returns {any} JS representation of the value
  */
 function decodeValue(value, db) {
-	if (db === undefined) throw Error("Argument 'db' is required but missing.");
-
 	// Get the value type.
 	const type = Object.keys(value)[0];
 	// Replace the firebase raw value, with actual value inside of it.
@@ -147,6 +145,8 @@ function decodeValue(value, db) {
 		case 'bytesValue':
 			return value;
 	}
+
+	console.log(type);
 
 	// If none matched throw.
 	throw Error(`Invalid Firestore value_type "${type}"`);

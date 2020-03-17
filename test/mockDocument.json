@@ -8,13 +8,13 @@
 			"booleanValue": false
 		},
 		"integer": {
-			"integerValue": 42
+			"integerValue": "42"
 		},
 		"double": {
-			"doubleValue": 4.2
+			"doubleValue": "4.2"
 		},
 		"timestamp": {
-			"timestampValue": "2019-10-10T14:00:00.617973Z"
+			"timestampValue": "2019-10-10T14:00:00.617Z"
 		},
 		"string": {
 			"stringValue": "This is a string"
@@ -38,13 +38,13 @@
 						"booleanValue": false
 					},
 					{
-						"integerValue": 42
+						"integerValue": "42"
 					},
 					{
-						"doubleValue": 4.2
+						"doubleValue": "4.2"
 					},
 					{
-						"timestampValue": "2019-10-10T14:00:00.617973Z"
+						"timestampValue": "2019-10-10T14:00:00.617Z"
 					},
 					{
 						"stringValue": "This is a string"
@@ -85,13 +85,13 @@
 						"booleanValue": false
 					},
 					"integer": {
-						"integerValue": 42
+						"integerValue": "42"
 					},
 					"double": {
-						"doubleValue": 4.2
+						"doubleValue": "4.2"
 					},
 					"timestamp": {
-						"timestampValue": "2019-10-10T14:00:00.617973Z"
+						"timestampValue": "2019-10-10T14:00:00.617Z"
 					},
 					"string": {
 						"stringValue": "This is a string"

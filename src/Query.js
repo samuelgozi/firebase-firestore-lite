@@ -1,4 +1,4 @@
-import { isDocReference, isColReference, isValidNumber, encodeValue } from './utils.js';
+import { isDocReference, isColReference, isPositiveInteger, encodeValue } from './utils.js';
 
 /**
  * Allowed types for the "from" option.
@@ -256,12 +256,12 @@ export default class Query {
 	}
 
 	offset(number) {
-		if (!isValidNumber(number)) throw Error('"offset" expects the argument to be a Integer that is greater than 0');
+		if (!isPositiveInteger(number)) throw Error('"offset" expects the argument to be a Integer that is greater than 0');
 		this.options.offset = number;
 	}
 
 	limit(number) {
-		if (!isValidNumber(number)) throw Error('"limit" expects the argument to be a Integer that is greater than 0');
+		if (!isPositiveInteger(number)) throw Error('"limit" expects the argument to be a Integer that is greater than 0');
 		this.options.limit = number;
 	}
 
