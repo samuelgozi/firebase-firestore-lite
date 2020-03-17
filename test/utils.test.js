@@ -1,8 +1,9 @@
-import { maskFromObject, isDocReference } from '../src/utils.js';
-import GeoPoint from '../src/GeoPoint.js';
+import { maskFromObject, isDocReference, isRawDocument, encode, decode } from '../src/utils.js';
 import Reference from '../src/Reference.js';
+import firestoreDocument from './mockDocument.json';
+import decodedDocument from './decodedMockedDocument.js';
 
-const db = { rootPath: 'root', endpoint: 'endpoint' };
+const db = { rootPath: 'projects/projectId/databases/(default)/documents', endpoint: 'endpoint' };
 
 describe('isDocReference', () => {
 	test('Should throw when the value is not a document', () => {
@@ -73,5 +74,55 @@ describe('maskFromObject', () => {
 		const expected = 'updateMask.fieldPaths=one&updateMask.fieldPaths=two.one&updateMask.fieldPaths=two.two';
 
 		expect(maskFromObject(obj)).toEqual(expected);
+	});
+});
+
+describe('isRawDocument', () => {
+	test('Returns false when object is not a firebase doc', () => {
+		expect(
+			isRawDocument({
+				hi: 'there!'
+			})
+		).toEqual(false);
+
+		expect(
+			isRawDocument({
+				name: 'testing'
+			})
+		).toEqual(false);
+
+		expect(isRawDocument(new Date())).toEqual(false);
+		expect(isRawDocument([])).toEqual(false);
+		expect(isRawDocument('string')).toEqual(false);
+		expect(isRawDocument(123)).toEqual(false);
+	});
+
+	test('Returns true when the object has the required props', () => {
+		expect(
+			isRawDocument({
+				name: 'test',
+				createTime: 'test',
+				updateTime: 'test'
+			})
+		).toEqual(true);
+
+		expect(
+			isRawDocument({
+				name: 'test',
+				fields: '',
+				createTime: 'test',
+				updateTime: 'test'
+			})
+		).toEqual(true);
+	});
+});
+
+describe('Decode', () => {
+	test('Throw when database argument is missing', () => {
+		expect(() => decode(firestoreDocument)).toThrow();
+	});
+
+	test('Types', () => {
+		expect(decode(firestoreDocument, db)).toEqual(decodedDocument);
 	});
 });

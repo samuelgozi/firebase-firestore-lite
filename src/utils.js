@@ -1,4 +1,5 @@
 import Reference from './Reference.js';
+import GeoPoint from './GeoPoint.js';
 
 /**
  * Checks if a value is a Reference to a Document.
@@ -7,6 +8,24 @@ import Reference from './Reference.js';
  */
 export function isDocReference(val) {
 	return val instanceof Reference && !val.isCollection;
+}
+
+/**
+ * Returns true if an object is a "raw" firebase document.
+ * @param {Object} document the object/document to test
+ * @returns {boolean}
+ */
+export function isRawDocument(document) {
+	if (typeof document !== 'object') return false;
+
+	// A Firestore document must have these three keys.
+	// The fields key is optional.
+	// https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents
+	for (let fieldName of ['name', 'createTime', 'updateTime']) {
+		if (!(fieldName in document)) return false;
+	}
+
+	return true;
 }
 
 /**
@@ -81,4 +100,134 @@ export function maskFromObject(object = {}) {
 	return getKeyPaths(object)
 		.map(p => `updateMask.fieldPaths=${p}`)
 		.join('&');
+}
+
+/**
+ * Decodes a Firebase Value into a JS one.
+ * @param {Object} firestoreValue Raw Firestore value
+ * @param {Object} db The database instance to use in References.
+ * @returns {any} JS representation of the value
+ */
+function decodeValue(value, db) {
+	if (db === undefined) throw Error("Argument 'db' is required but missing.");
+
+	// Get the value type.
+	const type = Object.keys(value)[0];
+	// Replace the firebase raw value, with actual value inside of it.
+	value = value[type];
+
+	// Some values need to be handled in a specific way,
+	// check if this is one of them, and return the value.
+	switch (type) {
+		case 'doubleValue':
+		case 'integerValue':
+			return Number(value);
+
+		case 'arrayValue':
+			return value.values.map(val => decodeValue(val, db));
+
+		case 'mapValue':
+			return decode(value, db);
+
+		case 'timestampValue':
+			return new Date(value);
+
+		case 'referenceValue':
+			return new Reference(value.replace(db.rootPath, ''), db);
+
+		case 'geoPointValue':
+			return new GeoPoint(value.latitude, value.longitude);
+
+		// These are the rest of the values.
+		// We include all of them instead of using 'default:'
+		// because we use it as validation.
+		case 'stringValue':
+		case 'booleanValue':
+		case 'nullValue':
+		case 'bytesValue':
+			return value;
+	}
+
+	// If none matched throw.
+	throw Error(`Invalid Firestore value_type "${type}"`);
+}
+
+/**
+ * Decodes a map into a JS object
+ * @param {Object} map The map value to decode
+ * @param {Object} db DB instance to use in references.
+ * @returns {Object}
+ */
+export function decode(map, db) {
+	if (db === undefined) throw Error("Argument 'db' is required but missing.");
+
+	const object = {};
+	for (const key in map.fields) {
+		object[key] = decodeValue(map.fields[key], db);
+	}
+
+	return object;
+}
+
+/**
+ * Encodes a JS variable into a Firebase Value.
+ * @param {any} value The variable to encode
+ * @returns {object}
+ */
+export function encodeValue(value) {
+	const objectClass = Object.prototype.toString.call(value);
+	let valueType = objectClass.substring(8, objectClass.length - 1).toLowerCase() + 'Value';
+
+	switch (valueType) {
+		case 'numberValue':
+			valueType = Number.isInteger(value) ? 'integerValue' : 'doubleValue';
+			value = String(value);
+			break;
+
+		case 'arrayValue':
+			value = { values: value.map(encodeValue) };
+			break;
+
+		case 'dateValue':
+			valueType = 'timestampValue';
+			value = value.toISOString();
+			break;
+
+		case 'objectValue':
+			// If the object is a custom type, then use its built in encoder
+			// and return it.
+			if ([Reference, GeoPoint].includes(value.constructor)) return value.toJSON();
+
+			// Else assume its intended to be a Map value.
+			valueType = 'mapValue';
+			value = encode(value);
+			break;
+	}
+
+	return {
+		[valueType]: value
+	};
+}
+
+/**
+ * Converts an object into a Firebase Map Value.
+ * @param {Object} object The object to encode
+ * @returns {Object}
+ */
+export function encode(object) {
+	const keys = Object.keys(object);
+
+	// If the object has no keys, then we don't
+	// need to add a 'fields' property.
+	// I'm not sure this matters, if I knew it didn't
+	// I would remove this if statement.
+	if (keys.length === 0) return {};
+
+	const map = { fields: {} };
+
+	for (const key of keys) {
+		map.fields[key] = encodeValue(object[key]);
+	}
+
+	return map;
 }

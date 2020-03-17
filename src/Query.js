@@ -1,5 +1,4 @@
-import Document from './Document.js';
-import { isDocReference, isColReference, isValidNumber } from './utils.js';
+import { isDocReference, isColReference, isValidNumber, encodeValue } from './utils.js';
 
 /**
  * Allowed types for the "from" option.
@@ -112,7 +111,7 @@ const encoders = {
 			fieldFilter: {
 				field: { fieldPath },
 				op: operators[op],
-				value: Document.encodeValue(value)
+				value: encodeValue(value)
 			}
 		};
 	},

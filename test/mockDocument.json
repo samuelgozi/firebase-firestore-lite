@@ -1,0 +1,128 @@
+{
+	"name": "projects/projectId/databases/(default)/documents/public/types",
+	"fields": {
+		"null": {
+			"nullValue": null
+		},
+		"boolean": {
+			"booleanValue": false
+		},
+		"integer": {
+			"integerValue": 42
+		},
+		"double": {
+			"doubleValue": 4.2
+		},
+		"timestamp": {
+			"timestampValue": "2019-10-10T14:00:00.617973Z"
+		},
+		"string": {
+			"stringValue": "This is a string"
+		},
+		"reference": {
+			"referenceValue": "projects/projectId/databases/(default)/documents/public/ref"
+		},
+		"geoPoint": {
+			"geoPointValue": {
+				"latitude": 30,
+				"longitude": 30
+			}
+		},
+		"array": {
+			"arrayValue": {
+				"values": [
+					{
+						"nullValue": null
+					},
+					{
+						"booleanValue": false
+					},
+					{
+						"integerValue": 42
+					},
+					{
+						"doubleValue": 4.2
+					},
+					{
+						"timestampValue": "2019-10-10T14:00:00.617973Z"
+					},
+					{
+						"stringValue": "This is a string"
+					},
+					{
+						"referenceValue": "projects/projectId/databases/(default)/documents/public/ref"
+					},
+					{
+						"geoPointValue": {
+							"latitude": 30,
+							"longitude": 30
+						}
+					},
+					{
+						"arrayValue": {
+							"values": [{ "stringValue": "one" }, { "stringValue": "two" }, { "stringValue": "three" }]
+						}
+					},
+					{
+						"mapValue": {
+							"fields": {
+								"one": { "stringValue": "one" },
+								"two": { "integerValue": "2" },
+								"three": { "doubleValue": "3.1" }
+							}
+						}
+					}
+				]
+			}
+		},
+		"map": {
+			"mapValue": {
+				"fields": {
+					"null": {
+						"nullValue": null
+					},
+					"boolean": {
+						"booleanValue": false
+					},
+					"integer": {
+						"integerValue": 42
+					},
+					"double": {
+						"doubleValue": 4.2
+					},
+					"timestamp": {
+						"timestampValue": "2019-10-10T14:00:00.617973Z"
+					},
+					"string": {
+						"stringValue": "This is a string"
+					},
+					"reference": {
+						"referenceValue": "projects/projectId/databases/(default)/documents/public/ref"
+					},
+					"geoPoint": {
+						"geoPointValue": {
+							"latitude": 30,
+							"longitude": 30
+						}
+					},
+					"array": {
+						"arrayValue": {
+							"values": [{ "stringValue": "one" }, { "stringValue": "two" }, { "stringValue": "three" }]
+						}
+					},
+					"map": {
+						"mapValue": {
+							"fields": {
+								"one": { "stringValue": "one" },
+								"two": { "integerValue": "2" },
+								"three": { "doubleValue": "3.1" }
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"createTime": "2019-10-10T14:00:00.617973Z",
+	"updateTime": "2019-10-10T14:44:42.885653Z"
+}
