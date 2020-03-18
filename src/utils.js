@@ -146,8 +146,6 @@ function decodeValue(value, db) {
 			return value;
 	}
 
-	console.log(type);
-
 	// If none matched throw.
 	throw Error(`Invalid Firestore value_type "${type}"`);
 }
@@ -159,7 +157,7 @@ function decodeValue(value, db) {
  * @returns {Object}
  */
 export function decode(map, db) {
-	if (db === undefined) throw Error("Argument 'db' is required but missing.");
+	if (db === undefined) throw Error('Argument "db" is required but missing');
 
 	const object = {};
 	for (const key in map.fields) {

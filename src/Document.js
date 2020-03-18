@@ -2,6 +2,7 @@ import { isRawDocument, decode } from './utils.js';
 
 export default class Document {
 	constructor(rawDoc, db) {
+		if (db === undefined) throw Error('Argument "db" is required but missing');
 		if (!isRawDocument(rawDoc)) throw Error('Invalid Firestore Document');
 
 		const { name, createTime, updateTime } = rawDoc;

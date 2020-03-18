@@ -1,13 +1,18 @@
 import Query from './Query.js';
 import Document from './Document.js';
-import { objectToQuery, maskFromObject } from './utils.js';
 import List from './List.js';
+import { objectToQuery, maskFromObject, encode } from './utils.js';
 
 export default class Reference {
 	constructor(path, db) {
+		if (db === undefined) throw Error('Argument "db" is required but missing');
+
 		// Normalize the path by removing slashes from
-		// the beginning or the end.
-		path = path.replace(/^\/?/, '').replace(/\/?$/, '');
+		// the beginning or the end and trimming spaces.
+		path = path
+			.trim()
+			.replace(/^\/?/, '')
+			.replace(/\/?$/, '');
 
 		this.id = path.split('/').pop();
 		this.db = db;
@@ -23,7 +28,7 @@ export default class Reference {
 	 */
 	get parent() {
 		if (this.isRoot) throw Error("Can't get parent of a root collection");
-		return new Reference(this.path.replace(/\/([^/]+)\/?$/, ''), this.db);
+		return new Reference(this.path.replace(/\/?([^/]+)\/?$/, ''), this.db);
 	}
 
 	/**
@@ -33,7 +38,7 @@ export default class Reference {
 	get parentCollection() {
 		if (this.isRoot) throw Error("Can't get parent of a root collection");
 		if (this.isCollection) return new Reference(this.path.replace(/(\/([^/]+)\/?){2}$|^([^/]+)$/, ''), this.db);
-		return this.parent();
+		return this.parent;
 	}
 
 	/**
@@ -41,7 +46,7 @@ export default class Reference {
 	 * @returns {boolean}
 	 */
 	get isCollection() {
-		return this.path.split('/').length % 2 === 1;
+		return this.isRoot ? false : this.path.split('/').length % 2 === 1;
 	}
 
 	/**
@@ -61,10 +66,9 @@ export default class Reference {
 	 * Will return a Document instance if it is a document, and a List instance if it is a collection.
 	 * @returns {Document|List}
 	 */
-	get(options) {
-		return this.db.fetch(this.endpoint + objectToQuery(options)).then(data => {
-			return this.isCollection ? new List(data, this, options) : new Document(data, this.db);
-		});
+	async get(options) {
+		const data = await this.db.fetch(this.endpoint + objectToQuery(options));
+		return this.isCollection ? new List(data, this, options) : new Document(data, this.db);
 	}
 
 	/**
@@ -72,17 +76,16 @@ export default class Reference {
 	 * Will throw is the reference points to a collection.
 	 * @returns {Document} The newly created/updated document.
 	 */
-	set(object) {
-		if (this.isCollection) throw Error("Can't set a collection");
-
-		return this.db
-			.fetch(this.endpoint, {
+	async set(object = {}) {
+		new Document(
+			await this.db.fetch(this.endpoint, {
 				// If this is a path to a specific document use
 				// patch instead, else, create a new document.
 				method: this.isCollection ? 'POST' : 'PATCH',
-				body: JSON.stringify(Document.encode(object))
-			})
-			.then(rawDoc => new Document(rawDoc, this.db));
+				body: JSON.stringify(encode(object))
+			}),
+			this.db
+		);
 	}
 
 	/**
@@ -90,15 +93,16 @@ export default class Reference {
 	 * Will throw is the reference points to a collection.
 	 * @returns {Document} The updated document.
 	 */
-	update(object) {
+	async update(object = {}) {
 		if (this.isCollection) throw Error("Can't update a collection");
 
-		return this.db
-			.fetch(`${this.endpoint}?${maskFromObject(object)}`, {
+		return new Document(
+			await this.db.fetch(this.endpoint + maskFromObject(object), {
 				method: 'PATCH',
-				body: JSON.stringify(Document.encode(object))
-			})
-			.then(rawDoc => new Document(rawDoc, this.db));
+				body: JSON.stringify(encode(object))
+			}),
+			this.db
+		);
 	}
 
 	/**
@@ -115,7 +119,7 @@ export default class Reference {
 	 */
 	query(options = {}) {
 		return new Query({
-			from: [this],
+			from: this,
 			...options
 		});
 	}

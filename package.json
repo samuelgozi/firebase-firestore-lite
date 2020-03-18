@@ -25,8 +25,7 @@
 		"eslint-plugin-jest": "^23.8.1",
 		"firebase-auth-lite": "^0.4.1",
 		"jest": "^25.1.0",
-		"jest-fetch-mock": "^3.0.1",
-		"jest-mock-fetch": "^1.0.9",
+		"jest-fetch-mock": "^3.0.3",
 		"regenerator-runtime": "^0.13.3"
 	}
 }

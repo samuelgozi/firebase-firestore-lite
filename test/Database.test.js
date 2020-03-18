@@ -35,7 +35,7 @@ describe('batchGet', () => {
 	test('Makes correct request', async () => {
 		const refs = [db.reference('col/doc'), db.reference('col/doc2'), db.reference('col/doc3')];
 
-		fetch.mockResponseOnce('[]');
+		fetch.mockResponse('[]');
 		await db.batchGet(refs);
 
 		const endpoint = fetch.mock.calls[0][0];

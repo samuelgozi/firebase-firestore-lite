@@ -11,7 +11,7 @@ export default class List {
 		const { documents, nextPageToken } = rawList;
 		this.ref = ref;
 		this.options = options;
-		this.documents = documents ? rawList.documents.map(rawDoc => new Document(rawDoc, ref.db)) : [];
+		this.documents = documents ? documents.map(rawDoc => new Document(rawDoc, ref.db)) : [];
 		this.options.pageToken = nextPageToken;
 	}
 
