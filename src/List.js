@@ -1,4 +1,5 @@
 import Document from './Document.js';
+
 /**
  * Represents a collection list response, with functionality
  * for getting the next page when available.
@@ -8,6 +9,9 @@ import Document from './Document.js';
  */
 export default class List {
 	constructor(rawList, ref, options = {}) {
+		if (ref === undefined) throw Error('The "reference" argument is required when creating a List');
+		if (!ref.isCollection) throw Error('The reference in a list should point to a collection');
+
 		const { documents, nextPageToken } = rawList;
 		this.ref = ref;
 		this.options = options;
