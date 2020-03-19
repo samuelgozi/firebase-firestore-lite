@@ -119,7 +119,7 @@ export default class Reference {
 	 */
 	query(options = {}) {
 		return new Query({
-			from: [this],
+			from: this,
 			...options
 		});
 	}

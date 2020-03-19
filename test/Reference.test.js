@@ -1,7 +1,7 @@
 import Document from '../src/Document.js';
 import Reference from '../src/Reference.js';
 import List from '../src/List.js';
-import Query from '../src/index.js';
+import Query from '../src/Query.js';
 import Database from '../src/index.js';
 
 const db = new Database({ projectId: 'projectId' });
@@ -284,5 +284,11 @@ describe('Delete', () => {
 
 		expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc`);
 		expect(mockCall[1].method).toEqual('DELETE');
+	});
+});
+
+describe('Query', () => {
+	test('Returns a Query instance', () => {
+		expect(new Reference('/col', db).query()).toBeInstanceOf(Query);
 	});
 });

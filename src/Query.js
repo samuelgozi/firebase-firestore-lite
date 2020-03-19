@@ -218,9 +218,9 @@ export default class Query {
 	from(val) {
 		const collection = val.collection || val;
 		const { allDescendants } = val;
-		if (!isColReference(collection)) throw Error('Invalid "from" argument');
+		if (!isColReference(collection)) throw Error('Expected the argument to be a reference to a collection');
 		if (allDescendants !== undefined && typeof allDescendants !== 'boolean')
-			throw Error('"from" expects the "allDescendants"argument to be a boolean');
+			throw Error('Expected the "allDescendants"argument to be a boolean');
 
 		this.options.from = { collectionId: collection.id, allDescendants };
 
@@ -246,22 +246,22 @@ export default class Query {
 	}
 
 	startAt(ref) {
-		if (!isDocReference(ref)) throw Error('"startAt" expects the argument to be a Reference to a Document');
+		if (!isDocReference(ref)) throw Error('Expected the argument to be a reference to a document');
 		this.options.startAt = ref;
 	}
 
 	endAt(ref) {
-		if (!isDocReference(ref)) throw Error('"endAt" expects the argument to be a Reference to a Document');
+		if (!isDocReference(ref)) throw Error('Expected the argument to be a reference to a document');
 		this.options.endAt = ref;
 	}
 
 	offset(number) {
-		if (!isPositiveInteger(number)) throw Error('"offset" expects the argument to be a Integer that is greater than 0');
+		if (!isPositiveInteger(number)) throw Error('Expected the argument to be an integer that is greater than 0');
 		this.options.offset = number;
 	}
 
 	limit(number) {
-		if (!isPositiveInteger(number)) throw Error('"limit" expects the argument to be a Integer that is greater than 0');
+		if (!isPositiveInteger(number)) throw Error('Expected the argument to be an integer that is greater than 0');
 		this.options.limit = number;
 	}
 

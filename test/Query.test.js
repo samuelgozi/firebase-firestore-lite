@@ -10,9 +10,15 @@ describe('Constructor', () => {
 		expect(new Query({ from: colRef }).toJSON().structuredQuery.from).toEqual({ collectionId: 'col' });
 
 		// Invalid arguments
-		expect(() => new Query({ from: [colRef] })).toThrow('Invalid "from" argument');
-		expect(() => new Query({ from: 42 })).toThrow('Invalid "from" argument');
-		expect(() => new Query({ from: 'this is a reference!' })).toThrow('Invalid "from" argument');
+		expect(() => new Query({ from: [colRef] })).toThrow(
+			'Invalid argument "from": Expected the argument to be a reference to a collection'
+		);
+		expect(() => new Query({ from: 42 })).toThrow(
+			'Invalid argument "from": Expected the argument to be a reference to a collection'
+		);
+		expect(() => new Query({ from: 'this is a reference!' })).toThrow(
+			'Invalid argument "from": Expected the argument to be a reference to a collection'
+		);
 		expect(() => new Query()).toThrow('"from" is required when building a new query');
 		expect(() => new Query({})).toThrow('"from" is required when building a new query');
 	});
@@ -180,7 +186,11 @@ describe('Encode', () => {
 		test('compositeFilter', () => {
 			const query = new Query({
 				from: colRef,
-				where: [['field.nan', '==', NaN], ['field.null', '==', null], ['field.path', '==', 42]]
+				where: [
+					['field.nan', '==', NaN],
+					['field.null', '==', null],
+					['field.path', '==', 42]
+				]
 			});
 
 			const expected = {
