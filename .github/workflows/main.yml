@@ -1,0 +1,22 @@
+name: Test with coverage
+on: push
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@master
+        with:
+          node-version: 12.x
+      - name: Generate coverage report
+        run: |
+          npm install
+          npm i codecov -g
+          npm run test
+          codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1.0.2
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          flags: unittests
+          name: codecov-umbrella
