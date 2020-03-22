@@ -155,20 +155,68 @@ If you are not sure whether your reference point to an object or a collection yo
 daniel.isCollection; // will be false.
 ```
 
-### Reading and Writing data
-[TODO]
+## Add and manage data
+
+There are two ways to write data to Cloud Firestore:
+
+- Set the data of a document within a collection, explicitly specifying a document identifier.
+- Add a new document to a collection. In this case, Cloud Firestore automatically generates the document identifier.
+
+This guide explains how to use the set and update methods in order to manipulate individual documents in Cloud Firestore. If you want to write data in bulk, see Transactions(WIP) and Batched Writes.
+
+### Set a document
+
+Set can be used to either create a new document and/or update one with a known ID, or create a new document with a generated ID.
+
+To update or create a document with a known identifier just create a reference that points to it(even if it doesn't exist):
+
+```js
+// Create a reference to the document named "samuel" inside the collection "users".
+const ref = db.reference('users/samuel');
+
+// Set its data(if it doesn't exist, it will be created).
+// Will return an instance of Document containing all of the
+// data of the updated/created document.
+const doc = await ref.set({
+	email: 'samuel@example.com'
+});
+```
+
+If the document does not exist, it will be created. If the document does exist, its contents will be overwritten with the newly provided data. If you with to merge the data with the existing, use the "update" methods instead.
+
+### Update a document
+
+The update method works the same as the set one with one difference, it will merge instead of overwrite the data if the document already exists.
+
+For example, if we want to add the "samuel" username a new prop without deleting the existing ones we can do it with the "update" method:
+
+```js
+const doc = await ref.update({
+	profession: 'web-dev'
+});
+
+console.log(doc);
+// Will log:
+// {
+//    email: 'samuel@example.com',
+//    profession: 'web-dev'
+// }
+```
+
+### Delete a document
+
+Deleting a document is pretty straight forward:
+
+```js
+ref.delete(); // Returns a promise that resolves if deleted successfully.
+```
+
+Just like that, its gone.
 
 ## API Reference
 
-The API reference can be found in the wiki of this repo.
-
-The API consists of two classes. The first one is the "Firestore" and the second one is "Reference". They both have instance methods, and between them there is most of what you need to know.
-
-In addition to those classes, there are the "custom types" which are classes that represent types of the database that don't exist on JS natively.
-
-And lastly there are "Helper types" which are classes that represent results from the database, and are there to help you navigate query results etc.
-
-Don't worry, there is not much to learn, and most of it is pretty intuitive anyways.
+The API will be changing before version 1.0, so it won't always be up-to-date, so if something doesn't work, feel free to open an issue.
+https://github.com/samuelgozi/firebase-firestore-lite/wiki
 
 ## Contributing
 

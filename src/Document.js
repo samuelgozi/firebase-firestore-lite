@@ -16,7 +16,6 @@ export default class Document {
 		};
 
 		Object.defineProperty(this, '__meta__', { value: meta });
-
 		Object.assign(this, decode(rawDoc, db));
 	}
 }
