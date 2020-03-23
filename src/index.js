@@ -2,8 +2,6 @@ import Reference from './Reference.js';
 import Document from './Document';
 import { isDocReference } from './utils.js';
 
-const ENDPOINT = 'https://firestore.googleapis.com/v1/';
-
 /*
  * The public API
  */
@@ -13,9 +11,9 @@ export default class Database {
 			throw Error('Database constructor expected the "config" argument to have a valid "projectId" property');
 
 		this.name = name;
-		this.rootPath = `projects/${projectId}/databases/${name}/documents`;
-		this.endpoint = ENDPOINT + this.rootPath;
 		this.auth = auth;
+		this.rootPath = `projects/${projectId}/databases/${name}/documents`;
+		this.endpoint = 'https://firestore.googleapis.com/v1/' + this.rootPath;
 	}
 
 	/**
