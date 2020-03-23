@@ -75,7 +75,7 @@ export function objectToQuery(obj = {}) {
  * @param {string} parentPath The parent path. used on recursive calls.
  * @returns {string[]}
  */
-function getKeyPaths(object, parentPath) {
+export function getKeyPaths(object, parentPath) {
 	let mask = [];
 
 	for (const key in object) {
