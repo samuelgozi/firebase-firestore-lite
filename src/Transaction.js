@@ -1,22 +1,29 @@
-import { getKeyPaths, encode } from './utils.js';
-import Reference from '../src/Reference.js';
+import { trimPath, isDocPath, getKeyPaths, encode, isDocReference } from './utils.js';
+import Document from './Document.js';
 
 export default class Transaction {
 	constructor(db) {
 		this.db = db;
 		this.writes = [];
+		this.preconditions = {};
 	}
 
 	/**
-	 * Not optimized way of generating a document name.
-	 * Should be rewritten, but will require rewrite of reference
-	 * to avoid repeating code.
-	 * @private
+	 * Validates that the arguments are of the correct types,
+	 * and that the documents are valid for this transaction.
+	 * Lastly we will return reliable data about the document.
 	 */
-	getName(ref) {
-		ref = ref instanceof Reference ? ref : new Reference(ref, this.db);
-		if (ref.isCollection) throw Error('The reference should point to a Document, but points to a Collection instead');
-		return ref.name;
+	handleArguments(ref, data = {}) {
+		const isDoc = ref instanceof Document;
+
+		if (!isDocPath(ref) && !isDocReference(ref) && !isDoc)
+			throw Error('Expected a Document, Reference or a string path pointing to a document.');
+
+		if (typeof data !== 'object') throw Error('The data object should be an object');
+
+		const doc = encode(isDoc ? ref : data);
+		doc.name = isDoc ? ref.__meta__.name : ref.name || `${this.db.rootPath}/${trimPath(ref)}`;
+		return doc;
 	}
 
 	/**
@@ -26,27 +33,31 @@ export default class Transaction {
 	 * @param {object} data An object with the data to write.
 	 */
 	set(ref, data) {
-		const doc = encode(data);
-		doc.name = this.getName(ref);
+		const doc = this.handleArguments(ref, data);
 
 		this.writes.push({
-			update: doc
+			update: doc,
+			currentDocument: this.preconditions[doc.name]
 		});
 	}
 
 	update(ref, data) {
-		const doc = encode(data);
-		doc.name = this.getName(ref);
+		const doc = this.handleArguments(ref, data);
 
 		this.writes.push({
 			update: doc,
 			updateMask: { fieldPaths: getKeyPaths(data) },
-			currentDocument: { exists: true }
+			currentDocument: this.preconditions[doc.name] || { exists: true }
 		});
 	}
 
-	delete(ref) {
-		this.writes.push({ delete: this.getName(ref) });
+	remove(ref) {
+		const name = this.handleArguments(ref).name;
+
+		this.writes.push({
+			delete: name,
+			currentDocument: this.preconditions[name]
+		});
 	}
 
 	async commit() {

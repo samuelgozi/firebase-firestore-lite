@@ -24,7 +24,7 @@ describe('batchGet', () => {
 	const db = new Database({ projectId: 'projectId' });
 
 	test('Throws when the array contains anything else than a doc', async () => {
-		const message = 'Array contains something other then References to documents';
+		const message = 'The array can only contain References or paths pointing to documents';
 		expect(db.batchGet([123])).rejects.toThrow(message);
 		expect(db.batchGet(['123'])).rejects.toThrow(message);
 		expect(db.batchGet([db.reference('col/doc'), 123])).rejects.toThrow(message);
@@ -72,5 +72,75 @@ describe('Reference', () => {
 		const ref = new Reference('col/doc', db);
 
 		expect(db.reference(doc)).toEqual(ref);
+	});
+});
+
+describe('RunTransactions', () => {
+	const db = new Database({ projectId: 'projectId' });
+
+	test('Sends request to correct endpoint', async () => {
+		fetch.resetMocks();
+		fetch.mockResponse('{}');
+
+		await db.runTransaction(() => {});
+
+		expect(fetch.mock.calls.length).toEqual(1);
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+	});
+
+	test('Callback is called', () => {
+		fetch.resetMocks();
+		fetch.mockResponse('{}');
+
+		const callback = jest.fn(() => {});
+		db.runTransaction(callback);
+
+		expect(callback.mock.calls.length).toEqual(1);
+	});
+
+	test('Callbacks receive all the necessary methods', () => {
+		fetch.resetMocks();
+		fetch.mockResponse('{}');
+
+		const callback = jest.fn(() => {});
+		db.runTransaction(callback);
+
+		expect(callback.mock.calls[0][0]).toHaveProperty('get');
+		expect(callback.mock.calls[0][0]).toHaveProperty('set');
+		expect(callback.mock.calls[0][0]).toHaveProperty('update');
+		expect(callback.mock.calls[0][0]).toHaveProperty('remove');
+	});
+
+	test('Callback methods work correctly on write-only mode', async () => {
+		fetch.resetMocks();
+		fetch.mockResponse('{}');
+
+		await db.runTransaction(({ set, update, remove }) => {
+			set('col/doc', { one: 'one' });
+			update('col/doc', { one: 'one' });
+			remove('col/doc');
+		});
+
+		const body = JSON.parse(fetch.mock.calls[0][1].body);
+
+		expect(body).toEqual({
+			writes: [
+				{
+					update: {
+						fields: { one: { stringValue: 'one' } },
+						name: 'projects/projectId/databases/(default)/documents/col/doc'
+					}
+				},
+				{
+					update: {
+						fields: { one: { stringValue: 'one' } },
+						name: 'projects/projectId/databases/(default)/documents/col/doc'
+					},
+					updateMask: { fieldPaths: ['one'] },
+					currentDocument: { exists: true }
+				},
+				{ delete: 'projects/projectId/databases/(default)/documents/col/doc' }
+			]
+		});
 	});
 });

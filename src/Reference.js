@@ -1,7 +1,7 @@
 import Query from './Query.js';
 import Document from './Document.js';
 import List from './List.js';
-import { objectToQuery, maskFromObject, encode } from './utils.js';
+import { trimPath, isDocPath, objectToQuery, maskFromObject, encode } from './utils.js';
 
 export default class Reference {
 	constructor(path, db) {
@@ -9,10 +9,7 @@ export default class Reference {
 
 		// Normalize the path by removing slashes from
 		// the beginning or the end and trimming spaces.
-		path = path
-			.trim()
-			.replace(/^\/?/, '')
-			.replace(/\/?$/, '');
+		path = trimPath(path);
 
 		this.id = path.split('/').pop();
 		this.db = db;
@@ -46,7 +43,7 @@ export default class Reference {
 	 * @returns {boolean}
 	 */
 	get isCollection() {
-		return this.isRoot ? false : this.path.split('/').length % 2 === 1;
+		return this.path !== '' && !isDocPath(this.path);
 	}
 
 	/**

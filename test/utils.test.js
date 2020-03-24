@@ -1,4 +1,6 @@
 import {
+	trimPath,
+	isDocPath,
 	isRawDocument,
 	isDocReference,
 	isColReference,
@@ -15,6 +17,36 @@ import firestoreDocument from './mockDocument.json';
 import decodedDocument from './decodedMockedDocument.js';
 
 const db = { rootPath: 'projects/projectId/databases/(default)/documents', endpoint: 'endpoint' };
+
+test('trimPath', () => {
+	expect(trimPath('/')).toEqual('');
+	expect(trimPath('col')).toEqual('col');
+	expect(trimPath('/col')).toEqual('col');
+	expect(trimPath('/col/')).toEqual('col');
+	expect(trimPath('col/')).toEqual('col');
+	expect(trimPath('col  ')).toEqual('col');
+	expect(trimPath('  col  ')).toEqual('col');
+	expect(trimPath('  col')).toEqual('col');
+
+	expect(trimPath('col/doc')).toEqual('col/doc');
+	expect(trimPath('/col/doc')).toEqual('col/doc');
+	expect(trimPath('/col/doc/')).toEqual('col/doc');
+	expect(trimPath('col/doc/')).toEqual('col/doc');
+	expect(trimPath('col/doc  ')).toEqual('col/doc');
+	expect(trimPath('  col/doc  ')).toEqual('col/doc');
+	expect(trimPath('  col/doc')).toEqual('col/doc');
+});
+
+test('IsDocPath', () => {
+	expect(isDocPath('')).toEqual(false);
+	expect(isDocPath('col')).toEqual(false);
+	expect(isDocPath('col/doc/col')).toEqual(false);
+	expect(isDocPath('col/doc/col/doc/col')).toEqual(false);
+
+	expect(isDocPath('col/doc')).toEqual(true);
+	expect(isDocPath('col/doc/col/doc')).toEqual(true);
+	expect(isDocPath('col/doc/col/doc/col/doc')).toEqual(true);
+});
 
 describe('isRawDocument', () => {
 	test('Returns false when object is not a firebase doc', () => {
