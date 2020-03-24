@@ -1,7 +1,8 @@
 import Transaction from '../src/Transaction.js';
 import Reference from '../src/Reference.js';
+import Database from '../src/index.js';
 
-const db = { rootPath: 'projects/projectId/databases/(default)/documents', endpoint: 'endpoint' };
+const db = new Database({ projectId: 'projectId' });
 const doc = { one: 'one', two: 2, three: 4.2 };
 const rawDoc = {
 	name: 'projects/projectId/databases/(default)/documents/col/doc',
@@ -85,6 +86,43 @@ describe('Transaction', () => {
 			tx.delete('col/doc');
 
 			expect(tx.writes).toEqual([{ delete: rawDoc.name }]);
+		});
+	});
+});
+
+describe('Commit', () => {
+	test('Sends request to right endpoint', () => {
+		fetch.resetMocks();
+		fetch.mockResponse('{}');
+
+		new Transaction(db).commit();
+
+		const endpoint = fetch.mock.calls[0][0];
+		expect(endpoint).toEqual(db.endpoint + ':commit');
+	});
+
+	test('Sends correctly formatted request', () => {
+		fetch.resetMocks();
+		fetch.mockResponse('{}');
+
+		const tx = new Transaction(db);
+
+		tx.set('col/doc', doc);
+		tx.update('col/doc', doc);
+		tx.delete('col/doc');
+		tx.commit();
+
+		const body = JSON.parse(fetch.mock.calls[0][1].body);
+		expect(body).toEqual({
+			writes: [
+				{ update: rawDoc },
+				{
+					update: rawDoc,
+					updateMask: { fieldPaths: ['one', 'two', 'three'] },
+					currentDocument: { exists: true }
+				},
+				{ delete: rawDoc.name }
+			]
 		});
 	});
 });

@@ -50,7 +50,7 @@ export default class Transaction {
 	}
 
 	async commit() {
-		return void (await this.db.fetch(this.endpoint + ':batchGet', {
+		return void (await this.db.fetch(this.db.endpoint + ':commit', {
 			method: 'POST',
 			body: JSON.stringify({ writes: this.writes })
 		}));

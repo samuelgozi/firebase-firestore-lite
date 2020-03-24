@@ -77,7 +77,7 @@ export default class Reference {
 	 * @returns {Document} The newly created/updated document.
 	 */
 	async set(object = {}) {
-		new Document(
+		return new Document(
 			await this.db.fetch(this.endpoint, {
 				// If this is a path to a specific document use
 				// patch instead, else, create a new document.
