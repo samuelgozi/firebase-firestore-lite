@@ -18,8 +18,8 @@ export default class Document {
 		const meta = {
 			db,
 			name,
-			createTime: new Date(createTime),
-			updateTime: new Date(updateTime),
+			createTime,
+			updateTime,
 			path: name.replace(db.rootPath, ''),
 			id: name.split('/').pop()
 		};
