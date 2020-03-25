@@ -3,6 +3,15 @@ import Document from './Document';
 import { isDocPath, isDocReference } from './utils.js';
 import Transaction from './Transaction.js';
 
+async function handleApiResponse(res) {
+	if (!res.ok) {
+		const data = await res.json();
+		throw Array.isArray(data) ? data : Object.assign(new Error(), data.error);
+	}
+
+	return res.json();
+}
+
 /**
  * Database Instance.
  * Encapsulates the Firestore service interface.
@@ -35,9 +44,9 @@ export default class Database {
 	 */
 	fetch() {
 		if (this.auth && this.auth.authorizedRequest)
-			return this.auth.authorizedRequest(...arguments).then(response => response.json());
+			return this.auth.authorizedRequest(...arguments).then(handleApiResponse);
 
-		return fetch(...arguments).then(response => response.json());
+		return fetch(...arguments).then(handleApiResponse);
 	}
 
 	/**
@@ -85,13 +94,31 @@ export default class Database {
 	 * Executes the given `updateFunction` and attempts to commit
 	 * the changes applied within it as a Transaction. If any document
 	 * read within the transaction has changed, Cloud Firestore retries
-	 * the updateFunction.
+	 * the updateFunction. If it fails to commit after 5 attempts, the
+	 * transaction fails and throws.
 	 *
-	 * @param {function} fn A function that will receive an object with methods to describe the transaction.
+	 * Will not re-attempt if an error is thrown inside the `updateFunction`
+	 * or if any error that is not related to the transaction is received
+	 * like a network error etc.
+	 *
+	 * @param {function} updateFunction A function that will receive an object with methods to describe the transaction.
+	 * @param {number} [attempts = 5] The number of times to retry if the transaction fails.
 	 */
-	async runTransaction(fn) {
+	async runTransaction(updateFunction, attempts = 5) {
 		const tx = new Transaction(this);
-		await fn(tx);
-		await tx.commit();
+
+		while (attempts > 0) {
+			await updateFunction(tx);
+
+			// Only retry on transaction errors.
+			try {
+				await tx.commit();
+				break; // Stop trying if it succeeded.
+			} catch (e) {
+				// Only throw if the error is not related to the transaction, or it is the last attempt.
+				if (attempts === 0 || (e.status !== 'NOT_FOUND' && e.status !== 'FAILED_PRECONDITION')) throw Error(e);
+			}
+			attempts--;
+		}
 	}
 }

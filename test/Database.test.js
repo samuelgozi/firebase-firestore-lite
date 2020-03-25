@@ -94,7 +94,7 @@ describe('RunTransactions', () => {
 		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
 	});
 
-	test('Callback is called', () => {
+	test("Callback is called once when transaction doesn't fail", () => {
 		fetch.resetMocks();
 		fetch.mockResponse('{}');
 
@@ -102,6 +102,55 @@ describe('RunTransactions', () => {
 		db.runTransaction(callback);
 
 		expect(callback.mock.calls.length).toEqual(1);
+	});
+
+	test('Callback is called again if the transaction fails for N attempts', async () => {
+		const missingDoc = {
+			error: {
+				code: 404,
+				message: 'No document to update: projects/sandbox-6b679/databases/(default)/documents/public/blahblah',
+				status: 'NOT_FOUND'
+			}
+		};
+
+		const failedPrecon = {
+			error: {
+				code: 400,
+				message: 'the stored version (0) does not match the required base version (1584437467559644)',
+				status: 'FAILED_PRECONDITION'
+			}
+		};
+
+		fetch.resetMocks();
+		fetch.mockResponses(
+			[JSON.stringify(failedPrecon), { status: 400 }],
+			[JSON.stringify(missingDoc), { status: 404 }],
+			[JSON.stringify(failedPrecon), { status: 400 }],
+			[JSON.stringify(missingDoc), { status: 404 }],
+			[JSON.stringify(failedPrecon), { status: 400 }]
+		);
+
+		let count = 0;
+		await db.runTransaction(() => count++);
+
+		expect(count).toEqual(5);
+	});
+
+	test('Throws without retrying when received an error not related to preconditions', async () => {
+		const error = {
+			error: {
+				code: 400,
+				message: 'A different error',
+				status: 'SOMETHING'
+			}
+		};
+
+		fetch.resetMocks();
+		fetch.mockResponse(JSON.stringify(error), { status: 400 });
+
+		let count = 0;
+		expect(db.runTransaction(() => count++)).rejects.toThrow('A different error');
+		expect(count).toEqual(1);
 	});
 
 	test('Callbacks receive all the necessary methods', () => {
