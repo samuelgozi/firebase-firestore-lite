@@ -100,8 +100,8 @@ export default class Database {
 
 		// Remove all the preconditions, since if the transaction fails
 		// we will need new ones anyways.
-		this.preconditions = {};
+		tx.preconditions = {};
 
-		tx.commit();
+		await tx.commit();
 	}
 }

@@ -1,0 +1,19 @@
+[
+	{
+		"found": {
+			"name": "projects/projectId/databases/(default)/documents/col/one",
+			"fields": {
+				"test": {
+					"stringValue": "one two... one two... working?"
+				}
+			},
+			"createTime": "2019-10-10T14:00:00.617973Z",
+			"updateTime": "2020-03-17T09:31:07.559644Z"
+		},
+		"readTime": "2020-03-25T13:07:35.422036Z"
+	},
+	{
+		"missing": "projects/projectId/databases/(default)/documents/col/two",
+		"readTime": "2020-03-25T13:07:35.422036Z"
+	}
+]

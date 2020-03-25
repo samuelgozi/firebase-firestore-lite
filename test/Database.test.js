@@ -1,6 +1,7 @@
 import Database from '../src/index.js';
 import Reference from '../src/Reference.js';
 import Document from '../src/Document.js';
+import batchGetResponse from './mockBatchGetResponse.json';
 
 describe('Constructor', () => {
 	test('Throws when `projectId` is missing', () => {
@@ -140,6 +141,40 @@ describe('RunTransactions', () => {
 					currentDocument: { exists: true }
 				},
 				{ delete: 'projects/projectId/databases/(default)/documents/col/doc' }
+			]
+		});
+	});
+
+	test('Reading documents adds correct preconditions', async () => {
+		fetch.resetMocks();
+		fetch.mockResponse(JSON.stringify(batchGetResponse));
+
+		await db.runTransaction(async ({ get, set, remove }) => {
+			await get(['col/one', 'col/two']); // the last doesn't  exist.
+			remove('col/one');
+			set('col/two', { one: 'one' });
+
+			// Rock response for the commit response.
+			fetch.mockResponse('{}');
+		});
+
+		const body = JSON.parse(fetch.mock.calls[1][1].body);
+
+		expect(body).toEqual({
+			writes: [
+				{
+					delete: 'projects/projectId/databases/(default)/documents/col/one',
+					currentDocument: {
+						updateTime: '2020-03-17T09:31:07.559644Z'
+					}
+				},
+				{
+					update: {
+						fields: { one: { stringValue: 'one' } },
+						name: 'projects/projectId/databases/(default)/documents/col/two'
+					},
+					currentDocument: { exists: false }
+				}
 			]
 		});
 	});
