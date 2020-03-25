@@ -270,15 +270,15 @@ describe('Update', () => {
 describe('Remove', () => {
 	test('Throws when the reference points to a collection', () => {
 		expect(() => {
-			new Reference('/col', db).remove();
-		}).toThrow("Can't remove a collection");
+			new Reference('/col', db).delete();
+		}).toThrow("Can't delete a collection");
 	});
 
 	test('Requests the correct endpoint', async () => {
 		fetch.resetMocks();
 		fetch.mockResponse('{}');
 
-		await new Reference('/col/doc', db).remove();
+		await new Reference('/col/doc', db).delete();
 
 		const mockCall = fetch.mock.calls[0];
 

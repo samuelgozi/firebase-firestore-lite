@@ -27,6 +27,29 @@ export default class Transaction {
 	}
 
 	/**
+	 * Wraps batch get with additional functionality needed in transactions.
+	 * Transactions need to be atomic. So in order to know that the document
+	 * wasn't changed concurrently then we save the updateTime of each document.
+	 *
+	 * Later we tell the database to use that as a precondition for the write.
+	 * In other words, if the update time of a document changed, then abort
+	 * the transaction. However, if a document didn't exist, then we use that
+	 * as a precondition, telling the database that if it was created concurrently
+	 * then it should abort the operation.
+	 * @param {Array.<Reference|string>} refs Array of references or string paths to retrieve.
+	 */
+	async get(refs) {
+		const docs = await this.db.batchGet(refs);
+
+		docs.forEach(doc => {
+			const { name, updateTime } = doc.__meta__ || { name: doc.__missing__ };
+			this.preconditions[name] = updateTime ? { updateTime } : { exists: false };
+		});
+
+		return docs;
+	}
+
+	/**
 	 * Adds a write instructions to the transaction.
 	 * Works the same as regular "set" method.
 	 * @param {Reference|string} ref Reference to a document, or a string path.
@@ -51,7 +74,7 @@ export default class Transaction {
 		});
 	}
 
-	remove(ref) {
+	delete(ref) {
 		const name = this.handleArguments(ref).name;
 
 		this.writes.push({
@@ -61,6 +84,8 @@ export default class Transaction {
 	}
 
 	async commit() {
+		this.preconditions = {};
+
 		return void (await this.db.fetch(this.db.endpoint + ':commit', {
 			method: 'POST',
 			body: JSON.stringify({ writes: this.writes })

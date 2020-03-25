@@ -1,6 +1,7 @@
 import Transaction from '../src/Transaction.js';
 import Reference from '../src/Reference.js';
 import Database from '../src/index.js';
+import batchGetResponse from './mockBatchGetResponse.json';
 
 const db = new Database({ projectId: 'projectId' });
 const doc = { one: 'one', two: 2, three: 4.2 };
@@ -20,6 +21,21 @@ const rawDoc = {
 };
 
 describe('Transaction', () => {
+	test('Reading documents saves the correct preconditions', async () => {
+		fetch.resetMocks();
+		fetch.mockResponse(JSON.stringify(batchGetResponse));
+
+		const tx = new Transaction(db);
+		await tx.get(['col/one', 'col/two']); // the last doesn't  exist.
+
+		expect(tx.preconditions).toEqual({
+			'projects/projectId/databases/(default)/documents/col/one': {
+				updateTime: '2020-03-17T09:31:07.559644Z'
+			},
+			'projects/projectId/databases/(default)/documents/col/two': { exists: false }
+		});
+	});
+
 	describe('Set', () => {
 		test('Passing a Reference instance', () => {
 			const ref = new Reference('col/doc', db);
@@ -132,28 +148,28 @@ describe('Transaction', () => {
 			const col = new Reference('col', db);
 			const tx = new Transaction(db);
 
-			tx.remove(ref);
+			tx.delete(ref);
 
 			expect(tx.writes).toEqual([{ delete: rawDoc.name }]);
-			expect(() => tx.remove(col)).toThrow('Expected a Document, Reference or a string path pointing to a document.');
+			expect(() => tx.delete(col)).toThrow('Expected a Document, Reference or a string path pointing to a document.');
 		});
 
 		test('Passing a string as the reference', () => {
 			const tx = new Transaction(db);
 
-			tx.remove('col/doc');
+			tx.delete('col/doc');
 
 			expect(tx.writes).toEqual([{ delete: rawDoc.name }]);
-			expect(() => tx.remove('col')).toThrow('Expected a Document, Reference or a string path pointing to a document.');
+			expect(() => tx.delete('col')).toThrow('Expected a Document, Reference or a string path pointing to a document.');
 		});
 
 		test('Uses preconditions', () => {
 			const tx = new Transaction(db);
 			tx.preconditions[rawDoc.name] = { updateTime: 'test' };
-			tx.remove('col/doc');
+			tx.delete('col/doc');
 
 			tx.preconditions[rawDoc.name] = { exists: true };
-			tx.remove('col/doc');
+			tx.delete('col/doc');
 
 			expect(tx.writes).toEqual([
 				{
@@ -188,7 +204,7 @@ describe('Commit', () => {
 
 		tx.set('col/doc', doc);
 		tx.update('col/doc', doc);
-		tx.remove('col/doc');
+		tx.delete('col/doc');
 		tx.commit();
 
 		const body = JSON.parse(fetch.mock.calls[0][1].body);

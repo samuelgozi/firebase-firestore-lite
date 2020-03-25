@@ -105,8 +105,8 @@ export default class Reference {
 	/**
 	 * Deletes the referenced document.
 	 */
-	remove() {
-		if (this.isCollection) throw Error("Can't remove a collection");
+	delete() {
+		if (this.isCollection) throw Error("Can't delete a collection");
 		return this.db.fetch(this.endpoint, { method: 'DELETE' });
 	}
 

@@ -1,21 +1,26 @@
 import Reference from './Reference.js';
 import Document from './Document';
-import { isDocPath, trimPath, isDocReference } from './utils.js';
+import { isDocPath, isDocReference } from './utils.js';
 import Transaction from './Transaction.js';
 
-const ENDPOINT = 'https://firestore.googleapis.com/v1/';
-
-/*
- * The public API
+/**
+ * Database Instance.
+ * Encapsulates the Firestore service interface.
  */
 export default class Database {
+	/**
+	 * @param {object} settings Settings object.
+	 * @param {string} settings.projectId Firebase's project ID.
+	 * @param {object} settings.name The name of the database to use in this instance.
+	 * @param {object} settings.auth Auth instance to use for authorization with this instance.
+	 */
 	constructor({ projectId, auth, name = '(default)' }) {
 		if (projectId === undefined)
 			throw Error('Database constructor expected the "config" argument to have a valid "projectId" property');
 
 		this.name = name;
 		this.rootPath = `projects/${projectId}/databases/${name}/documents`;
-		this.endpoint = ENDPOINT + this.rootPath;
+		this.endpoint = 'https://firestore.googleapis.com/v1/' + this.rootPath;
 		this.auth = auth;
 	}
 
@@ -26,6 +31,7 @@ export default class Database {
 	 * The API is exactly the same as native fetch.
 	 * @param {Request|Object|string} resource the resource to send the request to, or an options object.
 	 * @param {Object} init an options object.
+	 * @private
 	 */
 	fetch() {
 		if (this.auth && this.auth.authorizedRequest)
@@ -67,41 +73,25 @@ export default class Database {
 		);
 	}
 
+	/**
+	 * Returns a new transaction instance.
+	 * @returns {Transaction} A new transaction instance.
+	 */
+	transaction() {
+		return new Transaction(this);
+	}
+
+	/**
+	 * Executes the given `updateFunction` and attempts to commit
+	 * the changes applied within it as a Transaction. If any document
+	 * read within the transaction has changed, Cloud Firestore retries
+	 * the updateFunction.
+	 *
+	 * @param {function} fn A function that will receive an object with methods to describe the transaction.
+	 */
 	async runTransaction(fn) {
 		const tx = new Transaction(this);
-
-		/**
-		 * Wraps batch get with additional functionality needed in transactions.
-		 * Transactions need to be atomic. So in order to know that the document
-		 * wasn't changed concurrently then we save the updateTime of each document.
-		 *
-		 * Later we tell the database to use that as a precondition for the write.
-		 * In other words, if the update time of a document changed, then abort
-		 * the transaction. However, if a document didn't exist, then we use that
-		 * as a precondition, telling the database that if it was created concurrently
-		 * then it should abort the operation.
-		 * @param {Array.<Reference|string>} refs Array of references or string paths to retrieve.
-		 */
-		async function get(refs) {
-			const docs = await this.db.batchGet(refs);
-
-			docs.forEach(doc => {
-				const { name, updateTime } = doc.__meta__ || { name: doc.__missing__ };
-				this.preconditions[name] = updateTime ? { updateTime } : { exists: false };
-			});
-		}
-
-		await fn({
-			get: get.bind(tx),
-			set: tx.set.bind(tx),
-			update: tx.update.bind(tx),
-			remove: tx.remove.bind(tx)
-		});
-
-		// Remove all the preconditions, since if the transaction fails
-		// we will need new ones anyways.
-		tx.preconditions = {};
-
+		await fn(tx);
 		await tx.commit();
 	}
 }

@@ -1,7 +1,7 @@
 import Database from '../src/index.js';
 import Reference from '../src/Reference.js';
 import Document from '../src/Document.js';
-import batchGetResponse from './mockBatchGetResponse.json';
+import Transaction from '../src/Transaction.js';
 
 describe('Constructor', () => {
 	test('Throws when `projectId` is missing', () => {
@@ -76,6 +76,11 @@ describe('Reference', () => {
 	});
 });
 
+test('Transaction returns a new transaction instance', () => {
+	const db = new Database({ projectId: 'projectId' });
+	expect(db.transaction()).toBeInstanceOf(Transaction);
+});
+
 describe('RunTransactions', () => {
 	const db = new Database({ projectId: 'projectId' });
 
@@ -109,17 +114,17 @@ describe('RunTransactions', () => {
 		expect(callback.mock.calls[0][0]).toHaveProperty('get');
 		expect(callback.mock.calls[0][0]).toHaveProperty('set');
 		expect(callback.mock.calls[0][0]).toHaveProperty('update');
-		expect(callback.mock.calls[0][0]).toHaveProperty('remove');
+		expect(callback.mock.calls[0][0]).toHaveProperty('delete');
 	});
 
 	test('Callback methods work correctly on write-only mode', async () => {
 		fetch.resetMocks();
 		fetch.mockResponse('{}');
 
-		await db.runTransaction(({ set, update, remove }) => {
-			set('col/doc', { one: 'one' });
-			update('col/doc', { one: 'one' });
-			remove('col/doc');
+		await db.runTransaction(tx => {
+			tx.set('col/doc', { one: 'one' });
+			tx.update('col/doc', { one: 'one' });
+			tx.delete('col/doc');
 		});
 
 		const body = JSON.parse(fetch.mock.calls[0][1].body);
@@ -141,40 +146,6 @@ describe('RunTransactions', () => {
 					currentDocument: { exists: true }
 				},
 				{ delete: 'projects/projectId/databases/(default)/documents/col/doc' }
-			]
-		});
-	});
-
-	test('Reading documents adds correct preconditions', async () => {
-		fetch.resetMocks();
-		fetch.mockResponse(JSON.stringify(batchGetResponse));
-
-		await db.runTransaction(async ({ get, set, remove }) => {
-			await get(['col/one', 'col/two']); // the last doesn't  exist.
-			remove('col/one');
-			set('col/two', { one: 'one' });
-
-			// Rock response for the commit response.
-			fetch.mockResponse('{}');
-		});
-
-		const body = JSON.parse(fetch.mock.calls[1][1].body);
-
-		expect(body).toEqual({
-			writes: [
-				{
-					delete: 'projects/projectId/databases/(default)/documents/col/one',
-					currentDocument: {
-						updateTime: '2020-03-17T09:31:07.559644Z'
-					}
-				},
-				{
-					update: {
-						fields: { one: { stringValue: 'one' } },
-						name: 'projects/projectId/databases/(default)/documents/col/two'
-					},
-					currentDocument: { exists: false }
-				}
 			]
 		});
 	});
