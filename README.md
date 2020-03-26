@@ -12,59 +12,26 @@ of kilobytes without any app logic](https://github.com/samuelgozi/firebase-fires
 Hopefully nothing, but as it seems right now I will leave the "real time" and "offline support" parts for last, and the API might be a bit different.
 And the browser support, will be targeting only "evergreen" ones.
 
-## Roadmap
+## Roadmap / Features list
 
-### Internal functionality needed before implementing the rest of the API
+### General
 
-- [x] Decode Firebase Documents into JS Objects.
-- [x] Encode Firebase Documents from JS Objects.
-- [x] Create "DocumentMasks" for changes in retrieved documents.
-- [x] Cover all supported types(Except bytes for now)
-- [x] Authentication with firebase-auth-lite
+- [x] Run queries.
+- [x] Batch Get.
+- [x] Batch Write(by using transactions).
+- [x] Transactions.
+- [ ] Real time **\***
+- [ ] Offline support **\***
 
-### Documents and collections REST API implementation
+**\*** = Will start work on this once the rest of the API is stable.
 
-- [x] [get](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/get) Get a single document.
-- [x] [patch](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/patch) Update or insert a document.
-- [x] [createDocument](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/createDocument) Create a new document.
-- [x] [delete](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/delete) Delete a document.
-- [x] [runQuery](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/runQuery) Run a query. (partially implemented, little left)
-- [x] [batchGet](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/batchGet) Get multiple documents.
-- [ ] [beginTransaction](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/beginTransaction) Start a new transaction.
-- [ ] [commit](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/commit) Commit a transaction, while optionally updating documents.
-- [x] [list](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/list) List documents.
-- [ ] [listCollectionIds](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/listCollectionIds)\* List all the collection IDs underneath a document.
-- [ ] [rollback](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/rollback) Rolls back a transaction.
-- [ ] [write](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents/write) Streams batches of document updates and deletes, in order.
+### Documents
 
-**\* Features with an astrix("\*") require authenticating with permissions to manage Firebase projects, in other words these features are "firebase-admin" features and are currently not a high priority.**
+- [x] Read, add, update and delete documents.
 
-### Indexes REST API implementation
+### Collections
 
-**Note: All Indexes features require authenticating with permissions to manage Firebase projects, in other words these features are "firebase-admin" features and are currently not a high priority.**
-
-- [ ] [create](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.indexes/create)Create a specified index.
-- [ ] [delete](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.indexes/delete) Delete an index
-- [ ] [get](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.indexes/get) Get an index
-- [ ] [list](https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.indexes/list) List the indexes that match the specified filters.
-
-### Types support
-
-- [x] null (native)
-- [x] boolean (native)
-- [x] integer (native)
-- [x] double (native)
-- [x] timestamp (All JS Dates are auto converted to Timestamps)
-- [x] string (native)
-- [ ] bytes - **It wont be supported for now**
-- [x] reference (Custom class)
-- [x] geoPoint (Custom class)
-- [x] array (native)
-- [x] map (native objects)
-
-### Other
-
-Somewhere in the future I'm planing on implementing out of the box offline support, and realtime updates. But those features are currently not a high priority. The first priority if to provide a fully functional, light weight and versatile API, when we get there well focus on all the other shiny features.
+- [x] Read all documents in a collection.
 
 ## Getting started
 
@@ -80,9 +47,9 @@ Or
 yarn add firebase-firestore-lite
 ```
 
-### Import and initialize an instance
+## Initialize an instance
 
-It is possible to use authentication but not neccesary.
+It is possible to use authentication but not necessary.
 First I'll show you how to use it without it:
 
 ```js
@@ -92,35 +59,31 @@ import Firestore from 'firebase-firestore-lite';
 const db = new Firestore({ projectId: 'nano-inventory' });
 ```
 
-Now you can start working with the Firestore database, but of course, only if the firebase permissions allow it.
+Now you can start working with the database.
 
-Most apps don't let everyone access the database. If you want to access the database as an authenticated user it can be done with the ["firebase-auth-lite"](https://github.com/samuelgozi/firebase-auth-lite) package. Here's how:
+Most apps apply some kind of user based restrictions. If you want to access the database as an authenticated user it can be done with the ["firebase-auth-lite"](https://github.com/samuelgozi/firebase-auth-lite) library. Here's how:
 
 ```js
 import Firestore from 'firebase-firestore-lite';
-import { AuthFlow } from 'firebase-auth-lite';
+import Auth from 'firebase-auth-lite';
 
-// Please read the libraries docs to see how to configure auth.
-// Nothing special needs to be done in order for it to work with
-// "firebase-firestore-lite" library other than the written below.
+// Please read the docs of the Auth library for further instructions
+// of all of the Auth features.
 const auth = new Auth({
-	/* ... */
+	apiKey: '[The Firebase API key]'
 });
-auth.addProvider({ provider: 'google' });
 
 // Now pass the auth instance as well as the projectId.
 const db = new Firestore({ projectId: 'nano-inventory', auth });
 ```
 
-Now you are ready to go with authentication.
+The firestore instance will now make all of the requests with the authenticates user's credentials.
 
-### Working with references
+## Working with references
 
-In order to work with data on the database, we need to use and understand the "Reference" instance.
-A Reference represents a document in the database that we didn't necessarily download, and it doesn't really have to exist.
-We can create a reference to a document or a collection that doesn't exist and later create them, and we can also create a reference to a document that exists and delete or update it without reading it.
+References point to specific documents or collections in a database. A reference doesn't really know anything about the data itself, In fact, you can and will use references with documents that don't even exist.
 
-A reference can point to a document or a collection, and after creating one we will have some methods and properties that will help us manipulate and navigate the data it represents.
+A Reference is just a helper class that encapsulates some helpful methods that are designed to save us(the devs) some time. But in their essence they are just a fancy abstraction over paths.
 
 Lets create one:
 
@@ -132,43 +95,37 @@ const usersCollection = db.reference('users');
 const samuel = db.reference('users/samuel');
 ```
 
-Some times you don't want to write the whole path. You can also get a reference by the using child method or parent prop.
+`usersCollection` points to a collection. The way we know it is because of the path. The path is `users` and we know that the root of the database only has collections. So it is the same as writing `/users`.
+
+`samuel` points to a document because the path we used to create it was a path to a document.
+
+BTW, We can also create a reference to the root of the database(which technically is a document):
 
 ```js
-// Get the parent collection/document.
-// Returns a reference.
-const root = usersCollection.parent; // Now point to the root of the database.
+const root = db.reference('/');
 
-// Or you can get a child collection/document
-const daniel = usersCollection.child('daniel'); // Same as doing db.reference('users/daniel');
+// Or
+
+const root = db.reference('');
 ```
 
-You can also jump right away to the nearest parent collection:
-
-```js
-daniel.parentCollection; // Points to "users"
-```
-
-If you are not sure whether your reference point to an object or a collection you can always check it with the `isCollection` prop.
-
-```js
-daniel.isCollection; // will be false.
-```
+A reference has some helpful instance methods and properties.
+Please read more about them in the API reference.
 
 ## Add and manage data
 
-There are two ways to write data to Cloud Firestore:
+There are a variety of ways to manipulate data in Firestore:
 
-- Set the data of a document within a collection, explicitly specifying a document identifier.
-- Add a new document to a collection. In this case, Cloud Firestore automatically generates the document identifier.
-
-This guide explains how to use the set and update methods in order to manipulate individual documents in Cloud Firestore. If you want to write data in bulk, see Transactions(WIP) and Batched Writes.
+- Directly getting, adding, updating or deleting by using a `Reference`.
+- Getting all documents within a collection by using a `Reference`(to a collection).
+- `batchGet` to retrieve a list of documents.
+- `Transaction` to either batch write, or read and write at the same time.
 
 ### Set a document
 
-Set can be used to either create a new document and/or update one with a known ID, or create a new document with a generated ID.
+Set can be used to create/update a document with a known ID, or create a new document with a generated ID.
 
-To update or create a document with a known identifier just create a reference that points to it(even if it doesn't exist):
+To create/update a document with a known id just create a reference that points to it(even if it doesn't exist):
 
 ```js
 // Create a reference to the document named "samuel" inside the collection "users".
@@ -182,11 +139,26 @@ const doc = await ref.set({
 });
 ```
 
-If the document does not exist, it will be created. If the document does exist, its contents will be overwritten with the newly provided data. If you with to merge the data with the existing, use the "update" methods instead.
+If the document does not exist, it will be created. If the document does exist, its contents will be overwritten with the newly provided data. If you want to merge the data with the existing, use the
+"update" methods instead.
+
+To add a new document with a generated ID, you need to call the `set` method on a reference that points to a collection:
+
+```js
+// Create a reference the collection in which we want the new document.
+const ref = db.reference('users');
+
+// A new document will be created with a database generated ID.
+const doc = await ref.set({
+	email: 'samuel@example.com'
+});
+
+// The operation will return the new document with its ID.
+```
 
 ### Update a document
 
-The update method works the same as the set one with one difference, it will merge instead of overwrite the data if the document already exists.
+The `update` method works the same as `set` except it will merge instead of overwrite the data if the document already exists.
 
 For example, if we want to add the "samuel" username a new prop without deleting the existing ones we can do it with the "update" method:
 
@@ -213,11 +185,140 @@ ref.delete(); // Returns a promise that resolves if deleted successfully.
 
 Just like that, its gone.
 
+## Batch reads
+
+It is possible to get multiple documents with one request by using the `db.batchGet` method.
+
+The `batchGet` method can receives an array of document references, or if you prefer you can just pass document paths.
+
+```js
+// Using an array of references:
+const doc1 = db.reference('col/doc1');
+const doc2 = db.reference('col/doc2');
+const doc3 = db.reference('col/doc3');
+
+db.batchGet([doc1, doc2, doc3]);
+
+// Using an array of document paths:
+db.batchGet(['col/doc1', 'col/doc2', 'col/doc3']);
+```
+
+As you can see, using document paths instead of references is much cleaner, and it also performs a little bit better since you don't have to create Reference instances just for a single use.
+
+This method will return an array of `Document` instances.
+
+## Transactions and batch writes
+
+Transactions allow us to perform batch reads, or reads and writes. All of the operations done as a part of a transaction are atomic; Either all of them succeed, or none of them are applied.
+
+Transactions are subject to the [Quotas and Limits of Firestore](https://firebase.google.com/docs/firestore/quotas#writes_and_transactions), so make sure you read them.
+
+Lets start with a batch write. First we create a transaction:
+
+```js
+const tx = db.transaction();
+```
+
+Now `tx` holds a `Transaction` instance. The instance has three methods that help us describe operations:
+
+- `set` - Add or overwrite a document.
+- `update` - Update(merge) data of an existing document.
+- `delete` - Delete a document.
+
+These methods do not make any network requests yet. They are just helpers to describe the operations to be done as part of this transaction. In order to commit this changes we use the `commit` method. Now lets describe the transaction, and then commit it:
+
+```js
+// Create a new document or overwrite an existing one.
+tx.set('users/samuel', { name: 'samuel', email: 'samuel@example.com' });
+// Update an existing document.
+tx.update('users/daniel', { email: 'newEmail@example.com' });
+// Delete a document.
+tx.delete('users/george');
+
+// Now lets commit them. This one is asynchronous and does
+// indeed make the request.
+try {
+	await tx.commit();
+} catch (e) {
+	// Handle the failed transaction.
+}
+```
+
+### Read and write in a transaction
+
+A transaction is very powerful because you can use it to perform operations that depend on the current data of a document. Sometimes it is necessary to have a guarantee that we are working with the latest data. Using reads within a transaction can help us accomplish that.
+
+Introducing the `get` method. It works exactly as a `batchGet`, and that makes it different than the other `Transaction` methods because it is asynchronous.
+
+When using the `get` method inside a transaction we make sure that any write operation on a document returned from it will be atomic. So if the data in that document changed concurrently, and the one we have is no longer up-to-date, the whole transaction will fail.
+
+Here is how you can use it:
+
+```js
+const tx = db.transaction();
+const [doc1, doc2, doc3] = await tx.get(['col/doc1', 'col/doc2', 'col/doc3']);
+
+// Work and change the data.
+
+tx.set('col/doc1', doc1);
+tx.update('col/doc2', doc2);
+tx.delete('col/doc3', doc3);
+
+// Lastly commit
+await commit();
+```
+
+If you end up using the same Document instances returned from the
+`tx.get` method, then there is no need to pass the document path
+again and again when describing an operations. You can omit the path
+and just pass the Document instance instead:
+
+```js
+// Instead of
+tx.set('col/doc1', doc1);
+tx.update('col/doc2', doc2);
+tx.delete('col/doc3', doc3);
+
+// Do
+tx.set(doc1);
+tx.update(doc2);
+tx.delete(doc3);
+```
+
+But remember, this works only if you pass the same document instance returned from the `tx.get()` method. If you end up generating a new object, then you have to pass the path to it.
+
+### The `runTransaction` method
+
+There is a cleaner way to make a transaction with writes, and can also help you retry the transaction when failed.
+
+The `db.runTransaction()` method can help you keep things cleaner.
+It receives a function as its first argument, and the number of attempts as the second argument(defaults to 5).
+
+It will commit and retry the function for you if the transaction fails because the data changed, but it will throw immediately if the code failed due to any other reason.
+
+Here is how you can use it:
+
+```js
+function updateFunction(tx) {
+	const [doc1, doc2, doc3] = tx.get([ ... ]);
+
+	// Manipulate the data.
+	doc1.title = 'new title';
+	// ...
+
+	tx.update('col/doc1', doc1);
+}
+
+// Will resolve if and when the transaction is done.
+// Will try up to 10 times.
+await db.runTransaction(updateFunction, 10);
+```
+
 ## API Reference
 
-The API will be changing before version 1.0, so it won't always be up-to-date, so if something doesn't work, feel free to open an issue.
+The API will be changing up until version 1.0, so it won't always be up-to-date. If something is off, feel free to open an issue.
 https://github.com/samuelgozi/firebase-firestore-lite/wiki
 
 ## Contributing
 
-I very much welcome any contribution. Grammar issues, docs, examples, features requests, and code. Please feel free to open an issue and ask anything.
+I very much welcome any contribution. Grammar issues, docs, examples, features requests, and code. But please open an issue before so that you don't work on anything that someone else is.

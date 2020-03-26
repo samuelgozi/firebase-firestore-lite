@@ -2,6 +2,25 @@ import Reference from './Reference.js';
 import GeoPoint from './GeoPoint.js';
 
 /**
+ * Trims spaces and slashes from a path.
+ * @param {string} path Path relative to root of db.
+ */
+export function trimPath(path) {
+	return path
+		.trim()
+		.replace(/^\/?/, '')
+		.replace(/\/?$/, '');
+}
+
+/**
+ * Returns true if a string is a path that points to a document.
+ * @param {string} path Path relative to root of db.
+ */
+export function isDocPath(s) {
+	return typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 0;
+}
+
+/**
  * Returns true if an object is a "raw" firebase document.
  * @param {Object} document the object/document to test
  * @returns {boolean}
@@ -75,7 +94,7 @@ export function objectToQuery(obj = {}) {
  * @param {string} parentPath The parent path. used on recursive calls.
  * @returns {string[]}
  */
-function getKeyPaths(object, parentPath) {
+export function getKeyPaths(object, parentPath) {
 	let mask = [];
 
 	for (const key in object) {
@@ -219,7 +238,7 @@ export function encode(object) {
 	// need to add a 'fields' property.
 	// I'm not sure this matters, if I knew it didn't
 	// I would remove this if statement.
-	if (keys.length === 0) return {};
+	if (keys.length === 0) return object;
 
 	const map = { fields: {} };
 
