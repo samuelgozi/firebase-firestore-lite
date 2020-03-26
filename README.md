@@ -20,10 +20,10 @@ And the browser support, will be targeting only "evergreen" ones.
 - [x] Batch Get.
 - [x] Batch Write(by using transactions).
 - [x] Transactions.
-- [ ] Real time\*
-- [ ] Offline support\*
+- [ ] Real time **\***
+- [ ] Offline support **\***
 
-" \* " = Will start work on this once the rest of the API is stable.
+**\*** = Will start work on this once the rest of the API is stable.
 
 ### Documents
 
@@ -244,7 +244,7 @@ try {
 }
 ```
 
-#### Now lets add some reads into the mix
+### Read and write in a transaction
 
 A transaction is very powerful because you can use it to perform operations that depend on the current data of a document. Sometimes it is necessary to have a guarantee that we are working with the latest data. Using reads within a transaction can help us accomplish that.
 
@@ -287,7 +287,7 @@ tx.delete(doc3);
 
 But remember, this works only if you pass the same document instance returned from the `tx.get()` method. If you end up generating a new object, then you have to pass the path to it.
 
-#### The `runTransaction` method
+### The `runTransaction` method
 
 There is a cleaner way to make a transaction with writes, and can also help you retry the transaction when failed.
 
@@ -316,9 +316,9 @@ await db.runTransaction(updateFunction, 10);
 
 ## API Reference
 
-The API will be changing before version 1.0, so it won't always be up-to-date, so if something doesn't work, feel free to open an issue.
+The API will be changing up until version 1.0, so it won't always be up-to-date. If something is off, feel free to open an issue.
 https://github.com/samuelgozi/firebase-firestore-lite/wiki
 
 ## Contributing
 
-I very much welcome any contribution. Grammar issues, docs, examples, features requests, and code. Please feel free to open an issue and ask anything.
+I very much welcome any contribution. Grammar issues, docs, examples, features requests, and code. But please open an issue before so that you don't work on anything that someone else is.
