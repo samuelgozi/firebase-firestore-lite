@@ -39,8 +39,8 @@ describe('Document instance', () => {
 
 		expect(doc.__meta__).toBeDefined();
 		expect(doc.__meta__.db).toEqual(db);
-		expect(doc.__meta__.createTime).toEqual(new Date(rawDoc.createTime));
-		expect(doc.__meta__.updateTime).toEqual(new Date(rawDoc.updateTime));
+		expect(doc.__meta__.createTime).toEqual(rawDoc.createTime);
+		expect(doc.__meta__.updateTime).toEqual(rawDoc.updateTime);
 		expect(doc.__meta__.path).toEqual('/public/types');
 		expect(doc.__meta__.id).toEqual('types');
 	});

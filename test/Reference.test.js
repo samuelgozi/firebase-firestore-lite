@@ -267,7 +267,7 @@ describe('Update', () => {
 	});
 });
 
-describe('Delete', () => {
+describe('Remove', () => {
 	test('Throws when the reference points to a collection', () => {
 		expect(() => {
 			new Reference('/col', db).delete();
