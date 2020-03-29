@@ -24,7 +24,7 @@ export default class Reference {
 	 * @returns {Reference}
 	 */
 	get parent() {
-		if (this.isRoot) throw Error("Can't get parent of a root collection");
+		if (this.isRoot) throw Error("Can't get the parent of root");
 		return new Reference(this.path.replace(/\/?([^/]+)\/?$/, ''), this.db);
 	}
 
@@ -115,6 +115,8 @@ export default class Reference {
 	 * @returns {List} The results of the query.
 	 */
 	query(options = {}) {
+		if (!this.isCollection) throw Error('Query can only be called on collections');
+
 		return new Query({
 			from: this,
 			...options

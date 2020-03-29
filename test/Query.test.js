@@ -1,135 +1,86 @@
+import Database from '../src/index.js';
 import Query from '../src/Query.js';
 import Reference from '../src/Reference.js';
+import Document from '../src/Document.js';
 
-const mockDB = { rootPath: 'root', endpoint: 'endpoint' };
-const colRef = new Reference('col', mockDB);
+const db = new Database({ projectId: 'projectId' });
+const colRef = db.reference('col');
 
-describe('Constructor', () => {
-	test('from', () => {
-		// Valid argument
-		expect(new Query({ from: colRef }).toJSON().structuredQuery.from).toEqual({ collectionId: 'col' });
-
-		// Invalid arguments
-		expect(() => new Query({ from: [colRef] })).toThrow(
-			'Invalid argument "from": Expected the argument to be a reference to a collection'
-		);
-		expect(() => new Query({ from: 42 })).toThrow(
-			'Invalid argument "from": Expected the argument to be a reference to a collection'
-		);
-		expect(() => new Query({ from: 'this is a reference!' })).toThrow(
-			'Invalid argument "from": Expected the argument to be a reference to a collection'
-		);
-		expect(() => new Query()).toThrow('"from" is required when building a new query');
-		expect(() => new Query({})).toThrow('"from" is required when building a new query');
-	});
-
-	describe('where', () => {
-		test('Invalid props throw', () => {
-			expect(() => {
-				new Query({
-					from: colRef,
-					where: ['life', '==', 42]
-				});
-			}).toThrow('Invalid argument "where[0]": Invalid filter');
-		});
-
-		test('Valid prop is copied', () => {
-			const where = [['life', '==', 42]];
-			const query = new Query({ from: colRef, where });
-
-			expect(query.options.where).toEqual(where);
-		});
-	});
-
-	describe('orderBy', () => {
-		test('Invalid props throw', () => {
-			expect(() => {
-				new Query({
-					from: colRef,
-					orderBy: 42
-				});
-			}).toThrow('Invalid argument "orderBy": "field" property needs to be a string');
-		});
-
-		test('Valid prop', () => {
-			const arrayOfReferences = colRef;
+describe('Query', () => {
+	describe('select', () => {
+		test('Valid arguments', () => {
 			const query = new Query({
-				from: arrayOfReferences,
-				orderBy: 'field.path'
+				select: ['path'],
+				from: colRef
 			});
 
-			const expected = [
-				{
-					field: {
-						fieldPath: 'field.path'
-					},
-					direction: 'ASCENDING'
-				}
-			];
+			const expected = {
+				fields: [
+					{
+						fieldPath: 'path'
+					}
+				]
+			};
 
-			const queryFull = new Query({
-				from: arrayOfReferences,
-				orderBy: {
-					field: 'field.path',
-					direction: 'ascending'
-				}
-			});
+			expect(query.toJSON().structuredQuery.select).toEqual(expected);
+		});
 
-			expect(query.options.orderBy).toEqual(expected);
-			expect(queryFull.options.orderBy).toEqual(expected);
+		test('Invalid arguments', () => {
+			expect(() => {
+				new Query({
+					select: 'path',
+					from: colRef
+				});
+			}).toThrow('Invalid argument "select": Expected argument to be an array of field paths');
+
+			expect(() => {
+				new Query({
+					select: [42],
+					from: colRef
+				});
+			}).toThrow('Invalid argument "select": Field path at index [0] is not a string');
 		});
 	});
 
-	describe('offset and limit', () => {
-		test('Invalid props throw', () => {
-			// Offset
-			expect(() => new Query({ from: colRef, offset: 'hi there' })).toThrow();
-			expect(() => new Query({ from: colRef, offset: -23 })).toThrow();
-			expect(() => new Query({ from: colRef, offset: {} })).toThrow();
-			expect(() => new Query({ from: colRef, offset: [] })).toThrow();
-
-			// Limit
-			expect(() => new Query({ from: colRef, limit: 'hi there' })).toThrow();
-			expect(() => new Query({ from: colRef, limit: -23 })).toThrow();
-			expect(() => new Query({ from: colRef, limit: {} })).toThrow();
-			expect(() => new Query({ from: colRef, limit: [] })).toThrow();
-		});
-
-		test('Valid prop', () => {
-			const arrayOfReferences = colRef;
-
-			const offset = new Query({
-				from: arrayOfReferences,
-				offset: 42
+	describe('from', () => {
+		test('Valid arguments', () => {
+			const query = new Query({
+				from: colRef
 			});
 
-			const limit = new Query({
-				from: arrayOfReferences,
-				limit: 42
+			const query2 = new Query({
+				from: db.reference('col2')
 			});
 
-			expect(offset.options.offset).toEqual(42);
-			expect(limit.options.limit).toEqual(42);
+			// Overwrite the from value.
+			query2.from(colRef);
+
+			const expected = {
+				collectionId: 'col',
+				allDescendants: undefined
+			};
+
+			expect(query.toJSON().structuredQuery.from).toEqual(expected);
+			expect(query2.toJSON().structuredQuery.from).toEqual(expected);
 		});
-	});
-});
 
-describe('Encode', () => {
-	test('from', () => {
-		const query = new Query({
-			from: colRef
+		test('Invalid arguments', () => {
+			expect(() => {
+				new Query({
+					from: db.reference('col/doc')
+				});
+			}).toThrow('Invalid argument "from": Expected a reference to a collection');
+
+			expect(() => {
+				new Query({
+					from: 42
+				});
+			}).toThrow('Invalid argument "from": Expected a reference to a collection');
 		});
-
-		const expected = {
-			collectionId: colRef.id,
-			allDescendants: undefined
-		};
-
-		expect(query.toJSON().structuredQuery.from).toEqual(expected);
 	});
 
 	describe('where', () => {
-		test('fieldFilter', () => {
+		test('Compound(filters array) syntax', () => {
 			const query = new Query({
 				from: colRef,
 				where: [['field.path', '>=', 11]]
@@ -150,156 +101,434 @@ describe('Encode', () => {
 			expect(query.toJSON().structuredQuery.where).toEqual(expected);
 		});
 
-		test('unaryFilter', () => {
-			const queryNaN = new Query({
-				from: colRef,
-				where: [['field.path', '==', NaN]]
-			});
-
-			const queryNull = new Query({
-				from: colRef,
-				where: [['field.path', '==', null]]
-			});
-
-			const expectedNaN = {
-				unaryFilter: {
-					field: {
-						fieldPath: 'field.path'
-					},
-					op: 'IS_NAN'
-				}
-			};
-
-			const expectedNull = {
-				unaryFilter: {
-					field: {
-						fieldPath: 'field.path'
-					},
-					op: 'IS_NULL'
-				}
-			};
-
-			expect(queryNaN.toJSON().structuredQuery.where).toEqual(expectedNaN);
-			expect(queryNull.toJSON().structuredQuery.where).toEqual(expectedNull);
-		});
-
-		test('compositeFilter', () => {
+		test('Short(single filter) syntax', () => {
 			const query = new Query({
 				from: colRef,
-				where: [
-					['field.nan', '==', NaN],
-					['field.null', '==', null],
-					['field.path', '==', 42]
-				]
+				where: ['field.path', '>=', 11]
 			});
 
 			const expected = {
-				compositeFilter: {
-					op: 'AND',
-					filters: [
-						{
-							unaryFilter: {
-								field: {
-									fieldPath: 'field.nan'
-								},
-								op: 'IS_NAN'
-							}
-						},
-						{
-							unaryFilter: {
-								field: {
-									fieldPath: 'field.null'
-								},
-								op: 'IS_NULL'
-							}
-						},
-						{
-							fieldFilter: {
-								field: {
-									fieldPath: 'field.path'
-								},
-								op: 'EQUAL',
-								value: {
-									integerValue: '42'
-								}
-							}
-						}
-					]
+				fieldFilter: {
+					field: {
+						fieldPath: 'field.path'
+					},
+					op: 'GREATER_THAN_OR_EQUAL',
+					value: {
+						integerValue: '11'
+					}
 				}
 			};
 
 			expect(query.toJSON().structuredQuery.where).toEqual(expected);
 		});
+
+		test('Invalid argument', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					where: [42, '>=', 11]
+				});
+			}).toThrow('Invalid argument "where": Invalid field path');
+
+			expect(() => {
+				new Query({
+					from: colRef,
+					where: ['path', '===', 11]
+				});
+			}).toThrow('Invalid argument "where": Invalid operator');
+
+			expect(() => {
+				new Query({
+					from: colRef,
+					where: ['path', '>=', null]
+				});
+			}).toThrow('Invalid argument "where": Null and NaN can only be used with the == operator');
+		});
+
+		describe('Filter types', () => {
+			test('fieldFilter', () => {
+				const query = new Query({
+					from: colRef,
+					where: ['field.path', '>=', 11]
+				});
+
+				const expected = {
+					fieldFilter: {
+						field: {
+							fieldPath: 'field.path'
+						},
+						op: 'GREATER_THAN_OR_EQUAL',
+						value: {
+							integerValue: '11'
+						}
+					}
+				};
+
+				expect(query.toJSON().structuredQuery.where).toEqual(expected);
+			});
+
+			test('unaryFilter', () => {
+				const queryNaN = new Query({
+					from: colRef,
+					where: ['field.path', '==', NaN]
+				});
+
+				const queryNull = new Query({
+					from: colRef,
+					where: ['field.path', '==', null]
+				});
+
+				const expectedNaN = {
+					unaryFilter: {
+						field: {
+							fieldPath: 'field.path'
+						},
+						op: 'IS_NAN'
+					}
+				};
+
+				const expectedNull = {
+					unaryFilter: {
+						field: {
+							fieldPath: 'field.path'
+						},
+						op: 'IS_NULL'
+					}
+				};
+
+				expect(queryNaN.toJSON().structuredQuery.where).toEqual(expectedNaN);
+				expect(queryNull.toJSON().structuredQuery.where).toEqual(expectedNull);
+			});
+
+			test('compositeFilter', () => {
+				const query = new Query({
+					from: colRef,
+					where: [
+						['field.nan', '==', NaN],
+						['field.null', '==', null],
+						['field.path', '==', 42]
+					]
+				});
+
+				const expected = {
+					compositeFilter: {
+						op: 'AND',
+						filters: [
+							{
+								unaryFilter: {
+									field: {
+										fieldPath: 'field.nan'
+									},
+									op: 'IS_NAN'
+								}
+							},
+							{
+								unaryFilter: {
+									field: {
+										fieldPath: 'field.null'
+									},
+									op: 'IS_NULL'
+								}
+							},
+							{
+								fieldFilter: {
+									field: {
+										fieldPath: 'field.path'
+									},
+									op: 'EQUAL',
+									value: {
+										integerValue: '42'
+									}
+								}
+							}
+						]
+					}
+				};
+
+				expect(query.toJSON().structuredQuery.where).toEqual(expected);
+			});
+		});
 	});
 
-	test('orderBy', () => {
-		const queryShort = new Query({
-			from: colRef,
-			orderBy: 'field.path'
-		});
-
-		const queryFull = new Query({
-			from: colRef,
-			orderBy: {
-				field: 'field.path',
-				direction: 'descending'
-			}
-		});
-
-		const defaultOrder = {
-			field: {
-				fieldPath: '__name__'
-			},
-			direction: 'ASCENDING'
-		};
-
-		const expectedShort = [
-			{
-				field: {
-					fieldPath: 'field.path'
-				},
-				direction: 'ASCENDING'
-			},
-			defaultOrder
-		];
-
-		const expectedFull = [
-			{
-				field: {
-					fieldPath: 'field.path'
-				},
-				direction: 'DESCENDING'
-			},
-			defaultOrder
-		];
-
-		expect(queryShort.toJSON().structuredQuery.orderBy).toEqual(expectedShort);
-		expect(queryFull.toJSON().structuredQuery.orderBy).toEqual(expectedFull);
-	});
-
-	test('startAt and endAt', () => {
-		const docRef = new Reference('col/doc', mockDB);
-
-		const startAtQuery = new Query({
-			from: colRef,
-			startAt: docRef
-		});
-
-		const endAtQuery = new Query({
-			from: colRef,
-			endAt: docRef
-		});
-
-		const expected = {
-			values: [
-				{
-					referenceValue: docRef.name
+	describe('orderBy', () => {
+		test('Full syntax', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: {
+					field: 'field.path',
+					direction: 'descending'
 				}
-			],
-			before: true
-		};
+			});
 
-		expect(startAtQuery.toJSON().structuredQuery.startAt).toEqual(expected);
-		expect(endAtQuery.toJSON().structuredQuery.endAt).toEqual(expected);
+			const expected = [
+				{
+					field: {
+						fieldPath: 'field.path'
+					},
+					direction: 'DESCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'ASCENDING'
+				}
+			];
+
+			expect(query.toJSON().structuredQuery.orderBy).toEqual(expected);
+		});
+
+		test('Short syntax', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: 'field.path'
+			});
+
+			const expected = [
+				{
+					field: {
+						fieldPath: 'field.path'
+					},
+					direction: 'ASCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'ASCENDING'
+				}
+			];
+
+			expect(query.toJSON().structuredQuery.orderBy).toEqual(expected);
+		});
+
+		test('Compound(array) full syntax', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: [
+					{
+						field: 'field.path',
+						direction: 'descending'
+					},
+					{
+						field: 'second.path',
+						direction: 'descending'
+					}
+				]
+			});
+
+			const expected = [
+				{
+					field: {
+						fieldPath: 'field.path'
+					},
+					direction: 'DESCENDING'
+				},
+				{
+					field: {
+						fieldPath: 'second.path'
+					},
+					direction: 'DESCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'ASCENDING'
+				}
+			];
+
+			expect(query.toJSON().structuredQuery.orderBy).toEqual(expected);
+		});
+
+		test('Compound(array) short syntax', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: ['field.path', 'second.path']
+			});
+
+			const expected = [
+				{
+					field: {
+						fieldPath: 'field.path'
+					},
+					direction: 'ASCENDING'
+				},
+				{
+					field: {
+						fieldPath: 'second.path'
+					},
+					direction: 'ASCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'ASCENDING'
+				}
+			];
+
+			expect(query.toJSON().structuredQuery.orderBy).toEqual(expected);
+		});
+
+		test('Invalid direction', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					orderBy: {
+						field: 'field.path',
+						direction: 'whats up?'
+					}
+				});
+			}).toThrow('Invalid argument "orderBy": "direction" property can only be one of: "ascending" or "descending"');
+		});
+	});
+
+	describe('startAt', () => {
+		test('Valid arguments', () => {
+			const docRef = new Reference('col/doc', db);
+
+			const query = new Query({
+				from: colRef,
+				startAt: docRef
+			});
+
+			const expected = {
+				values: [
+					{
+						referenceValue: docRef.name
+					}
+				],
+				before: true
+			};
+
+			expect(query.toJSON().structuredQuery.startAt).toEqual(expected);
+		});
+
+		test('Invalid arguments', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					startAt: 42
+				});
+			}).toThrow('Invalid argument "startAt": Expected a reference to a document');
+		});
+	});
+
+	describe('endAt', () => {
+		test('Valid arguments', () => {
+			const docRef = new Reference('col/doc', db);
+
+			const query = new Query({
+				from: colRef,
+				endAt: docRef
+			});
+
+			const expected = {
+				values: [
+					{
+						referenceValue: docRef.name
+					}
+				],
+				before: true
+			};
+
+			expect(query.toJSON().structuredQuery.endAt).toEqual(expected);
+		});
+
+		test('Invalid arguments', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					endAt: 42
+				});
+			}).toThrow('Invalid argument "endAt": Expected a reference to a document');
+		});
+	});
+
+	describe('offset', () => {
+		test('Valid argument', () => {
+			const query = new Query({
+				from: colRef,
+				offset: 51
+			});
+
+			expect(query.toJSON().structuredQuery.offset).toEqual(51);
+		});
+
+		test('Invalid argument', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					offset: '51'
+				});
+			}).toThrow('Expected an integer that is greater than 0');
+		});
+	});
+
+	describe('limit', () => {
+		test('Valid argument', () => {
+			const query = new Query({
+				from: colRef,
+				limit: 51
+			});
+
+			expect(query.toJSON().structuredQuery.limit).toEqual(51);
+		});
+
+		test('Invalid argument', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					limit: '51'
+				});
+			}).toThrow('Expected an integer that is greater than 0');
+		});
+	});
+
+	describe('run', () => {
+		test('Sends request to the right endpoint', async () => {
+			fetch.resetMocks();
+			fetch.mockResponse('[]');
+
+			await new Query({
+				from: colRef
+			}).run();
+
+			expect(fetch.mock.calls.length).toEqual(1);
+			expect(fetch.mock.calls[0][0]).toEqual(colRef.parent.endpoint + ':runQuery');
+		});
+
+		test('Returns array of documents', async () => {
+			fetch.resetMocks();
+			fetch.mockResponse(`[
+				{
+					"document": {
+						"name": "projects/projectId/databases/(default)/documents/col/AKoa",
+						"fields": {},
+						"createTime": "2019-10-17T16:33:41.217487Z",
+						"updateTime": "2019-12-04T10:18:57.882392Z"
+					},
+					"readTime": "2020-03-29T00:17:46.518749Z"
+				},
+				{
+					"document": {
+						"name": "projects/projectId/databases/(default)/documents/col/q9YU",
+						"fields": {},
+						"createTime": "2019-11-13T21:38:41.443294Z",
+						"updateTime": "2019-11-13T21:38:41.443294Z"
+					},
+					"readTime": "2020-03-29T00:17:46.518749Z"
+				}
+			]`);
+
+			const response = await new Query({
+				from: colRef
+			}).run();
+
+			response.map(doc => {
+				expect(doc).toBeInstanceOf(Document);
+			});
+		});
 	});
 });

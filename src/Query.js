@@ -1,4 +1,5 @@
 import { isDocReference, isColReference, isPositiveInteger, encodeValue } from './utils.js';
+import Document from '../src/Document.js';
 
 /**
  * Allowed types for the "from" option.
@@ -10,9 +11,9 @@ import { isDocReference, isColReference, isPositiveInteger, encodeValue } from '
 /**
  * Options object for a Query class.
  * @typedef {array} FilterOption
- * @property {string} 0 - property name
- * @property {string} 1 - operator
- * @property {string} 2 - value to compare
+ * @property {string} 0 - Property name
+ * @property {string} 1 - Operator - Can only be: `<`, `<=`, `LESS_THAN_OR_EQUAL`, `>`, `>=`, `==` or `contains`.
+ * @property {string} 2 - Value to compare
  */
 
 /**
@@ -32,8 +33,8 @@ import { isDocReference, isColReference, isPositiveInteger, encodeValue } from '
 /**
  * Options object for a Query class.
  * @typedef {Object} QueryOptions
- * @property {string[]} select The fields to return, leave empty to return the whole doc.
- * @property {Reference} from The collection to query.
+ * @property {string[]} [select] The fields to return, leave empty to return the whole doc.
+ * @property {Reference} from The collection to query, Should be set automatically if you are using `ref.query()`.
  * @property {FilterOption[]} [where] Filter used to select matching documents.
  * @property {(string | OrderOption)} [orderBy] The field to use while ordering the results and direction.
  * @property {(Reference | CursorOption)} [startAt] Reference to a document from which to start the query.
@@ -56,22 +57,15 @@ const operators = {
  * @param {*} filter A the value to check
  * @returns {boolean} True if the value is a valid filter.
  */
-function isFilter(filter) {
+function validateFilter(filter) {
 	if (!Array.isArray(filter) || filter.length !== 3) return false;
 
-	// Check if on of the functions in the array returns true.
-	// There are three functions, one for each argument that
-	// needs to be present in a valid filter.
-	// Each function checks that its related argument is valid.
-	// it it returns true its invalid, and we loop through them.
-	return ![
-		fieldPath => typeof fieldPath !== 'string',
-		op => !(op in operators),
-		value => {
-			if (value === undefined) return true;
-			return (value === null || Number.isNaN(value)) && filter[1] !== '==';
-		}
-	].some((fn, i) => fn(filter[i]));
+	const [fieldPath, op, value] = filter;
+	if (typeof fieldPath !== 'string') throw Error('Invalid field path');
+	if (!(op in operators)) throw Error('Invalid operator');
+	if ((value === null || Number.isNaN(value)) && filter[1] !== '==')
+		throw Error('Null and NaN can only be used with the == operator');
+	if (value === undefined) throw Error('Invalid comparative value');
 }
 
 /*
@@ -169,6 +163,7 @@ export default class Query {
 	 */
 	constructor(options = {}) {
 		this.options = {
+			select: [],
 			where: [],
 			orderBy: []
 		};
@@ -177,14 +172,18 @@ export default class Query {
 		for (const option of ['select', 'from', 'where', 'orderBy', 'startAt', 'endAt', 'offset', 'limit']) {
 			const optionValue = options[option];
 
-			// Save the option only if it was passed in the options.
-			// Remember, we are looping through the array of the valid options,
-			// not directly over the ones passed.
 			if (option in options) {
-				// If the argument is an array, then loop though its values, and
-				// add them one by one. the only values allowed to be arrays
-				// are: 'where' and 'orderBy'.
-				if ((option === 'where' || option === 'orderBy') && Array.isArray(optionValue)) {
+				// If the option is "where" or "orderBy", and is also an array,
+				// then it might be a compound value, so we want to pass it one
+				// by one to its method.
+				//
+				// "where" is always an array, because every individual filter
+				// is represented by an array, so check to see if its first child
+				// is also an array. if it is, then it might be a compound value.
+				if (
+					(option === 'where' && Array.isArray(optionValue[0])) ||
+					(option === 'orderBy' && Array.isArray(optionValue))
+				) {
 					optionValue.forEach((val, i) => {
 						// Use try/catch in order to provide context for the error.
 						try {
@@ -210,6 +209,16 @@ export default class Query {
 
 		// Validate that "from" is always passed.
 		if (!('from' in options)) throw Error('"from" is required when building a new query');
+		this.db = options.from.db;
+		this.parentDocument = options.from.parent;
+	}
+
+	select(fields) {
+		if (!Array.isArray(fields)) throw Error('Expected argument to be an array of field paths');
+		fields.forEach((field, i) => {
+			if (typeof field !== 'string') throw Error(`Field path at index [${i}] is not a string`);
+			this.options.select.push(field);
+		});
 	}
 
 	/**
@@ -218,9 +227,9 @@ export default class Query {
 	from(val) {
 		const collection = val.collection || val;
 		const { allDescendants } = val;
-		if (!isColReference(collection)) throw Error('Expected the argument to be a reference to a collection');
+		if (!isColReference(collection)) throw Error('Expected a reference to a collection');
 		if (allDescendants !== undefined && typeof allDescendants !== 'boolean')
-			throw Error('Expected the "allDescendants"argument to be a boolean');
+			throw Error('Expected the "allDescendants" argument to be a boolean');
 
 		this.options.from = { collectionId: collection.id, allDescendants };
 
@@ -229,7 +238,7 @@ export default class Query {
 
 	where(fieldPath) {
 		const filter = Array.isArray(fieldPath) ? fieldPath : arguments;
-		if (!isFilter(filter)) throw Error('Invalid filter');
+		validateFilter(filter);
 		this.options.where.push(filter);
 		return this;
 	}
@@ -243,26 +252,31 @@ export default class Query {
 			throw Error('"direction" property can only be one of: "ascending" or "descending"');
 
 		this.options.orderBy.push({ field: { fieldPath }, direction: direction || 'ASCENDING' });
+		return this;
 	}
 
 	startAt(ref) {
-		if (!isDocReference(ref)) throw Error('Expected the argument to be a reference to a document');
+		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
 		this.options.startAt = ref;
+		return this;
 	}
 
 	endAt(ref) {
-		if (!isDocReference(ref)) throw Error('Expected the argument to be a reference to a document');
+		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
 		this.options.endAt = ref;
+		return this;
 	}
 
 	offset(number) {
-		if (!isPositiveInteger(number)) throw Error('Expected the argument to be an integer that is greater than 0');
+		if (!isPositiveInteger(number)) throw Error('Expected an integer that is greater than 0');
 		this.options.offset = number;
+		return this;
 	}
 
 	limit(number) {
-		if (!isPositiveInteger(number)) throw Error('Expected the argument to be an integer that is greater than 0');
+		if (!isPositiveInteger(number)) throw Error('Expected an integer that is greater than 0');
 		this.options.limit = number;
+		return this;
 	}
 
 	toJSON() {
@@ -284,10 +298,12 @@ export default class Query {
 		};
 	}
 
-	run() {
-		this.options.from.db.fetch(this.options.from.db.endpoint + ':runQuery', {
-			method: 'POST',
-			body: JSON.stringify(this)
-		});
+	async run() {
+		return (
+			await this.db.fetch(this.parentDocument.endpoint + ':runQuery', {
+				method: 'POST',
+				body: JSON.stringify(this)
+			})
+		).map(result => new Document(result.document, this.db));
 	}
 }

@@ -244,6 +244,46 @@ try {
 }
 ```
 
+## Queries
+
+Queries are done by using the `query` method of a reference instance. The query will search through the children of document/collection.
+
+lets look at an example:
+
+```js
+const users = db.reference('users');
+
+const usersQuery = users.query({
+	where: [['age', '=>', 21]], // Array of query operations.
+	orderBy: 'age', // Can also be an object { field: 'age', direction: 'ascending' }
+	limit: 10 // The max results
+});
+
+// The above will be identical to
+const usersQuery = users
+	.query()
+	.where('age', '=>', 21)
+	.orderBy('age')
+	.limit(10);
+```
+
+The `users.query()` method optionally accepts an options object, and then returns a new Query instance. All of the options can also be set by using the query methods, and they can also be chained(as seen in the second example). You can then `run()` the query:
+
+```js
+const results = await usersQuery.run(); // Will return the query results.
+```
+
+All the query options can be seen in the [API reference for Query](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Query-instance#queryoptions--object), bet here is a quick recap of the important ones:
+
+- `select` Array of field paths to be returned, if left empty will return the whole document.
+- `where` Comparative operations for filtering the query.
+- `from` Set by default for you to eb the current collection of the reference.
+- `orderBy` The field and direction to order by.
+- `startAt` A reference to a specific document from which to start the query.
+- `endAt` A reference to a specific document at which to end the query.
+- `offset` Number of results to skip
+- `limit` The maximum number of documents to return.
+
 ### Read and write in a transaction
 
 A transaction is very powerful because you can use it to perform operations that depend on the current data of a document. Sometimes it is necessary to have a guarantee that we are working with the latest data. Using reads within a transaction can help us accomplish that.
