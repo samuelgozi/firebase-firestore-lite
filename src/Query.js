@@ -49,7 +49,7 @@ const operators = {
 	'>': 'GREATER_THAN',
 	'>=': 'GREATER_THAN_OR_EQUAL',
 	'==': 'EQUAL',
-	contains: 'ARRAY_CONTAINS',
+	contains: 'ARRAY_CONTAINS'
 };
 
 /**
@@ -95,8 +95,8 @@ const encoders = {
 			return {
 				unaryFilter: {
 					field: { fieldPath },
-					op: Number.isNaN(value) ? 'IS_NAN' : 'IS_NULL',
-				},
+					op: Number.isNaN(value) ? 'IS_NAN' : 'IS_NULL'
+				}
 			};
 		}
 
@@ -104,8 +104,8 @@ const encoders = {
 			fieldFilter: {
 				field: { fieldPath },
 				op: operators[op],
-				value: encodeValue(value),
-			},
+				value: encodeValue(value)
+			}
 		};
 	},
 
@@ -126,8 +126,8 @@ const encoders = {
 		return {
 			compositeFilter: {
 				op: 'AND',
-				filters: option.map(this.encodeFilter),
-			},
+				filters: option.map(this.encodeFilter)
+			}
 		};
 	},
 
@@ -139,7 +139,7 @@ const encoders = {
 	referenceToCursor(ref) {
 		return {
 			values: [{ referenceValue: ref.name }],
-			before: true,
+			before: true
 		};
 	},
 
@@ -149,7 +149,7 @@ const encoders = {
 
 	endAt(ref) {
 		return this.referenceToCursor(ref);
-	},
+	}
 };
 
 /**
@@ -164,7 +164,7 @@ export default class Query {
 		this.options = {
 			select: [],
 			where: [],
-			orderBy: [],
+			orderBy: []
 		};
 
 		// Loop through all the valid options, validate them and then save them.
@@ -293,7 +293,7 @@ export default class Query {
 		}
 
 		return {
-			structuredQuery: encoded,
+			structuredQuery: encoded
 		};
 	}
 
@@ -301,7 +301,7 @@ export default class Query {
 		return (
 			await this.db.fetch(this.parentDocument.endpoint + ':runQuery', {
 				method: 'POST',
-				body: JSON.stringify(this),
+				body: JSON.stringify(this)
 			})
 		).map((result) => new Document(result.document, this.db));
 	}
