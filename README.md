@@ -255,16 +255,12 @@ const users = db.reference('users');
 
 const usersQuery = users.query({
 	where: [['age', '=>', 21]], // Array of query operations.
-	orderBy: 'age', // Can also be an object { field: 'age', direction: 'ascending' }
+	orderBy: 'age', // Can also be an object { field: 'age', direction: 'asc'|'desc' }
 	limit: 10 // The max results
 });
 
 // The above will be identical to
-const usersQuery = users
-	.query()
-	.where('age', '=>', 21)
-	.orderBy('age')
-	.limit(10);
+const usersQuery = users.query().where('age', '=>', 21).orderBy('age').limit(10);
 ```
 
 The `users.query()` method optionally accepts an options object, and then returns a new Query instance. All of the options can also be set by using the query methods, and they can also be chained(as seen in the second example). You can then `run()` the query:
