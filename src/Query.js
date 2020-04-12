@@ -81,7 +81,7 @@ const encoders = {
 	 * @returns {Object}
 	 */
 	select(fieldsArray) {
-		const fields = fieldsArray.map((fieldPath) => ({ fieldPath }));
+		const fields = fieldsArray.map(fieldPath => ({ fieldPath }));
 		return fields.length ? { fields } : undefined;
 	},
 
@@ -129,11 +129,6 @@ const encoders = {
 				filters: option.map(this.encodeFilter)
 			}
 		};
-	},
-
-	orderBy(option) {
-		option.push({ field: { fieldPath: '__name__' }, direction: 'ASCENDING' });
-		return option;
 	},
 
 	referenceToCursor(ref) {
@@ -242,15 +237,19 @@ export default class Query {
 		return this;
 	}
 
-	orderBy(order) {
-		const fieldPath = order.field || order;
-		const direction = typeof order.direction === 'string' ? order.direction.toUpperCase() : order.direction;
+	orderBy(order, dir = 'asc') {
+		const dirMap = {
+			asc: 'ASCENDING',
+			desc: 'DESCENDING'
+		};
+
+		let { field: fieldPath = order, direction = dir } = order;
+		direction = dirMap[direction];
 
 		if (typeof fieldPath !== 'string') throw Error('"field" property needs to be a string');
-		if (![undefined, 'ASCENDING', 'DESCENDING'].includes(direction))
-			throw Error('"direction" property can only be one of: "ascending" or "descending"');
+		if (direction === undefined) throw Error('"direction" property can only be "asc" or "desc"');
 
-		this.options.orderBy.push({ field: { fieldPath }, direction: direction || 'ASCENDING' });
+		this.options.orderBy.push({ field: { fieldPath }, direction });
 		return this;
 	}
 
@@ -303,6 +302,6 @@ export default class Query {
 				method: 'POST',
 				body: JSON.stringify(this)
 			})
-		).map((result) => new Document(result.document, this.db));
+		).map(result => new Document(result.document, this.db));
 	}
 }
