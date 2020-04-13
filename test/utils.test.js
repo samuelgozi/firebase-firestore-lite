@@ -371,17 +371,13 @@ describe('encode', () => {
 			{
 				fieldPath: 't5',
 				appendMissingElements: {
-					arrayValue: {
-						values: [{ stringValue: 'hello' }]
-					}
+					values: [{ stringValue: 'hello' }]
 				}
 			},
 			{
 				fieldPath: 't6',
 				removeAllFromArray: {
-					arrayValue: {
-						values: [{ stringValue: 'good bye' }]
-					}
+					values: [{ stringValue: 'good bye' }]
 				}
 			}
 		];

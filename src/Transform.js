@@ -23,6 +23,7 @@ export default class Transform {
 				`The value for the transform "${name}" needs to be a${validator === isNumber ? ' number' : 'n array'}.`
 			);
 
-		this[transformName] = name === 'serverTimestamp' ? 'REQUEST_TIME' : encodeValue(value);
+		if (validator === Array.isArray) this[transformName] = encodeValue(value).arrayValue;
+		else this[transformName] = name === 'serverTimestamp' ? 'REQUEST_TIME' : encodeValue(value);
 	}
 }

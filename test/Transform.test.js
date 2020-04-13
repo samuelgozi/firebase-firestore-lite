@@ -105,19 +105,17 @@ describe('Transform', () => {
 				const given = JSON.stringify(new Transform('appendToArray', [1, 2, 3]));
 				const expected = JSON.stringify({
 					appendMissingElements: {
-						arrayValue: {
-							values: [
-								{
-									integerValue: '1'
-								},
-								{
-									integerValue: '2'
-								},
-								{
-									integerValue: '3'
-								}
-							]
-						}
+						values: [
+							{
+								integerValue: '1'
+							},
+							{
+								integerValue: '2'
+							},
+							{
+								integerValue: '3'
+							}
+						]
 					}
 				});
 
@@ -128,9 +126,7 @@ describe('Transform', () => {
 				const given = JSON.stringify(new Transform('appendToArray', []));
 				const expected = JSON.stringify({
 					appendMissingElements: {
-						arrayValue: {
-							values: []
-						}
+						values: []
 					}
 				});
 
@@ -159,19 +155,17 @@ describe('Transform', () => {
 				const given = JSON.stringify(new Transform('removeFromArray', [1, 2, 3]));
 				const expected = JSON.stringify({
 					removeAllFromArray: {
-						arrayValue: {
-							values: [
-								{
-									integerValue: '1'
-								},
-								{
-									integerValue: '2'
-								},
-								{
-									integerValue: '3'
-								}
-							]
-						}
+						values: [
+							{
+								integerValue: '1'
+							},
+							{
+								integerValue: '2'
+							},
+							{
+								integerValue: '3'
+							}
+						]
 					}
 				});
 
@@ -182,9 +176,7 @@ describe('Transform', () => {
 				const given = JSON.stringify(new Transform('removeFromArray', []));
 				const expected = JSON.stringify({
 					removeAllFromArray: {
-						arrayValue: {
-							values: []
-						}
+						values: []
 					}
 				});
 
