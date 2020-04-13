@@ -18,7 +18,7 @@ const transformsMap = {
  * made by the Firebase server. For example `serverTimestamp`
  * cant be known in the client, as it evaluates in the server.
  *
- * The valid types are:
+ * The valid transforms are:
  *  - `serverTimestamp`: Is replaces by the server with the time the request was processed.
  *  - `increment`: The server will increment this field by the given amount.
  *  - `max`: Sets the field to the maximum of its current value and the given value.

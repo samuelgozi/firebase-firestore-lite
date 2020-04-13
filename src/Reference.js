@@ -132,13 +132,13 @@ export default class Reference {
 	 * Will throw is the reference points to a collection.
 	 * @returns {Document} The updated document.
 	 */
-	async update(obj, mustExist = true) {
+	async update(obj, existsOptional) {
 		if (this.isCollection) throw Error("Can't update a collection");
 
 		const doc = this.handleTransforms(obj, true);
 
 		if (doc instanceof Promise) return await doc;
-		if (mustExist) doc.currentDocument = { exists: true };
+		if (!existsOptional) doc.currentDocument = { exists: true };
 
 		return new Document(
 			await this.db.fetch(this.endpoint + maskFromObject(obj), {
