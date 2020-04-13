@@ -1,15 +1,13 @@
 import Reference from './Reference.js';
 import GeoPoint from './GeoPoint.js';
+import Transform from './Transform.js';
 
 /**
  * Trims spaces and slashes from a path.
  * @param {string} path Path relative to root of db.
  */
 export function trimPath(path) {
-	return path
-		.trim()
-		.replace(/^\/?/, '')
-		.replace(/\/?$/, '');
+	return path.trim().replace(/^\/?/, '').replace(/\/?$/, '');
 }
 
 /**
@@ -191,7 +189,7 @@ export function decode(map, db) {
  * @param {any} value The variable to encode
  * @returns {object}
  */
-export function encodeValue(value) {
+export function encodeValue(value, transforms, parentPath) {
 	const objectClass = Object.prototype.toString.call(value);
 	let valueType = objectClass.substring(8, objectClass.length - 1).toLowerCase() + 'Value';
 
@@ -217,21 +215,19 @@ export function encodeValue(value) {
 
 			// Else assume its intended to be a Map value.
 			valueType = 'mapValue';
-			value = encode(value);
+			value = encode(value, transforms, parentPath);
 			break;
 	}
 
-	return {
-		[valueType]: value
-	};
+	return { [valueType]: value };
 }
 
 /**
- * Converts an object into a Firebase Map Value.
+ * Converts an object into a write instruction.
  * @param {Object} object The object to encode
  * @returns {Object}
  */
-export function encode(object) {
+export function encode(object, transforms, parentPath) {
 	const keys = Object.keys(object);
 
 	// If the object has no keys, then we don't
@@ -243,7 +239,19 @@ export function encode(object) {
 	const map = { fields: {} };
 
 	for (const key of keys) {
-		map.fields[key] = encodeValue(object[key]);
+		const value = object[key];
+		const path = parentPath ? `${parentPath}.${key}` : key;
+
+		// If this is a transform then add it to the transforms
+		// list and skip its parsing. but only if a transforms array
+		// was provided.
+		if (value instanceof Transform) {
+			value.fieldPath = path;
+			transforms && transforms.push(value);
+			continue;
+		}
+
+		map.fields[key] = encodeValue(value, transforms, path);
 	}
 
 	return map;

@@ -16,13 +16,13 @@ const transformsMap = {
 export default class Transform {
 	constructor(name, value) {
 		if (!(name in transformsMap)) throw Error(`Invalid transform name: "${name}"`);
-		const [tname, validator] = transformsMap[name];
+		const [transformName, validator] = transformsMap[name];
 
 		if (validator && !validator(value))
 			throw Error(
 				`The value for the transform "${name}" needs to be a${validator === isNumber ? ' number' : 'n array'}.`
 			);
 
-		this[tname] = name === 'serverTimestamp' ? 'REQUEST_TIME' : encodeValue(value);
+		this[transformName] = name === 'serverTimestamp' ? 'REQUEST_TIME' : encodeValue(value);
 	}
 }

@@ -13,6 +13,7 @@ import {
 } from '../src/utils.js';
 import Reference from '../src/Reference.js';
 import GeoPoint from '../src/GeoPoint.js';
+import Transform from '../src/Transform.js';
 import firestoreDocument from './mockDocument.json';
 import decodedDocument from './decodedMockedDocument.js';
 
@@ -307,10 +308,103 @@ describe('EncodeValue', () => {
 			}
 		});
 	});
+});
 
-	test('Objects', () => {
+describe('encode', () => {
+	test('Maps without transforms', () => {
 		expect(encode(decodedDocument)).toEqual({
 			fields: firestoreDocument.fields
 		});
+	});
+
+	test('Maps with transforms', () => {
+		const expectedDoc = {
+			fields: {
+				one: {
+					stringValue: '1'
+				},
+				two: {
+					integerValue: '2'
+				},
+				three: {
+					doubleValue: '4.2'
+				},
+				four: {
+					mapValue: {
+						fields: {
+							five: {
+								stringValue: 'five'
+							}
+						}
+					}
+				}
+			}
+		};
+
+		const expectedTransforms = [
+			{
+				fieldPath: 'four.nested',
+				setToServerValue: 'REQUEST_TIME'
+			},
+			{
+				fieldPath: 't1',
+				setToServerValue: 'REQUEST_TIME'
+			},
+			{
+				fieldPath: 't2',
+				increment: {
+					integerValue: '1'
+				}
+			},
+			{
+				fieldPath: 't3',
+				maximum: {
+					integerValue: '4'
+				}
+			},
+			{
+				fieldPath: 't4',
+				minimum: {
+					doubleValue: '4.2'
+				}
+			},
+			{
+				fieldPath: 't5',
+				appendMissingElements: {
+					arrayValue: {
+						values: [{ stringValue: 'hello' }]
+					}
+				}
+			},
+			{
+				fieldPath: 't6',
+				removeAllFromArray: {
+					arrayValue: {
+						values: [{ stringValue: 'good bye' }]
+					}
+				}
+			}
+		];
+
+		const given = {
+			one: '1',
+			two: 2,
+			three: 4.2,
+			four: {
+				five: 'five',
+				nested: new Transform('serverTimestamp')
+			},
+			t1: new Transform('serverTimestamp'),
+			t2: new Transform('increment', 1),
+			t3: new Transform('max', 4),
+			t4: new Transform('min', 4.2),
+			t5: new Transform('appendToArray', ['hello']),
+			t6: new Transform('removeFromArray', ['good bye'])
+		};
+
+		const transforms = [];
+
+		expect(encode(given, transforms)).toEqual(expectedDoc);
+		expect(transforms).toMatchObject(expectedTransforms);
 	});
 });
