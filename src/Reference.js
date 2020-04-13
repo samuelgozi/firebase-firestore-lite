@@ -1,7 +1,7 @@
 import Query from './Query.js';
 import Document from './Document.js';
 import List from './List.js';
-import { trimPath, isDocPath, objectToQuery, maskFromObject, encode } from './utils.js';
+import { trimPath, isDocPath, objectToQuery, maskFromObject, encode, getKeyPaths } from './utils.js';
 
 export default class Reference {
 	constructor(path, db) {
@@ -69,17 +69,59 @@ export default class Reference {
 	}
 
 	/**
+	 * Helper that handles Transforms in objects.
+	 * If the object has a transform then a transaction will be made,
+	 * and a promise for the resulting document will be returned.
+	 * Else, if it doesn't have any Transforms then we return the parsed
+	 * document and let the caller handle the request.
+	 *
+	 * @param {object} obj The object representing the Firebase document.
+	 * @param {boolean} update True if intended to update an existing document.
+	 * @private
+	 */
+	handleTransforms(obj, update = false) {
+		if (typeof obj !== 'object') throw Error(`"${update ? 'update' : 'set'}" received no arguments`);
+		const transforms = [];
+		const doc = encode(obj, transforms);
+
+		if (transforms.length === 0) return doc;
+
+		if (this.isCollection && transforms.length)
+			throw Error("Transforms can't be used when creating documents with server generated IDs");
+
+		const tx = this.db.transaction();
+		doc.name = this.name;
+		tx.writes.push(
+			{
+				update: doc,
+				updateMask: update ? { fieldPaths: getKeyPaths(obj) } : undefined,
+				currentDocument: update ? { exists: true } : undefined
+			},
+			{
+				transform: {
+					document: this.name,
+					fieldTransforms: transforms
+				}
+			}
+		);
+		return tx.commit().then(() => this.get());
+	}
+
+	/**
 	 * Create a new document or overwrites an existing one matching this reference.
 	 * Will throw is the reference points to a collection.
 	 * @returns {Document} The newly created/updated document.
 	 */
-	async set(object = {}) {
+	async set(obj) {
+		const doc = this.handleTransforms(obj);
+		if (doc instanceof Promise) return await doc;
+
 		return new Document(
 			await this.db.fetch(this.endpoint, {
 				// If this is a path to a specific document use
 				// patch instead, else, create a new document.
 				method: this.isCollection ? 'POST' : 'PATCH',
-				body: JSON.stringify(encode(object))
+				body: JSON.stringify(doc)
 			}),
 			this.db
 		);
@@ -90,13 +132,18 @@ export default class Reference {
 	 * Will throw is the reference points to a collection.
 	 * @returns {Document} The updated document.
 	 */
-	async update(object = {}) {
+	async update(obj, mustExist = true) {
 		if (this.isCollection) throw Error("Can't update a collection");
 
+		const doc = this.handleTransforms(obj, true);
+
+		if (doc instanceof Promise) return await doc;
+		if (mustExist) doc.currentDocument = { exists: true };
+
 		return new Document(
-			await this.db.fetch(this.endpoint + maskFromObject(object), {
+			await this.db.fetch(this.endpoint + maskFromObject(obj), {
 				method: 'PATCH',
-				body: JSON.stringify(encode(object))
+				body: JSON.stringify(doc)
 			}),
 			this.db
 		);

@@ -3,6 +3,7 @@ import Reference from '../src/Reference.js';
 import List from '../src/List.js';
 import Query from '../src/Query.js';
 import Database from '../src/index.js';
+import Transform from '../src/Transform.js';
 
 const db = new Database({ projectId: 'projectId' });
 const rawDoc = JSON.stringify({
@@ -193,11 +194,15 @@ describe('Get', () => {
 
 describe('Set', () => {
 	describe('Requests the correct endpoint', () => {
+		test('Throws when no argument is provided', async () => {
+			await expect(new Reference('col/doc', db).set()).rejects.toThrow('"set" received no arguments');
+		});
+
 		test('New document(collection endpoint)', async () => {
 			fetch.resetMocks();
 			fetch.mockResponse(rawDoc);
 
-			await new Reference('col/doc/col', db).set();
+			await new Reference('col/doc/col', db).set({});
 			const mockCall = fetch.mock.calls[0];
 
 			expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc/col`);
@@ -208,7 +213,7 @@ describe('Set', () => {
 			fetch.resetMocks();
 			fetch.mockResponse(rawDoc);
 
-			await new Reference('col/doc', db).set();
+			await new Reference('col/doc', db).set({});
 			const mockCall = fetch.mock.calls[0];
 
 			expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc`);
@@ -237,18 +242,96 @@ describe('Set', () => {
 			expect(body).toEqual('{"fields":{"one":{"stringValue":"one"}}}');
 		});
 	});
+
+	describe('Transforms', () => {
+		test('Throws when called on collection with a Transform', async () => {
+			fetch.resetMocks();
+			fetch.mockResponses('{}', rawDoc);
+
+			const promise = new Reference('col', db).set({
+				one: 'one',
+				two: 'two',
+				tran: new Transform('serverTimestamp')
+			});
+
+			expect(promise).rejects.toThrow("Transforms can't be used when creating documents with server generated IDs");
+		});
+
+		test('Makes the correct requests', async () => {
+			fetch.resetMocks();
+			fetch.mockResponses('{}', rawDoc);
+
+			await new Reference('col/doc', db).set({
+				one: 'one',
+				two: 'two',
+				tran: new Transform('serverTimestamp')
+			});
+
+			expect(fetch.mock.calls.length).toEqual(2);
+			expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		});
+
+		test('Transaction includes correct body', async () => {
+			fetch.resetMocks();
+			fetch.mockResponses('{}', rawDoc);
+
+			const ref = new Reference('col/doc', db);
+
+			await ref.set({
+				one: 'one',
+				two: 'two',
+				tran: new Transform('serverTimestamp')
+			});
+
+			const given = JSON.parse(fetch.mock.calls[0][1].body);
+			const expected = {
+				writes: [
+					{
+						update: {
+							name: ref.name,
+							fields: {
+								one: {
+									stringValue: 'one'
+								},
+								two: {
+									stringValue: 'two'
+								}
+							}
+						}
+					},
+					{
+						transform: {
+							document: ref.name,
+							fieldTransforms: [
+								{
+									fieldPath: 'tran',
+									setToServerValue: 'REQUEST_TIME'
+								}
+							]
+						}
+					}
+				]
+			};
+
+			expect(given).toEqual(expected);
+		});
+	});
 });
 
 describe('Update', () => {
-	test('Throws when the reference points to a collection', () => {
-		expect(new Reference('/col', db).update()).rejects.toThrow("Can't update a collection");
+	test('Throws when no argument is provided', async () => {
+		await expect(new Reference('col/doc', db).update()).rejects.toThrow('"update" received no arguments');
+	});
+
+	test('Throws when the reference points to a collection', async () => {
+		await expect(new Reference('/col', db).update({})).rejects.toThrow("Can't update a collection");
 	});
 
 	test('Requests the correct endpoint', async () => {
 		fetch.resetMocks();
 		fetch.mockResponse(rawDoc);
 
-		await new Reference('/col/doc', db).update();
+		await new Reference('/col/doc', db).update({});
 
 		const mockCall = fetch.mock.calls[0];
 
@@ -263,7 +346,83 @@ describe('Update', () => {
 		await new Reference('col/doc', db).update({ one: 'one' });
 		const body = fetch.mock.calls[0][1].body;
 
-		expect(body).toEqual('{"fields":{"one":{"stringValue":"one"}}}');
+		expect(body).toEqual(
+			JSON.stringify({
+				fields: {
+					one: { stringValue: 'one' }
+				},
+				currentDocument: {
+					exists: true
+				}
+			})
+		);
+	});
+
+	describe('Transforms', () => {
+		test('Makes the correct requests', async () => {
+			fetch.resetMocks();
+			fetch.mockResponses('{}', rawDoc);
+
+			await new Reference('col/doc', db).update({
+				one: 'one',
+				two: 'two',
+				tran: new Transform('serverTimestamp')
+			});
+
+			expect(fetch.mock.calls.length).toEqual(2);
+			expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		});
+
+		test('Transaction includes correct body', async () => {
+			fetch.resetMocks();
+			fetch.mockResponses('{}', rawDoc);
+
+			const ref = new Reference('col/doc', db);
+
+			await ref.update({
+				one: 'one',
+				two: 'two',
+				tran: new Transform('serverTimestamp')
+			});
+
+			const given = JSON.parse(fetch.mock.calls[0][1].body);
+			const expected = {
+				writes: [
+					{
+						update: {
+							name: ref.name,
+							fields: {
+								one: {
+									stringValue: 'one'
+								},
+								two: {
+									stringValue: 'two'
+								}
+							}
+						},
+						currentDocument: {
+							exists: true
+						},
+						updateMask: {
+							fieldPaths: ['one', 'two']
+						}
+					},
+					{
+						transform: {
+							document: ref.name,
+							fieldTransforms: [
+								{
+									fieldPath: 'tran',
+									setToServerValue: 'REQUEST_TIME'
+								}
+							]
+						}
+					}
+				]
+			};
+
+			expect(given).toEqual(expected);
+		});
 	});
 });
 

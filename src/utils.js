@@ -98,6 +98,8 @@ export function getKeyPaths(object, parentPath) {
 	for (const key in object) {
 		const keyPath = parentPath ? `${parentPath}.${key}` : key;
 
+		if (object[key] instanceof Transform) continue;
+
 		if (typeof object[key] === 'object' && !Array.isArray(object[key])) {
 			mask = mask.concat(getKeyPaths(object[key], keyPath));
 			continue;
@@ -114,9 +116,8 @@ export function getKeyPaths(object, parentPath) {
  * @param {Object} object
  */
 export function maskFromObject(object = {}) {
-	return getKeyPaths(object)
-		.map(p => `updateMask.fieldPaths=${p}`)
-		.join('&');
+	const paths = getKeyPaths(object);
+	return paths.length === 0 ? '' : paths.map(p => `updateMask.fieldPaths=${p}`).join('&');
 }
 
 /**
@@ -230,11 +231,7 @@ export function encodeValue(value, transforms, parentPath) {
 export function encode(object, transforms, parentPath) {
 	const keys = Object.keys(object);
 
-	// If the object has no keys, then we don't
-	// need to add a 'fields' property.
-	// I'm not sure this matters, if I knew it didn't
-	// I would remove this if statement.
-	if (keys.length === 0) return object;
+	if (keys.length === 0) return {};
 
 	const map = { fields: {} };
 
