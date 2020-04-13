@@ -11,7 +11,7 @@
 			"integerValue": "42"
 		},
 		"double": {
-			"doubleValue": "4.2"
+			"doubleValue": 4.2
 		},
 		"timestamp": {
 			"timestampValue": "2019-10-10T14:00:00.617Z"
@@ -41,7 +41,7 @@
 						"integerValue": "42"
 					},
 					{
-						"doubleValue": "4.2"
+						"doubleValue": 4.2
 					},
 					{
 						"timestampValue": "2019-10-10T14:00:00.617Z"
@@ -68,7 +68,7 @@
 							"fields": {
 								"one": { "stringValue": "one" },
 								"two": { "integerValue": "2" },
-								"three": { "doubleValue": "3.1" }
+								"three": { "doubleValue": 3.1 }
 							}
 						}
 					}
@@ -88,7 +88,7 @@
 						"integerValue": "42"
 					},
 					"double": {
-						"doubleValue": "4.2"
+						"doubleValue": 4.2
 					},
 					"timestamp": {
 						"timestampValue": "2019-10-10T14:00:00.617Z"
@@ -115,7 +115,7 @@
 							"fields": {
 								"one": { "stringValue": "one" },
 								"two": { "integerValue": "2" },
-								"three": { "doubleValue": "3.1" }
+								"three": { "doubleValue": 3.1 }
 							}
 						}
 					}

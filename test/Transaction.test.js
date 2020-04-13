@@ -15,7 +15,7 @@ const rawDoc = {
 			integerValue: '2'
 		},
 		three: {
-			doubleValue: '4.2'
+			doubleValue: 4.2
 		}
 	}
 };

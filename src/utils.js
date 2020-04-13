@@ -134,7 +134,6 @@ function decodeValue(value, db) {
 	// Some values need to be handled in a specific way,
 	// check if this is one of them, and return the value.
 	switch (type) {
-		case 'doubleValue':
 		case 'integerValue':
 			return Number(value);
 
@@ -157,6 +156,7 @@ function decodeValue(value, db) {
 		// We include all of them instead of using 'default:'
 		// because we use it as validation.
 		case 'stringValue':
+		case 'doubleValue':
 		case 'booleanValue':
 		case 'nullValue':
 		case 'bytesValue':
@@ -196,7 +196,7 @@ export function encodeValue(value, transforms, parentPath) {
 	switch (valueType) {
 		case 'numberValue':
 			valueType = Number.isInteger(value) ? 'integerValue' : 'doubleValue';
-			value = String(value);
+			value = valueType === 'integerValue' ? String(value) : value;
 			break;
 
 		case 'arrayValue':

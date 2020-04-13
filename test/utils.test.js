@@ -253,7 +253,7 @@ describe('EncodeValue', () => {
 	});
 
 	test('Doubles', () => {
-		expect(encodeValue(4.2)).toEqual({ doubleValue: '4.2' });
+		expect(encodeValue(4.2)).toEqual({ doubleValue: 4.2 });
 	});
 
 	test('Dates', () => {
@@ -296,7 +296,7 @@ describe('EncodeValue', () => {
 						integerValue: '42'
 					},
 					{
-						doubleValue: '4.2'
+						doubleValue: 4.2
 					},
 					{
 						timestampValue: date.toISOString()
@@ -327,7 +327,7 @@ describe('encode', () => {
 					integerValue: '2'
 				},
 				three: {
-					doubleValue: '4.2'
+					doubleValue: 4.2
 				},
 				four: {
 					mapValue: {
@@ -365,7 +365,7 @@ describe('encode', () => {
 			{
 				fieldPath: 't4',
 				minimum: {
-					doubleValue: '4.2'
+					doubleValue: 4.2
 				}
 			},
 			{
