@@ -139,7 +139,7 @@ function decodeValue(value, db) {
 			return Number(value);
 
 		case 'arrayValue':
-			return value.values.map(val => decodeValue(val, db));
+			return value.values ? value.values.map(val => decodeValue(val, db)) : [];
 
 		case 'mapValue':
 			return decode(value, db);
@@ -201,7 +201,7 @@ export function encodeValue(value, transforms, parentPath) {
 			break;
 
 		case 'arrayValue':
-			value = { values: value.map(encodeValue) };
+			value = value.length ? { values: value.map(encodeValue) } : {};
 			break;
 
 		case 'dateValue':

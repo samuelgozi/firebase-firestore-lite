@@ -23,6 +23,7 @@ export default {
 		['one', 'two', 'three'],
 		{ one: 'one', two: 2, three: 3.1 }
 	],
+	emptyArray: [],
 	map: {
 		null: null,
 		boolean: false,
@@ -34,5 +35,6 @@ export default {
 		geoPoint: new GeoPoint(30, 30),
 		array: ['one', 'two', 'three'],
 		map: { one: 'one', two: 2, three: 3.1 }
-	}
+	},
+	emptyMap: {}
 };

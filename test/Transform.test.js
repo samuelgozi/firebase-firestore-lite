@@ -125,9 +125,7 @@ describe('Transform', () => {
 			test('Empty array', () => {
 				const given = JSON.stringify(new Transform('appendToArray', []));
 				const expected = JSON.stringify({
-					appendMissingElements: {
-						values: []
-					}
+					appendMissingElements: {}
 				});
 
 				expect(given).toEqual(expected);
@@ -175,9 +173,7 @@ describe('Transform', () => {
 			test('Empty array', () => {
 				const given = JSON.stringify(new Transform('removeFromArray', []));
 				const expected = JSON.stringify({
-					removeAllFromArray: {
-						values: []
-					}
+					removeAllFromArray: {}
 				});
 
 				expect(given).toEqual(expected);

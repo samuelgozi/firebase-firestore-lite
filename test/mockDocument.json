@@ -75,6 +75,9 @@
 				]
 			}
 		},
+		"emptyArray": {
+			"arrayValue": {}
+		},
 		"map": {
 			"mapValue": {
 				"fields": {
@@ -121,6 +124,9 @@
 					}
 				}
 			}
+		},
+		"emptyMap": {
+			"mapValue": {}
 		}
 	},
 	"createTime": "2019-10-10T14:00:00.617973Z",
