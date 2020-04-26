@@ -1,6 +1,6 @@
 import Reference from './Reference.js';
-import Document from './Document';
-import { isDocPath, isDocReference } from './utils.js';
+import { Document } from './Document';
+import { isDocPath, isDocReference } from './utils';
 import Transaction from './Transaction.js';
 
 async function handleApiResponse(res) {
@@ -12,25 +12,38 @@ async function handleApiResponse(res) {
 	return res.json();
 }
 
-/**
- * Database Instance.
- * Encapsulates the Firestore service interface.
- */
+interface Auth {
+	authorizedRequest(input: RequestInfo, init?: RequestInit): Promise<Response>;
+}
+
+interface DatabaseOptions {
+	/** Firebase's project ID */
+	projectId: string;
+	/** The name to use for this database instance */
+	name: string;
+	/** Auth instance */
+	auth: Auth;
+}
+
+interface updateFunction {
+	(tx?: Transaction): Promise<void> | void;
+}
+
+/** Database Instance */
 export default class Database {
-	/**
-	 * @param {object} settings Settings object.
-	 * @param {string} settings.projectId Firebase's project ID.
-	 * @param {object} settings.name The name of the database to use in this instance.
-	 * @param {object} settings.auth Auth instance to use for authorization with this instance.
-	 */
-	constructor({ projectId, auth, name = '(default)' }) {
+	name: string;
+	rootPath: string;
+	endpoint: string;
+	auth: Auth;
+
+	constructor({ projectId, auth, name = '(default)' }: DatabaseOptions) {
 		if (projectId === undefined)
 			throw Error('Database constructor expected the "config" argument to have a valid "projectId" property');
 
 		this.name = name;
+		this.auth = auth;
 		this.rootPath = `projects/${projectId}/databases/${name}/documents`;
 		this.endpoint = 'https://firestore.googleapis.com/v1/' + this.rootPath;
-		this.auth = auth;
 	}
 
 	/**
@@ -42,11 +55,11 @@ export default class Database {
 	 * @param {Object} init an options object.
 	 * @private
 	 */
-	fetch() {
+	fetch(input: RequestInfo, init?: RequestInit) {
 		if (this.auth && this.auth.authorizedRequest)
-			return this.auth.authorizedRequest(...arguments).then(handleApiResponse);
+			return this.auth.authorizedRequest(input, init).then(handleApiResponse);
 
-		return fetch(...arguments).then(handleApiResponse);
+		return fetch(input, init).then(handleApiResponse);
 	}
 
 	/**
@@ -54,25 +67,19 @@ export default class Database {
 	 * @param {(string|Document)} path Path to the collection or document.
 	 * @returns {Reference} instance of a reference.
 	 */
-	reference(path) {
+	reference(path: String | Document): Reference {
 		if (path instanceof Document) path = path.__meta__.path;
 		return new Reference(path, this);
 	}
 
-	/**
-	 * Gets multiple documents.
-	 * Documents returned are not guaranteed to be in th same order as requested.
-	 * @param {Array.<Reference|string>} refs Array of references or string paths to retrieve.
-	 * @returns {Promise}
-	 */
-	async batchGet(refs) {
+	async batchGet(refs: Array<Reference | string>) {
 		const response = await this.fetch(this.endpoint + ':batchGet', {
 			method: 'POST',
 			body: JSON.stringify({
 				documents: refs.map(ref => {
 					if (!isDocPath(ref) && !isDocReference(ref))
 						throw Error('The array can only contain References or paths pointing to documents');
-					return ref.name || `${this.rootPath}/${ref}`;
+					return (ref as Reference).name || `${this.rootPath}/${ref}`;
 				})
 			})
 		});
@@ -82,10 +89,7 @@ export default class Database {
 		);
 	}
 
-	/**
-	 * Returns a new transaction instance.
-	 * @returns {Transaction} A new transaction instance.
-	 */
+	/** Returns a new transaction instance */
 	transaction() {
 		return new Transaction(this);
 	}
@@ -100,15 +104,12 @@ export default class Database {
 	 * Will not re-attempt if an error is thrown inside the `updateFunction`
 	 * or if any error that is not related to the transaction is received
 	 * like a network error etc.
-	 *
-	 * @param {function} updateFunction A function that will receive an object with methods to describe the transaction.
-	 * @param {number} [attempts = 5] The number of times to retry if the transaction fails.
 	 */
-	async runTransaction(updateFunction, attempts = 5) {
+	async runTransaction(fn: updateFunction, attempts = 5) {
 		const tx = new Transaction(this);
 
 		while (attempts > 0) {
-			await updateFunction(tx);
+			await fn(tx);
 
 			// Only retry on transaction errors.
 			try {

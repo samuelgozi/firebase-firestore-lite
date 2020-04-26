@@ -1,29 +1,21 @@
-import Reference from './Reference.js';
-import GeoPoint from './GeoPoint.js';
-import Transform from './Transform.js';
+import Reference from './Reference';
+import GeoPoint from './GeoPoint';
+import Transform from './Transform';
+import { FirebaseDocument, FirebaseMap } from './Document';
+import Database from './mod';
 
-/**
- * Trims spaces and slashes from a path.
- * @param {string} path Path relative to root of db.
- */
-export function trimPath(path) {
+/** Trims spaces and slashes from a path */
+export function trimPath(path: string) {
 	return path.trim().replace(/^\/?/, '').replace(/\/?$/, '');
 }
 
-/**
- * Returns true if a string is a path that points to a document.
- * @param {string} path Path relative to root of db.
- */
-export function isDocPath(s) {
+/** Returns true if a variable is a path that points to a document */
+export function isDocPath(s: string | Reference): boolean {
 	return typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 0;
 }
 
-/**
- * Returns true if an object is a "raw" firebase document.
- * @param {Object} document the object/document to test
- * @returns {boolean}
- */
-export function isRawDocument(document) {
+/** Returns true if an object is a "raw" firebase document */
+export function isRawDocument(document: any): boolean {
 	if (typeof document !== 'object') return false;
 
 	// A Firestore document must have these three keys.
@@ -36,39 +28,23 @@ export function isRawDocument(document) {
 	return true;
 }
 
-/**
- * Checks if a value is a Reference to a Document.
- * @param {*} val A the value to check
- * @returns {boolean}
- */
-export function isDocReference(val) {
+/** Checks if a value is a Reference to a Document */
+export function isDocReference(val: string | Reference): boolean {
 	return val instanceof Reference && !val.isCollection;
 }
 
-/**
- * Checks if a value is a Reference to a Collection.
- * @param {*} val A the value to check
- * @returns {boolean}
- */
-export function isColReference(val) {
+/** Returns true if a value is a Reference to a Collection */
+export function isColReference(val: any): boolean {
 	return val instanceof Reference && val.isCollection;
 }
 
-/**
- * Checks if a value is a number that is not negative and is an integer.
- * @param {*} val the value to check
- * @returns {boolean}
- */
-export function isPositiveInteger(val) {
+/** Checks if a value is a number that is not negative and is an integer */
+export function isPositiveInteger(val: any): boolean {
 	return Number.isInteger(val) && val >= 0;
 }
 
-/**
- * Converts an Object to a URI query String.
- * @param {Object} obj
- * @returns {string}
- */
-export function objectToQuery(obj = {}) {
+/** Converts an Object to a URI query String */
+export function objectToQuery(obj = {}): string {
 	const props = [];
 
 	for (let prop in obj) {
@@ -88,11 +64,8 @@ export function objectToQuery(obj = {}) {
 /**
  * Returns an array of keyPaths of an object.
  * Skips over arrays values.
- * @param {Object} object The object to return its key paths.
- * @param {string} parentPath The parent path. used on recursive calls.
- * @returns {string[]}
  */
-export function getKeyPaths(object, parentPath) {
+export function getKeyPaths(object: object, parentPath?: string): string[] {
 	let mask = [];
 
 	for (const key in object) {
@@ -111,22 +84,14 @@ export function getKeyPaths(object, parentPath) {
 	return mask;
 }
 
-/**
- * Returns a string that represents a query parameter field mask.
- * @param {Object} object
- */
-export function maskFromObject(object = {}) {
+/** Returns a string that represents a query parameter field mask */
+export function maskFromObject(object = {}): string {
 	const paths = getKeyPaths(object);
 	return paths.length === 0 ? '' : paths.map(p => `updateMask.fieldPaths=${p}`).join('&');
 }
 
-/**
- * Decodes a Firebase Value into a JS one.
- * @param {Object} firestoreValue Raw Firestore value
- * @param {Object} db The database instance to use in References.
- * @returns {any} JS representation of the value
- */
-function decodeValue(value, db) {
+/** Decodes a Firebase Value into a JS one */
+function decodeValue(value: any, db: Database) {
 	// Get the value type.
 	const type = Object.keys(value)[0];
 	// Replace the firebase raw value, with actual value inside of it.
@@ -142,10 +107,10 @@ function decodeValue(value, db) {
 			return value.values ? value.values.map(val => decodeValue(val, db)) : [];
 
 		case 'mapValue':
-			return decode(value, db);
+			return decode(value as FirebaseMap, db);
 
 		case 'timestampValue':
-			return new Date(value);
+			return new Date(value as string);
 
 		case 'referenceValue':
 			return new Reference(value.replace(db.rootPath, ''), db);
@@ -168,13 +133,8 @@ function decodeValue(value, db) {
 	throw Error(`Invalid Firestore value_type "${type}"`);
 }
 
-/**
- * Decodes a map into a JS object
- * @param {Object} map The map value to decode
- * @param {Object} db DB instance to use in references.
- * @returns {Object}
- */
-export function decode(map, db) {
+/** Decodes a map into a JS object */
+export function decode(map: FirebaseMap | FirebaseDocument, db: Database) {
 	if (db === undefined) throw Error('Argument "db" is required but missing');
 
 	const object = {};
@@ -185,12 +145,8 @@ export function decode(map, db) {
 	return object;
 }
 
-/**
- * Encodes a JS variable into a Firebase Value.
- * @param {any} value The variable to encode
- * @returns {object}
- */
-export function encodeValue(value, transforms, parentPath) {
+/** Encodes a JS variable into a Firebase Value */
+export function encodeValue(value: any, transforms?: Transform[], parentPath?: string) {
 	const objectClass = Object.prototype.toString.call(value);
 	let valueType = objectClass.substring(8, objectClass.length - 1).toLowerCase() + 'Value';
 
@@ -223,12 +179,8 @@ export function encodeValue(value, transforms, parentPath) {
 	return { [valueType]: value };
 }
 
-/**
- * Converts an object into a write instruction.
- * @param {Object} object The object to encode
- * @returns {Object}
- */
-export function encode(object, transforms, parentPath) {
+/** Converts an object into a write instruction */
+export function encode(object: object, transforms: Transform[], parentPath?: string): FirebaseMap {
 	const keys = Object.keys(object);
 
 	if (keys.length === 0) return {};

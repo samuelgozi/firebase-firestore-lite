@@ -1,12 +1,13 @@
-import { trimPath, isDocPath, getKeyPaths, encode, isDocReference } from './utils.js';
-import Document from './Document.js';
+import { trimPath, isDocPath, getKeyPaths, encode, isDocReference } from './utils';
+import { Document, FirebaseDocument } from './Document';
+import Reference from './Reference';
+import Database from './mod';
 
 export default class Transaction {
-	constructor(db) {
-		this.db = db;
-		this.writes = [];
-		this.preconditions = {};
-	}
+	writes = [];
+	preconditions = {};
+
+	constructor(private db: Database) {}
 
 	/**
 	 * Validates that the arguments are of the correct types,
@@ -14,7 +15,7 @@ export default class Transaction {
 	 * Lastly we will return reliable data about the document.
 	 * @private
 	 */
-	handleArguments(ref, data = {}) {
+	private handleArguments(ref: any, data = {}) {
 		const isDoc = ref instanceof Document;
 
 		if (!isDocPath(ref) && !isDocReference(ref) && !isDoc)

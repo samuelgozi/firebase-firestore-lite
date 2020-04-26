@@ -1,4 +1,17 @@
-import Document from './Document.js';
+import { Document, FirebaseDocument } from './Document';
+import Reference from './Reference';
+
+interface FirebaseList {
+	documents: FirebaseDocument[];
+	nextPageToken: string;
+}
+
+export interface FirebaseListOptions {
+	pageSize?: number;
+	pageToken?: string;
+	orderBy?: string;
+	showMissing?: boolean;
+}
 
 /**
  * Represents a collection list response, with functionality
@@ -7,8 +20,12 @@ import Document from './Document.js';
  * @param {Reference} ref A reference to the collection.
  * @param {Object} options Any options that were passed at first to the get request.
  */
-export default class List {
-	constructor(rawList, ref, options = {}) {
+export class List {
+	ref: Reference;
+	options: any;
+	documents: Document[];
+
+	constructor(rawList: FirebaseList, ref: Reference, options: FirebaseListOptions = {}) {
 		if (ref === undefined) throw Error('The "reference" argument is required when creating a List');
 		if (!ref.isCollection) throw Error('The reference in a list should point to a collection');
 
@@ -19,11 +36,8 @@ export default class List {
 		this.options.pageToken = nextPageToken;
 	}
 
-	/**
-	 * Fetches the next page in the query.
-	 * @returns {List} Next page results.
-	 */
-	getNextPage() {
+	/** Fetches the next page in the query */
+	getNextPage(): List {
 		return this.ref.get(this.options);
 	}
 }
