@@ -1,6 +1,9 @@
-import Reference from '../src/Reference.js';
-import GeoPoint from '../src/GeoPoint.js';
-const db = { rootPath: 'projects/projectId/databases/(default)/documents', endpoint: 'endpoint' };
+import Reference from '../src/Reference.ts';
+import GeoPoint from '../src/GeoPoint.ts';
+const db = {
+	rootPath: 'projects/projectId/databases/(default)/documents',
+	endpoint: 'endpoint'
+};
 
 export default {
 	null: null,

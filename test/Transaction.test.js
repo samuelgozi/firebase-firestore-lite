@@ -1,6 +1,6 @@
-import Transaction from '../src/Transaction.js';
-import Reference from '../src/Reference.js';
-import Database from '../src/index.js';
+import Transaction from '../src/Transaction.ts';
+import Reference from '../src/Reference.ts';
+import Database from '../src/mod.ts';
 import batchGetResponse from './mockBatchGetResponse.json';
 
 const db = new Database({ projectId: 'projectId' });
@@ -32,7 +32,9 @@ describe('Transaction', () => {
 			'projects/projectId/databases/(default)/documents/col/one': {
 				updateTime: '2020-03-17T09:31:07.559644Z'
 			},
-			'projects/projectId/databases/(default)/documents/col/two': { exists: false }
+			'projects/projectId/databases/(default)/documents/col/two': {
+				exists: false
+			}
 		});
 	});
 
@@ -45,7 +47,9 @@ describe('Transaction', () => {
 			tx.set(ref, doc);
 
 			expect(tx.writes).toEqual([{ update: rawDoc }]);
-			expect(() => tx.set(col)).toThrow('Expected a Document, Reference or a string path pointing to a document.');
+			expect(() => tx.set(col)).toThrow(
+				'Expected a Document, Reference or a string path pointing to a document.'
+			);
 		});
 
 		test('Passing a string as the reference', () => {
@@ -54,7 +58,9 @@ describe('Transaction', () => {
 			tx.set('col/doc', doc);
 
 			expect(tx.writes).toEqual([{ update: rawDoc }]);
-			expect(() => tx.set('col')).toThrow('Expected a Document, Reference or a string path pointing to a document.');
+			expect(() => tx.set('col')).toThrow(
+				'Expected a Document, Reference or a string path pointing to a document.'
+			);
 		});
 
 		test('Uses preconditions', () => {
@@ -116,7 +122,9 @@ describe('Transaction', () => {
 				}
 			]);
 
-			expect(() => tx.update('col')).toThrow('Expected a Document, Reference or a string path pointing to a document.');
+			expect(() => tx.update('col')).toThrow(
+				'Expected a Document, Reference or a string path pointing to a document.'
+			);
 		});
 
 		test('Uses preconditions', () => {
@@ -151,7 +159,9 @@ describe('Transaction', () => {
 			tx.delete(ref);
 
 			expect(tx.writes).toEqual([{ delete: rawDoc.name }]);
-			expect(() => tx.delete(col)).toThrow('Expected a Document, Reference or a string path pointing to a document.');
+			expect(() => tx.delete(col)).toThrow(
+				'Expected a Document, Reference or a string path pointing to a document.'
+			);
 		});
 
 		test('Passing a string as the reference', () => {
@@ -160,7 +170,9 @@ describe('Transaction', () => {
 			tx.delete('col/doc');
 
 			expect(tx.writes).toEqual([{ delete: rawDoc.name }]);
-			expect(() => tx.delete('col')).toThrow('Expected a Document, Reference or a string path pointing to a document.');
+			expect(() => tx.delete('col')).toThrow(
+				'Expected a Document, Reference or a string path pointing to a document.'
+			);
 		});
 
 		test('Uses preconditions', () => {

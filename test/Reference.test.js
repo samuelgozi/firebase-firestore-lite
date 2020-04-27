@@ -1,9 +1,9 @@
-import Document from '../src/Document.js';
-import Reference from '../src/Reference.js';
-import List from '../src/List.js';
-import Query from '../src/Query.js';
-import Database from '../src/index.js';
-import Transform from '../src/Transform.js';
+import { Document } from '../src/Document.ts';
+import Reference from '../src/Reference.ts';
+import { List } from '../src/List.ts';
+import Query from '../src/Query.ts';
+import Database from '../src/mod.ts';
+import Transform from '../src/Transform.ts';
 
 const db = new Database({ projectId: 'projectId' });
 const rawDoc = JSON.stringify({
@@ -45,7 +45,9 @@ describe('Constructor', () => {
 	});
 
 	test('Name is correct', () => {
-		expect(new Reference('test', db).name).toEqual('projects/projectId/databases/(default)/documents/test');
+		expect(new Reference('test', db).name).toEqual(
+			'projects/projectId/databases/(default)/documents/test'
+		);
 	});
 
 	test('Endpoint is correct', () => {
@@ -87,7 +89,9 @@ describe('Static properties', () => {
 
 			expect(ref.parentCollection.path).toEqual('col/doc/col/doc/col');
 			expect(ref.parentCollection.parentCollection.path).toEqual('col/doc/col');
-			expect(ref.parentCollection.parentCollection.parentCollection.path).toEqual('col');
+			expect(
+				ref.parentCollection.parentCollection.parentCollection.path
+			).toEqual('col');
 		});
 
 		test('Returns a reference to the parent collection from a document', () => {
@@ -195,7 +199,9 @@ describe('Get', () => {
 describe('Set', () => {
 	describe('Requests the correct endpoint', () => {
 		test('Throws when no argument is provided', async () => {
-			await expect(new Reference('col/doc', db).set()).rejects.toThrow('"set" received no arguments');
+			await expect(new Reference('col/doc', db).set()).rejects.toThrow(
+				'"set" received no arguments'
+			);
 		});
 
 		test('New document(collection endpoint)', async () => {
@@ -254,7 +260,9 @@ describe('Set', () => {
 				tran: new Transform('serverTimestamp')
 			});
 
-			expect(promise).rejects.toThrow("Transforms can't be used when creating documents with server generated IDs");
+			await expect(promise).rejects.toThrow(
+				"Transforms can't be used when creating documents with server generated IDs"
+			);
 		});
 
 		test('Makes the correct requests', async () => {
@@ -320,11 +328,15 @@ describe('Set', () => {
 
 describe('Update', () => {
 	test('Throws when no argument is provided', async () => {
-		await expect(new Reference('col/doc', db).update()).rejects.toThrow('"update" received no arguments');
+		await expect(new Reference('col/doc', db).update()).rejects.toThrow(
+			'"update" received no arguments'
+		);
 	});
 
 	test('Throws when the reference points to a collection', async () => {
-		await expect(new Reference('/col', db).update({})).rejects.toThrow("Can't update a collection");
+		await expect(new Reference('/col', db).update({})).rejects.toThrow(
+			"Can't update a collection"
+		);
 	});
 
 	test('Requests the correct endpoint', async () => {

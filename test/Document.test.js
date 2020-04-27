@@ -1,7 +1,10 @@
-import Document from '../src/Document.js';
+import { Document } from '../src/Document.ts';
 
 // Mock database instance
-const db = { rootPath: 'projects/projectId/databases/(default)/documents', endpoint: 'endpoint' };
+const db = {
+	rootPath: 'projects/projectId/databases/(default)/documents',
+	endpoint: 'endpoint'
+};
 
 // Mock Firestore Document
 const rawDoc = {
@@ -27,11 +30,15 @@ describe('Document instance', () => {
 
 		const partialDoc = { name: 'one' };
 
-		expect(() => new Document(partialDoc, db)).toThrow('Invalid Firestore Document');
+		expect(() => new Document(partialDoc, db)).toThrow(
+			'Invalid Firestore Document'
+		);
 	});
 
 	test('Throws when db is missing', () => {
-		expect(() => new Document(rawDoc)).toThrow('Argument "db" is required but missing');
+		expect(() => new Document(rawDoc)).toThrow(
+			'Argument "db" is required but missing'
+		);
 	});
 
 	test('Metadata is embeded in the document', () => {

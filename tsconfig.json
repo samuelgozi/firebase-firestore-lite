@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "node",
+		"declaration": true,
+		"target": "es2017",
+		"module": "ESNext",
+		"outDir": "dist"
+	},
+	"files": ["./src/mod.ts"]
+}

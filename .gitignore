@@ -89,3 +89,6 @@ typings/
 
 # Firebase configuration used for testing
 firebaseConfig.js
+
+# build directory
+dist

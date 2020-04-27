@@ -1,7 +1,7 @@
-import List from '../src/List.js';
-import Reference from '../src/Reference.js';
-import Database from '../src/index.js';
-import Document from '../src/Document.js';
+import { List } from '../src/List.ts';
+import Reference from '../src/Reference.ts';
+import Database from '../src/mod.ts';
+import { Document } from '../src/Document.ts';
 
 const db = new Database({ projectId: 'projectId' });
 const rawDoc = {

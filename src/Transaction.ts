@@ -1,12 +1,21 @@
-import { trimPath, isDocPath, getKeyPaths, encode, isDocReference } from './utils.js';
-import Document from './Document.js';
+import {
+	trimPath,
+	isDocPath,
+	getKeyPaths,
+	encode,
+	isDocReference
+} from './utils';
+import { Document, FirebaseDocument } from './Document';
+import Reference from './Reference';
+import Database from './mod';
+
+type ref = Reference | Document | string;
 
 export default class Transaction {
-	constructor(db) {
-		this.db = db;
-		this.writes = [];
-		this.preconditions = {};
-	}
+	writes = [];
+	preconditions = {};
+
+	constructor(private db: Database) {}
 
 	/**
 	 * Validates that the arguments are of the correct types,
@@ -14,16 +23,29 @@ export default class Transaction {
 	 * Lastly we will return reliable data about the document.
 	 * @private
 	 */
-	handleArguments(ref, data = {}) {
+	private handleArguments(
+		ref: ref,
+		data = {},
+		transforms?: []
+	): FirebaseDocument {
 		const isDoc = ref instanceof Document;
 
 		if (!isDocPath(ref) && !isDocReference(ref) && !isDoc)
-			throw Error('Expected a Document, Reference or a string path pointing to a document.');
+			throw Error(
+				'Expected a Document, Reference or a string path pointing to a document.'
+			);
 
-		if (typeof data !== 'object') throw Error('The data object should be an object');
+		if (typeof data !== 'object')
+			throw Error('The data object should be an object');
 
-		const doc = encode(isDoc ? ref : data);
-		doc.name = isDoc ? ref.__meta__.name : ref.name || `${this.db.rootPath}/${trimPath(ref)}`;
+		const doc = encode(isDoc ? ref : data, transforms) as FirebaseDocument;
+
+		// Generate the name of the document.
+		doc.name = isDoc
+			? (ref as Document).__meta__.name
+			: (ref as Reference).name ||
+			  `${this.db.rootPath}/${trimPath(ref as string)}`;
+
 		return doc;
 	}
 
@@ -37,14 +59,15 @@ export default class Transaction {
 	 * the transaction. However, if a document didn't exist, then we use that
 	 * as a precondition, telling the database that if it was created concurrently
 	 * then it should abort the operation.
-	 * @param {Array.<Reference|string>} refs Array of references or string paths to retrieve.
 	 */
-	async get(refs) {
+	async get(refs: Array<Reference | string>) {
 		const docs = await this.db.batchGet(refs);
 
 		docs.forEach(doc => {
 			const { name, updateTime } = doc.__meta__ || { name: doc.__missing__ };
-			this.preconditions[name] = updateTime ? { updateTime } : { exists: false };
+			this.preconditions[name] = updateTime
+				? { updateTime }
+				: { exists: false };
 		});
 
 		return docs;
@@ -53,11 +76,10 @@ export default class Transaction {
 	/**
 	 * Adds a write operation to the transaction, will create a document if
 	 * it didn't exist before, and overwrite all fo the data if it did.
-	 * @param {Reference|Document|string} ref Reference, Document instance or a string path to the document.
-	 * @param {object} data An object with the data.
 	 */
-	set(ref, data) {
-		const doc = this.handleArguments(ref, data);
+	set(ref: ref, data: any) {
+		const transforms = [];
+		const doc = this.handleArguments(ref, data, transforms as []);
 
 		this.writes.push({
 			update: doc,
@@ -68,10 +90,8 @@ export default class Transaction {
 	/**
 	 * Adds a write operation to the transaction, will create a document if
 	 * it didn't exist before, and merge the data if it does exist.
-	 * @param {Reference|Document|string} ref Reference, Document instance or a string path to the document.
-	 * @param {object} data An object with the data.
 	 */
-	update(ref, data) {
+	update(ref: ref, data: any) {
 		const doc = this.handleArguments(ref, data);
 
 		this.writes.push({
@@ -83,9 +103,8 @@ export default class Transaction {
 
 	/**
 	 * Adds a delete operation to the transaction.
-	 * @param {Reference|Document|string} ref Reference, Document instance or a string path to the document.
 	 */
-	delete(ref) {
+	delete(ref: ref) {
 		const name = this.handleArguments(ref).name;
 
 		this.writes.push({
