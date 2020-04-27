@@ -1,7 +1,7 @@
-import Database from '../src/index.js';
-import Reference from '../src/Reference.js';
-import Document from '../src/Document.js';
-import Transaction from '../src/Transaction.js';
+import Database from '../src/mod.ts';
+import Reference from '../src/Reference.ts';
+import { Document } from '../src/Document.ts';
+import Transaction from '../src/Transaction.ts';
 
 describe('Constructor', () => {
 	test('Throws when `projectId` is missing', () => {

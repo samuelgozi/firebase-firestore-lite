@@ -1,4 +1,4 @@
-import Transform from '../src/Transform.js';
+import Transform from '../src/Transform.ts';
 
 describe('Transform', () => {
 	test('Invalid transform names', () => {
@@ -33,15 +33,21 @@ describe('Transform', () => {
 		test('Invalid arguments', () => {
 			expect(() => {
 				new Transform('increment', '1');
-			}).toThrow('The value for the transform "increment" needs to be a number.');
+			}).toThrow(
+				'The value for the transform "increment" needs to be a number.'
+			);
 
 			expect(() => {
 				new Transform('increment', {});
-			}).toThrow('The value for the transform "increment" needs to be a number.');
+			}).toThrow(
+				'The value for the transform "increment" needs to be a number.'
+			);
 
 			expect(() => {
 				new Transform('increment', []);
-			}).toThrow('The value for the transform "increment" needs to be a number.');
+			}).toThrow(
+				'The value for the transform "increment" needs to be a number.'
+			);
 		});
 	});
 
@@ -135,22 +141,30 @@ describe('Transform', () => {
 		test('Invalid arguments', () => {
 			expect(() => {
 				new Transform('appendToArray', '1');
-			}).toThrow('The value for the transform "appendToArray" needs to be an array');
+			}).toThrow(
+				'The value for the transform "appendToArray" needs to be an array'
+			);
 
 			expect(() => {
 				new Transform('appendToArray', 42);
-			}).toThrow('The value for the transform "appendToArray" needs to be an array');
+			}).toThrow(
+				'The value for the transform "appendToArray" needs to be an array'
+			);
 
 			expect(() => {
 				new Transform('appendToArray', {});
-			}).toThrow('The value for the transform "appendToArray" needs to be an array');
+			}).toThrow(
+				'The value for the transform "appendToArray" needs to be an array'
+			);
 		});
 	});
 
 	describe('removeFromArray', () => {
 		describe('Valid Arguments', () => {
 			test('Array with items', () => {
-				const given = JSON.stringify(new Transform('removeFromArray', [1, 2, 3]));
+				const given = JSON.stringify(
+					new Transform('removeFromArray', [1, 2, 3])
+				);
 				const expected = JSON.stringify({
 					removeAllFromArray: {
 						values: [
@@ -183,15 +197,21 @@ describe('Transform', () => {
 		test('Invalid arguments', () => {
 			expect(() => {
 				new Transform('removeFromArray', '1');
-			}).toThrow('The value for the transform "removeFromArray" needs to be an array');
+			}).toThrow(
+				'The value for the transform "removeFromArray" needs to be an array'
+			);
 
 			expect(() => {
 				new Transform('removeFromArray', 42);
-			}).toThrow('The value for the transform "removeFromArray" needs to be an array');
+			}).toThrow(
+				'The value for the transform "removeFromArray" needs to be an array'
+			);
 
 			expect(() => {
 				new Transform('removeFromArray', {});
-			}).toThrow('The value for the transform "removeFromArray" needs to be an array');
+			}).toThrow(
+				'The value for the transform "removeFromArray" needs to be an array'
+			);
 		});
 	});
 });

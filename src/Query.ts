@@ -170,17 +170,15 @@ const options = [
 export default class Query {
 	private db: Database;
 	private parentDocument: Reference;
-	private options: any;
+	private options: any = {
+		select: [],
+		where: [],
+		orderBy: []
+	};
 
 	constructor(init = {} as QueryOptions) {
 		// Loop through all the valid options, validate them and then save them.
 		for (const option of options) {
-			this.options = {
-				select: [],
-				where: [],
-				orderBy: []
-			};
-
 			const optionValue = init[option];
 
 			if (option in init) {
@@ -310,6 +308,15 @@ export default class Query {
 		return this;
 	}
 
+	async run() {
+		return (
+			await this.db.fetch(this.parentDocument.endpoint + ':runQuery', {
+				method: 'POST',
+				body: JSON.stringify(this)
+			})
+		).map(result => new Document(result.document, this.db));
+	}
+
 	toJSON() {
 		const encoded = {};
 
@@ -327,14 +334,5 @@ export default class Query {
 		return {
 			structuredQuery: encoded
 		};
-	}
-
-	async run() {
-		return (
-			await this.db.fetch(this.parentDocument.endpoint + ':runQuery', {
-				method: 'POST',
-				body: JSON.stringify(this)
-			})
-		).map(result => new Document(result.document, this.db));
 	}
 }

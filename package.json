@@ -18,6 +18,8 @@
 		"test": "jest"
 	},
 	"devDependencies": {
+		"@babel/preset-env": "^7.9.5",
+		"@babel/preset-typescript": "^7.9.0",
 		"@typescript-eslint/eslint-plugin": "^2.29.0",
 		"@typescript-eslint/parser": "^2.29.0",
 		"eslint": "^6.8.0",

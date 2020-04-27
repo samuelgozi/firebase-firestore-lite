@@ -10,14 +10,17 @@ import {
 	encode,
 	decode,
 	objectToQuery
-} from '../src/utils.js';
-import Reference from '../src/Reference.js';
-import GeoPoint from '../src/GeoPoint.js';
-import Transform from '../src/Transform.js';
+} from '../src/utils.ts';
+import Reference from '../src/Reference.ts';
+import GeoPoint from '../src/GeoPoint.ts';
+import Transform from '../src/Transform.ts';
 import firestoreDocument from './mockDocument.json';
-import decodedDocument from './decodedMockedDocument.js';
+import decodedDocument from './decodedMockedDocument';
 
-const db = { rootPath: 'projects/projectId/databases/(default)/documents', endpoint: 'endpoint' };
+const db = {
+	rootPath: 'projects/projectId/databases/(default)/documents',
+	endpoint: 'endpoint'
+};
 
 test('trimPath', () => {
 	expect(trimPath('/')).toEqual('');
@@ -115,12 +118,16 @@ test('IsColReference', () => {
 	// References to collections
 	expect(isColReference(new Reference('col', db))).toEqual(true);
 	expect(isColReference(new Reference('col/doc/col', db))).toEqual(true);
-	expect(isColReference(new Reference('col/doc/col/doc/col', db))).toEqual(true);
+	expect(isColReference(new Reference('col/doc/col/doc/col', db))).toEqual(
+		true
+	);
 
 	// References to documents.
 	expect(isColReference(new Reference('col/doc', db))).toEqual(false);
 	expect(isColReference(new Reference('col/doc/col/doc', db))).toEqual(false);
-	expect(isColReference(new Reference('col/doc/col/doc/col/doc', db))).toEqual(false);
+	expect(isColReference(new Reference('col/doc/col/doc/col/doc', db))).toEqual(
+		false
+	);
 });
 
 test('IsPositiveInteger', () => {
@@ -208,7 +215,8 @@ describe('maskFromObject', () => {
 				two: []
 			}
 		};
-		const expected = 'updateMask.fieldPaths=one&updateMask.fieldPaths=two.one&updateMask.fieldPaths=two.two';
+		const expected =
+			'updateMask.fieldPaths=one&updateMask.fieldPaths=two.one&updateMask.fieldPaths=two.two';
 
 		expect(maskFromObject(obj)).toEqual(expected);
 	});
@@ -262,7 +270,9 @@ describe('EncodeValue', () => {
 	});
 
 	test('String', () => {
-		expect(encodeValue('This is a string')).toEqual({ stringValue: 'This is a string' });
+		expect(encodeValue('This is a string')).toEqual({
+			stringValue: 'This is a string'
+		});
 	});
 
 	test('References', () => {

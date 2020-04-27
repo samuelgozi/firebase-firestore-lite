@@ -1,7 +1,7 @@
-import Database from '../src/index.js';
-import Query from '../src/Query.js';
-import Reference from '../src/Reference.js';
-import Document from '../src/Document.js';
+import Database from '../src/mod.ts';
+import Query from '../src/Query.ts';
+import Reference from '../src/Reference.ts';
+import { Document } from '../src/Document.ts';
 
 const db = new Database({ projectId: 'projectId' });
 const colRef = db.reference('col');
@@ -31,14 +31,18 @@ describe('Query', () => {
 					select: 'path',
 					from: colRef
 				});
-			}).toThrow('Invalid argument "select": Expected argument to be an array of field paths');
+			}).toThrow(
+				'Invalid argument "select": Expected argument to be an array of field paths'
+			);
 
 			expect(() => {
 				new Query({
 					select: [42],
 					from: colRef
 				});
-			}).toThrow('Invalid argument "select": Field path at index [0] is not a string');
+			}).toThrow(
+				'Invalid argument "select": Field path at index [0] is not a string'
+			);
 		});
 
 		test('Is undefined when select arguments are empty', () => {
@@ -77,13 +81,17 @@ describe('Query', () => {
 				new Query({
 					from: db.reference('col/doc')
 				});
-			}).toThrow('Invalid argument "from": Expected a reference to a collection');
+			}).toThrow(
+				'Invalid argument "from": Expected a reference to a collection'
+			);
 
 			expect(() => {
 				new Query({
 					from: 42
 				});
-			}).toThrow('Invalid argument "from": Expected a reference to a collection');
+			}).toThrow(
+				'Invalid argument "from": Expected a reference to a collection'
+			);
 		});
 	});
 
@@ -150,7 +158,9 @@ describe('Query', () => {
 					from: colRef,
 					where: ['path', '>=', null]
 				});
-			}).toThrow('Invalid argument "where": Null and NaN can only be used with the == operator');
+			}).toThrow(
+				'Invalid argument "where": Null and NaN can only be used with the == operator'
+			);
 		});
 
 		describe('Filter types', () => {
@@ -364,7 +374,9 @@ describe('Query', () => {
 						direction: 'whats up?'
 					}
 				});
-			}).toThrow('Invalid argument "orderBy": "direction" property can only be "asc" or "desc"');
+			}).toThrow(
+				'Invalid argument "orderBy": "direction" property can only be "asc" or "desc"'
+			);
 		});
 	});
 
@@ -395,7 +407,9 @@ describe('Query', () => {
 					from: colRef,
 					startAt: 42
 				});
-			}).toThrow('Invalid argument "startAt": Expected a reference to a document');
+			}).toThrow(
+				'Invalid argument "startAt": Expected a reference to a document'
+			);
 		});
 	});
 
@@ -426,7 +440,9 @@ describe('Query', () => {
 					from: colRef,
 					endAt: 42
 				});
-			}).toThrow('Invalid argument "endAt": Expected a reference to a document');
+			}).toThrow(
+				'Invalid argument "endAt": Expected a reference to a document'
+			);
 		});
 	});
 
@@ -480,7 +496,9 @@ describe('Query', () => {
 			}).run();
 
 			expect(fetch.mock.calls.length).toEqual(1);
-			expect(fetch.mock.calls[0][0]).toEqual(colRef.parent.endpoint + ':runQuery');
+			expect(fetch.mock.calls[0][0]).toEqual(
+				colRef.parent.endpoint + ':runQuery'
+			);
 		});
 
 		test('Returns array of documents', async () => {
