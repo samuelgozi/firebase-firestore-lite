@@ -2,30 +2,29 @@
 	"name": "firebase-firestore-lite",
 	"version": "0.6.2",
 	"description": "A lightweight cloud firestore library for the browser",
-	"main": "src/index.js",
+	"main": "dist/mod.js",
 	"author": "Samuel Elgozi <samu.elgozi@gmail.com>",
 	"license": "MIT",
 	"files": [
-		"src"
+		"dist"
 	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/samuelgozi/firebase-firestore-lite.git"
 	},
 	"scripts": {
+		"build": "tsc",
+		"lint": "eslint . --ext .ts",
 		"test": "jest"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.9.0",
-		"@babel/preset-env": "^7.9.0",
-		"babel-eslint": "^10.1.0",
-		"core-js": "^3.6.4",
+		"@typescript-eslint/eslint-plugin": "^2.29.0",
+		"@typescript-eslint/parser": "^2.29.0",
 		"eslint": "^6.8.0",
-		"eslint-plugin-babel": "^5.3.0",
 		"eslint-plugin-jest": "^23.8.2",
 		"firebase-auth-lite": "^0.5.4",
 		"jest": "^25.1.0",
 		"jest-fetch-mock": "^3.0.3",
-		"regenerator-runtime": "^0.13.5"
+		"typescript": "^3.8.3"
 	}
 }

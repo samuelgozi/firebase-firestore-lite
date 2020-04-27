@@ -10,7 +10,10 @@ describe('Constructor', () => {
 
 	test('Constructs the correct endpoint', () => {
 		const db = new Database({ projectId: 'test-project' });
-		const customName = new Database({ projectId: 'test-project', name: 'db-name' });
+		const customName = new Database({
+			projectId: 'test-project',
+			name: 'db-name'
+		});
 
 		expect(db.endpoint).toEqual(
 			'https://firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents'
@@ -25,16 +28,27 @@ describe('batchGet', () => {
 	const db = new Database({ projectId: 'projectId' });
 
 	test('Throws when the array contains anything else than a doc', async () => {
-		const message = 'The array can only contain References or paths pointing to documents';
-		expect(db.batchGet([123])).rejects.toThrow(message);
-		expect(db.batchGet(['123'])).rejects.toThrow(message);
-		expect(db.batchGet([db.reference('col/doc'), 123])).rejects.toThrow(message);
-		expect(db.batchGet([db.reference('col/doc/col'), 123])).rejects.toThrow(message);
-		expect(db.batchGet([db.reference('col/doc/col')])).rejects.toThrow(message);
+		const message =
+			'The array can only contain References or paths pointing to documents';
+		await expect(db.batchGet([123])).rejects.toThrow(message);
+		await expect(db.batchGet(['123'])).rejects.toThrow(message);
+		await expect(db.batchGet([db.reference('col/doc'), 123])).rejects.toThrow(
+			message
+		);
+		await expect(
+			db.batchGet([db.reference('col/doc/col'), 123])
+		).rejects.toThrow(message);
+		await expect(db.batchGet([db.reference('col/doc/col')])).rejects.toThrow(
+			message
+		);
 	});
 
 	test('Makes correct request', async () => {
-		const refs = [db.reference('col/doc'), db.reference('col/doc2'), db.reference('col/doc3')];
+		const refs = [
+			db.reference('col/doc'),
+			db.reference('col/doc2'),
+			db.reference('col/doc3')
+		];
 
 		fetch.mockResponse('[]');
 		await db.batchGet(refs);
@@ -108,7 +122,8 @@ describe('RunTransactions', () => {
 		const missingDoc = {
 			error: {
 				code: 404,
-				message: 'No document to update: projects/sandbox-6b679/databases/(default)/documents/public/blahblah',
+				message:
+					'No document to update: projects/sandbox-6b679/databases/(default)/documents/public/blahblah',
 				status: 'NOT_FOUND'
 			}
 		};
@@ -116,7 +131,8 @@ describe('RunTransactions', () => {
 		const failedPrecon = {
 			error: {
 				code: 400,
-				message: 'the stored version (0) does not match the required base version (1584437467559644)',
+				message:
+					'the stored version (0) does not match the required base version (1584437467559644)',
 				status: 'FAILED_PRECONDITION'
 			}
 		};
@@ -149,7 +165,9 @@ describe('RunTransactions', () => {
 		fetch.mockResponse(JSON.stringify(error), { status: 400 });
 
 		let count = 0;
-		expect(db.runTransaction(() => count++)).rejects.toThrow('A different error');
+		await expect(db.runTransaction(() => count++)).rejects.toThrow(
+			'A different error'
+		);
 		expect(count).toEqual(1);
 	});
 

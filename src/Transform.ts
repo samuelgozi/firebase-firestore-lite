@@ -54,15 +54,21 @@ export default class Transform {
 	 * for example when using `increment` the value will be the number to increment by.
 	 */
 	constructor(name: transform, value: number | any[]) {
-		if (!(name in transformsMap)) throw Error(`Invalid transform name: "${name}"`);
+		if (!(name in transformsMap))
+			throw Error(`Invalid transform name: "${name}"`);
 		const [transformName, validator] = transformsMap[name];
 
 		if (validator && !validator(value))
 			throw Error(
-				`The value for the transform "${name}" needs to be a${validator === isNumber ? ' number' : 'n array'}.`
+				`The value for the transform "${name}" needs to be a${
+					validator === isNumber ? ' number' : 'n array'
+				}.`
 			);
 
-		if (validator === Array.isArray) this[transformName] = encodeValue(value).arrayValue;
-		else this[transformName] = name === 'serverTimestamp' ? 'REQUEST_TIME' : encodeValue(value);
+		if (validator === Array.isArray)
+			this[transformName] = encodeValue(value).arrayValue;
+		else
+			this[transformName] =
+				name === 'serverTimestamp' ? 'REQUEST_TIME' : encodeValue(value);
 	}
 }

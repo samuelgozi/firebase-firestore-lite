@@ -25,19 +25,27 @@ export class List {
 	options: any;
 	documents: Document[];
 
-	constructor(rawList: FirebaseList, ref: Reference, options: FirebaseListOptions = {}) {
-		if (ref === undefined) throw Error('The "reference" argument is required when creating a List');
-		if (!ref.isCollection) throw Error('The reference in a list should point to a collection');
+	constructor(
+		rawList: FirebaseList,
+		ref: Reference,
+		options: FirebaseListOptions = {}
+	) {
+		if (ref === undefined)
+			throw Error('The "reference" argument is required when creating a List');
+		if (!ref.isCollection)
+			throw Error('The reference in a list should point to a collection');
 
 		const { documents, nextPageToken } = rawList;
 		this.ref = ref;
 		this.options = options;
-		this.documents = documents ? documents.map(rawDoc => new Document(rawDoc, ref.db)) : [];
+		this.documents = documents
+			? documents.map(rawDoc => new Document(rawDoc, ref.db))
+			: [];
 		this.options.pageToken = nextPageToken;
 	}
 
 	/** Fetches the next page in the query */
-	getNextPage(): List {
-		return this.ref.get(this.options);
+	getNextPage() {
+		return this.ref.get(this.options) as Promise<List>;
 	}
 }

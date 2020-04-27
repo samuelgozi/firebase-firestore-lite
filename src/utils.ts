@@ -10,8 +10,10 @@ export function trimPath(path: string) {
 }
 
 /** Returns true if a variable is a path that points to a document */
-export function isDocPath(s: string | Reference): boolean {
-	return typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 0;
+export function isDocPath(s: any): boolean {
+	return (
+		typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 0
+	);
 }
 
 /** Returns true if an object is a "raw" firebase document */
@@ -21,7 +23,7 @@ export function isRawDocument(document: any): boolean {
 	// A Firestore document must have these three keys.
 	// The fields key is optional.
 	// https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents
-	for (let fieldName of ['name', 'createTime', 'updateTime']) {
+	for (const fieldName of ['name', 'createTime', 'updateTime']) {
 		if (!(fieldName in document)) return false;
 	}
 
@@ -29,7 +31,7 @@ export function isRawDocument(document: any): boolean {
 }
 
 /** Checks if a value is a Reference to a Document */
-export function isDocReference(val: string | Reference): boolean {
+export function isDocReference(val: any): boolean {
 	return val instanceof Reference && !val.isCollection;
 }
 
@@ -47,7 +49,7 @@ export function isPositiveInteger(val: any): boolean {
 export function objectToQuery(obj = {}): string {
 	const props = [];
 
-	for (let prop in obj) {
+	for (const prop in obj) {
 		if (obj[prop] === undefined) continue; // Skip over undefined props.
 
 		// If it is an array then we should encode each value in separate, and then join.
@@ -87,7 +89,9 @@ export function getKeyPaths(object: object, parentPath?: string): string[] {
 /** Returns a string that represents a query parameter field mask */
 export function maskFromObject(object = {}): string {
 	const paths = getKeyPaths(object);
-	return paths.length === 0 ? '' : paths.map(p => `updateMask.fieldPaths=${p}`).join('&');
+	return paths.length === 0
+		? ''
+		: paths.map(p => `updateMask.fieldPaths=${p}`).join('&');
 }
 
 /** Decodes a Firebase Value into a JS one */
@@ -146,9 +150,14 @@ export function decode(map: FirebaseMap | FirebaseDocument, db: Database) {
 }
 
 /** Encodes a JS variable into a Firebase Value */
-export function encodeValue(value: any, transforms?: Transform[], parentPath?: string) {
+export function encodeValue(
+	value: any,
+	transforms?: Transform[],
+	parentPath?: string
+): any {
 	const objectClass = Object.prototype.toString.call(value);
-	let valueType = objectClass.substring(8, objectClass.length - 1).toLowerCase() + 'Value';
+	let valueType =
+		objectClass.substring(8, objectClass.length - 1).toLowerCase() + 'Value';
 
 	switch (valueType) {
 		case 'numberValue':
@@ -168,7 +177,8 @@ export function encodeValue(value: any, transforms?: Transform[], parentPath?: s
 		case 'objectValue':
 			// If the object is a custom type, then use its built in encoder
 			// and return it.
-			if ([Reference, GeoPoint].includes(value.constructor)) return value.toJSON();
+			if (value instanceof Reference || value instanceof GeoPoint)
+				return value.toJSON();
 
 			// Else assume its intended to be a Map value.
 			valueType = 'mapValue';
@@ -180,7 +190,11 @@ export function encodeValue(value: any, transforms?: Transform[], parentPath?: s
 }
 
 /** Converts an object into a write instruction */
-export function encode(object: object, transforms: Transform[], parentPath?: string): FirebaseMap {
+export function encode(
+	object: object,
+	transforms: Transform[],
+	parentPath?: string
+): FirebaseMap {
 	const keys = Object.keys(object);
 
 	if (keys.length === 0) return {};

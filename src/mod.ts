@@ -1,7 +1,7 @@
-import Reference from './Reference.js';
+import Reference from './Reference';
 import { Document } from './Document';
 import { isDocPath, isDocReference } from './utils';
-import Transaction from './Transaction.js';
+import Transaction from './Transaction';
 
 async function handleApiResponse(res) {
 	if (!res.ok) {
@@ -25,7 +25,7 @@ interface DatabaseOptions {
 	auth: Auth;
 }
 
-interface updateFunction {
+interface UpdateFunction {
 	(tx?: Transaction): Promise<void> | void;
 }
 
@@ -38,7 +38,9 @@ export default class Database {
 
 	constructor({ projectId, auth, name = '(default)' }: DatabaseOptions) {
 		if (projectId === undefined)
-			throw Error('Database constructor expected the "config" argument to have a valid "projectId" property');
+			throw Error(
+				'Database constructor expected the "config" argument to have a valid "projectId" property'
+			);
 
 		this.name = name;
 		this.auth = auth;
@@ -67,9 +69,9 @@ export default class Database {
 	 * @param {(string|Document)} path Path to the collection or document.
 	 * @returns {Reference} instance of a reference.
 	 */
-	reference(path: String | Document): Reference {
+	reference(path: string | Document): Reference {
 		if (path instanceof Document) path = path.__meta__.path;
-		return new Reference(path, this);
+		return new Reference(path as string, this);
 	}
 
 	async batchGet(refs: Array<Reference | string>) {
@@ -78,14 +80,18 @@ export default class Database {
 			body: JSON.stringify({
 				documents: refs.map(ref => {
 					if (!isDocPath(ref) && !isDocReference(ref))
-						throw Error('The array can only contain References or paths pointing to documents');
+						throw Error(
+							'The array can only contain References or paths pointing to documents'
+						);
 					return (ref as Reference).name || `${this.rootPath}/${ref}`;
 				})
 			})
 		});
 
 		return response.map(entry =>
-			entry.found ? new Document(entry.found, this) : Object.defineProperty({}, '__missing__', { value: entry.missing })
+			entry.found
+				? new Document(entry.found, this)
+				: Object.defineProperty({}, '__missing__', { value: entry.missing })
 		);
 	}
 
@@ -105,7 +111,7 @@ export default class Database {
 	 * or if any error that is not related to the transaction is received
 	 * like a network error etc.
 	 */
-	async runTransaction(fn: updateFunction, attempts = 5) {
+	async runTransaction(fn: UpdateFunction, attempts = 5) {
 		const tx = new Transaction(this);
 
 		while (attempts > 0) {
@@ -117,7 +123,11 @@ export default class Database {
 				break; // Stop trying if it succeeded.
 			} catch (e) {
 				// Only throw if the error is not related to the transaction, or it is the last attempt.
-				if (attempts === 0 || (e.status !== 'NOT_FOUND' && e.status !== 'FAILED_PRECONDITION')) throw Error(e);
+				if (
+					attempts === 0 ||
+					(e.status !== 'NOT_FOUND' && e.status !== 'FAILED_PRECONDITION')
+				)
+					throw Error(e);
 			}
 			attempts--;
 		}

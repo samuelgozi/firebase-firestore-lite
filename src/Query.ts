@@ -1,47 +1,61 @@
-import { isDocReference, isColReference, isPositiveInteger, encodeValue } from './utils.js';
-import Document from '../src/Document.js';
+import {
+	isDocReference,
+	isColReference,
+	isPositiveInteger,
+	encodeValue
+} from './utils';
+import { Document } from './Document';
+import Reference from './Reference';
+import Database from './mod';
 
-/**
- * Allowed types for the "from" option.
- * @typedef {Object} FromOption
- * @property {Reference} collection the collection reference.
- * @property {boolean} allDescendants whether to make a compound query or not.
- */
+interface FromOption {
+	/** Reference to the collection */
+	collection: Reference;
+	/** Whether to make a compound query or not */
+	allDescendants: boolean;
+}
 
-/**
- * Options object for a Query class.
- * @typedef {array} FilterOption
- * @property {string} 0 - Property name
- * @property {string} 1 - Operator - Can only be: `<`, `<=`, `LESS_THAN_OR_EQUAL`, `>`, `>=`, `==` or `contains`.
- * @property {string} 2 - Value to compare
- */
+type FilterOption = [
+	/** Property name */
+	string,
+	/** Operator */
+	'<' | '<=' | 'LESS_THAN_OR_EQUAL' | '>' | '>=' | '==' | 'contains',
+	/** The value to compare against */
+	any
+];
 
-/**
- * Options object for a Query class.
- * @typedef {Object} OrderOption
- * @property {string} field The field path to use while ordering.
- * @property {('ascending'|'descending')} [direction] The direction; ascending or descending.
- */
+interface OrderOption {
+	/** The field path to use while ordering */
+	field: string;
+	/** The direction to order by */
+	direction?: 'asc' | 'desc';
+}
 
-/**
- * Options object for a Query class.
- * @typedef {Object} CursorOption
- * @property {Reference} Reference A reference to a document.
- * @property {boolean} before If the position is just before or just after the given values.
- */
+interface CursorOption {
+	/** A reference to a document */
+	reference: Reference;
+	/** If the position is before or just after the given values */
+	before: boolean;
+}
 
-/**
- * Options object for a Query class.
- * @typedef {Object} QueryOptions
- * @property {string[]} [select] The fields to return, leave empty to return the whole doc.
- * @property {Reference} from The collection to query, Should be set automatically if you are using `ref.query()`.
- * @property {FilterOption[]} [where] Filter used to select matching documents.
- * @property {(string | OrderOption)} [orderBy] The field to use while ordering the results and direction.
- * @property {(Reference | CursorOption)} [startAt] Reference to a document from which to start the query.
- * @property {(Reference | CursorOption)} [endAt] Reference to a document at which to end the query.
- * @property {number} [offset] The number of results to skip.
- * @property {number} [limit] The max amount of documents to return.
- */
+interface QueryOptions {
+	/** The fields to return, leave empty to return the whole doc. */
+	select?: string[];
+	/** The collection to query, Should be set automatically if you are using `ref.query()` */
+	from: Reference | FromOption;
+	/** Filter used to select matching documents */
+	where?: FilterOption[];
+	/** The field to use while ordering the results and direction */
+	orderBy?: string | OrderOption | Array<string | OrderOption>;
+	/** Reference to a document from which to start the query */
+	startAt?: Reference | CursorOption;
+	/** Reference to a document at which to end the query */
+	endAt?: Reference | CursorOption;
+	/** The number of results to skip */
+	offset?: number;
+	/** The max amount of documents to return */
+	limit?: number;
+}
 
 const operators = {
 	'<': 'LESS_THAN',
@@ -77,20 +91,14 @@ const encoders = {
 	/**
 	 * Converts an option from the Query instance into a valid JSON
 	 * object to use with the Firestores REST API.
-	 * @param {string[]} val array of references to collections.
-	 * @returns {Object}
 	 */
-	select(fieldsArray) {
+	select(fieldsArray: string[]) {
 		const fields = fieldsArray.map(fieldPath => ({ fieldPath }));
 		return fields.length ? { fields } : undefined;
 	},
 
-	/**
-	 * Converts a Query filter(array with three items), into an encoded filter.
-	 * @param {FilterOption} filter - The filter.
-	 * @returns {Object}
-	 */
-	encodeFilter([fieldPath, op, value]) {
+	/** Converts a Query filter(array with three items), into an encoded filter */
+	encodeFilter([fieldPath, op, value]: FilterOption): any {
 		if (Number.isNaN(value) || value === null) {
 			return {
 				unaryFilter: {
@@ -111,11 +119,9 @@ const encoders = {
 
 	/**
 	 * Converts an option from the Query instance into a valid JSON
-	 * object to use with the Firestores REST API.
-	 * @param {FilterOption[]} val Array of filters.
-	 * @returns {Object}
+	 * object to use with the Firestore's REST API.
 	 */
-	where(option) {
+	where(option: FilterOption[]) {
 		if (option.length === 0) return;
 
 		if (option.length === 1) {
@@ -131,42 +137,53 @@ const encoders = {
 		};
 	},
 
-	referenceToCursor(ref) {
+	referenceToCursor(ref: Reference) {
 		return {
 			values: [{ referenceValue: ref.name }],
 			before: true
 		};
 	},
 
-	startAt(ref) {
+	startAt(ref: Reference) {
 		return this.referenceToCursor(ref);
 	},
 
-	endAt(ref) {
+	endAt(ref: Reference) {
 		return this.referenceToCursor(ref);
 	}
 };
 
+const options = [
+	'select',
+	'from',
+	'where',
+	'orderBy',
+	'startAt',
+	'endAt',
+	'offset',
+	'limit'
+];
+
 /**
- * Query object that represents a Firestore query.
+ * Query class that represents a Firestore query.
  */
 export default class Query {
-	/**
-	 * Create a Firestore query.
-	 * @param {QueryOptions} options configuration for the query.
-	 */
-	constructor(options = {}) {
-		this.options = {
-			select: [],
-			where: [],
-			orderBy: []
-		};
+	private db: Database;
+	private parentDocument: Reference;
+	private options: any;
 
+	constructor(init = {} as QueryOptions) {
 		// Loop through all the valid options, validate them and then save them.
-		for (const option of ['select', 'from', 'where', 'orderBy', 'startAt', 'endAt', 'offset', 'limit']) {
-			const optionValue = options[option];
+		for (const option of options) {
+			this.options = {
+				select: [],
+				where: [],
+				orderBy: []
+			};
 
-			if (option in options) {
+			const optionValue = init[option];
+
+			if (option in init) {
 				// If the option is "where" or "orderBy", and is also an array,
 				// then it might be a compound value, so we want to pass it one
 				// by one to its method.
@@ -202,15 +219,18 @@ export default class Query {
 		}
 
 		// Validate that "from" is always passed.
-		if (!('from' in options)) throw Error('"from" is required when building a new query');
-		this.db = options.from.db;
-		this.parentDocument = options.from.parent;
+		if (!('from' in init))
+			throw Error('"from" is required when building a new query');
+		this.db = (init.from as Reference).db;
+		this.parentDocument = (init.from as Reference).parent;
 	}
 
-	select(fields) {
-		if (!Array.isArray(fields)) throw Error('Expected argument to be an array of field paths');
+	select(fields: QueryOptions['select']) {
+		if (!Array.isArray(fields))
+			throw Error('Expected argument to be an array of field paths');
 		fields.forEach((field, i) => {
-			if (typeof field !== 'string') throw Error(`Field path at index [${i}] is not a string`);
+			if (typeof field !== 'string')
+				throw Error(`Field path at index [${i}] is not a string`);
 			this.options.select.push(field);
 		});
 	}
@@ -218,61 +238,74 @@ export default class Query {
 	/**
 	 * Adds a collection to query.
 	 */
-	from(val) {
-		const collection = val.collection || val;
-		const { allDescendants } = val;
-		if (!isColReference(collection)) throw Error('Expected a reference to a collection');
+	from(val: QueryOptions['from']) {
+		const collection = (val as FromOption).collection || val;
+		const { allDescendants } = val as FromOption;
+
+		if (!isColReference(collection))
+			throw Error('Expected a reference to a collection');
+
 		if (allDescendants !== undefined && typeof allDescendants !== 'boolean')
 			throw Error('Expected the "allDescendants" argument to be a boolean');
 
-		this.options.from = { collectionId: collection.id, allDescendants };
+		this.options.from = {
+			collectionId: (collection as Reference).id,
+			allDescendants
+		};
 
 		return this;
 	}
 
-	where(fieldPath) {
+	where(fieldPath: QueryOptions['where']) {
 		const filter = Array.isArray(fieldPath) ? fieldPath : arguments;
 		validateFilter(filter);
 		this.options.where.push(filter);
 		return this;
 	}
 
-	orderBy(order, dir = 'asc') {
+	orderBy(
+		order: QueryOptions['orderBy'],
+		dir: OrderOption['direction'] = 'asc'
+	) {
 		const dirMap = {
 			asc: 'ASCENDING',
 			desc: 'DESCENDING'
 		};
 
-		let { field: fieldPath = order, direction = dir } = order;
-		direction = dirMap[direction];
+		let { field: fieldPath = order, direction = dir } = order as OrderOption;
+		direction = dirMap[direction] as OrderOption['direction'];
 
-		if (typeof fieldPath !== 'string') throw Error('"field" property needs to be a string');
-		if (direction === undefined) throw Error('"direction" property can only be "asc" or "desc"');
+		if (typeof fieldPath !== 'string')
+			throw Error('"field" property needs to be a string');
+		if (direction === undefined)
+			throw Error('"direction" property can only be "asc" or "desc"');
 
 		this.options.orderBy.push({ field: { fieldPath }, direction });
 		return this;
 	}
 
-	startAt(ref) {
+	startAt(ref: QueryOptions['startAt']) {
 		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
 		this.options.startAt = ref;
 		return this;
 	}
 
-	endAt(ref) {
+	endAt(ref: QueryOptions['endAt']) {
 		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
 		this.options.endAt = ref;
 		return this;
 	}
 
-	offset(number) {
-		if (!isPositiveInteger(number)) throw Error('Expected an integer that is greater than 0');
+	offset(number: number) {
+		if (!isPositiveInteger(number))
+			throw Error('Expected an integer that is greater than 0');
 		this.options.offset = number;
 		return this;
 	}
 
-	limit(number) {
-		if (!isPositiveInteger(number)) throw Error('Expected an integer that is greater than 0');
+	limit(number: number) {
+		if (!isPositiveInteger(number))
+			throw Error('Expected an integer that is greater than 0');
 		this.options.limit = number;
 		return this;
 	}

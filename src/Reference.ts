@@ -2,7 +2,14 @@ import Database from './mod';
 import Query from './Query';
 import { Document, FirebaseDocument, FirebaseMap } from './Document';
 import { List } from './List';
-import { trimPath, isDocPath, objectToQuery, maskFromObject, encode, getKeyPaths } from './utils';
+import {
+	trimPath,
+	isDocPath,
+	objectToQuery,
+	maskFromObject,
+	encode,
+	getKeyPaths
+} from './utils';
 
 export default class Reference {
 	/** The ID of the document inside the collection */
@@ -12,10 +19,10 @@ export default class Reference {
 	/** Whether or not this reference points to the root of the database */
 	isRoot: boolean;
 
-	private name: string;
-	private endpoint: string;
+	readonly name: string;
+	readonly endpoint: string;
 
-	constructor(path: string, private db: Database) {
+	constructor(path: string, readonly db: Database) {
 		if (db === undefined) throw Error('Argument "db" is required but missing');
 
 		// Normalize the path by removing slashes from
@@ -38,7 +45,11 @@ export default class Reference {
 	/** Returns a reference to the parent collection */
 	get parentCollection() {
 		if (this.isRoot) throw Error("Can't get parent of a root collection");
-		if (this.isCollection) return new Reference(this.path.replace(/(\/([^/]+)\/?){2}$|^([^/]+)$/, ''), this.db);
+		if (this.isCollection)
+			return new Reference(
+				this.path.replace(/(\/([^/]+)\/?){2}$|^([^/]+)$/, ''),
+				this.db
+			);
 		return this.parent;
 	}
 
@@ -62,7 +73,9 @@ export default class Reference {
 	 */
 	async get(options?: object) {
 		const data = await this.db.fetch(this.endpoint + objectToQuery(options));
-		return this.isCollection ? new List(data, this, options) : new Document(data, this.db);
+		return this.isCollection
+			? new List(data, this, options)
+			: new Document(data, this.db);
 	}
 
 	/**
@@ -72,15 +85,21 @@ export default class Reference {
 	 * Else, if it doesn't have any Transforms then we return the parsed
 	 * document and let the caller handle the request.
 	 */
-	private handleTransforms(obj: object, update = false): FirebaseMap | Promise<Document> {
-		if (typeof obj !== 'object') throw Error(`"${update ? 'update' : 'set'}" received no arguments`);
+	private handleTransforms(
+		obj: object,
+		update = false
+	): FirebaseMap | Promise<Document> {
+		if (typeof obj !== 'object')
+			throw Error(`"${update ? 'update' : 'set'}" received no arguments`);
 		const transforms = [];
 		const doc = encode(obj, transforms);
 
 		if (transforms.length === 0) return doc;
 
 		if (this.isCollection && transforms.length)
-			throw Error("Transforms can't be used when creating documents with server generated IDs");
+			throw Error(
+				"Transforms can't be used when creating documents with server generated IDs"
+			);
 
 		const tx = this.db.transaction();
 		(doc as FirebaseDocument).name = this.name;
@@ -154,7 +173,8 @@ export default class Reference {
 	 * @returns {List} The results of the query.
 	 */
 	query(options = {}) {
-		if (!this.isCollection) throw Error('Query can only be called on collections');
+		if (!this.isCollection)
+			throw Error('Query can only be called on collections');
 
 		return new Query({
 			from: this,

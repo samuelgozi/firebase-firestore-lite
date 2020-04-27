@@ -1,6 +1,5 @@
 import { isRawDocument, decode } from './utils';
 import Database from './mod';
-import GeoPoint from './GeoPoint';
 
 export interface FirebaseMap {
 	/** The map's fields */
