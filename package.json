@@ -3,6 +3,7 @@
 	"version": "0.6.2",
 	"description": "A lightweight cloud firestore library for the browser",
 	"main": "dist/mod.js",
+	"types": "dist/mod.d.ts",
 	"author": "Samuel Elgozi <samu.elgozi@gmail.com>",
 	"license": "MIT",
 	"files": [
@@ -15,7 +16,8 @@
 	"scripts": {
 		"build": "tsc",
 		"lint": "eslint . --ext .ts",
-		"test": "jest"
+		"test": "jest",
+		"prepublishOnly": "tsc"
 	},
 	"devDependencies": {
 		"@babel/preset-env": "^7.9.5",
