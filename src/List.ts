@@ -1,5 +1,5 @@
-import { Document, FirebaseDocument } from './Document';
-import Reference from './Reference';
+import { Document, FirebaseDocument } from './Document.ts';
+import Reference from './Reference.ts';
 
 interface FirebaseList {
 	documents: FirebaseDocument[];

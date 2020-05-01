@@ -3,10 +3,10 @@ import {
 	isColReference,
 	isPositiveInteger,
 	encodeValue
-} from './utils';
-import { Document } from './Document';
-import Reference from './Reference';
-import Database from './Database';
+} from './utils.ts';
+import { Document } from './Document.ts';
+import Reference from './Reference.ts';
+import Database from './Database.ts';
 
 interface FromOption {
 	/** Reference to the collection */

@@ -1,7 +1,7 @@
-import Reference from './Reference';
-import { Document } from './Document';
-import { isDocPath, isDocReference } from './utils';
-import Transaction from './Transaction';
+import Reference from './Reference.ts';
+import { Document } from './Document.ts';
+import { isDocPath, isDocReference } from './utils.ts';
+import Transaction from './Transaction.ts';
 
 async function handleApiResponse(res) {
 	if (!res.ok) {

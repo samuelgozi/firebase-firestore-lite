@@ -1,7 +1,7 @@
-import Database from './Database';
-import Query from './Query';
-import { Document, FirebaseDocument, FirebaseMap } from './Document';
-import { List } from './List';
+import Database from './Database.ts';
+import Query from './Query.ts';
+import { Document, FirebaseDocument, FirebaseMap } from './Document.ts';
+import { List } from './List.ts';
 import {
 	trimPath,
 	isDocPath,
@@ -9,7 +9,7 @@ import {
 	maskFromObject,
 	encode,
 	getKeyPaths
-} from './utils';
+} from './utils.ts';
 
 export default class Reference {
 	/** The ID of the document inside the collection */

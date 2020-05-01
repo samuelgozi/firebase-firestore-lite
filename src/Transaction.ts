@@ -4,10 +4,10 @@ import {
 	getKeyPaths,
 	encode,
 	isDocReference
-} from './utils';
-import { Document, FirebaseDocument } from './Document';
-import Reference from './Reference';
-import Database from './Database';
+} from './utils.ts';
+import { Document, FirebaseDocument } from './Document.ts';
+import Reference from './Reference.ts';
+import Database from './Database.ts';
 
 type ref = Reference | Document | string;
 

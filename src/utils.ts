@@ -1,8 +1,8 @@
-import Reference from './Reference';
-import GeoPoint from './GeoPoint';
-import Transform from './Transform';
-import { FirebaseDocument, FirebaseMap } from './Document';
-import Database from './Database';
+import Reference from './Reference.ts';
+import GeoPoint from './GeoPoint.ts';
+import Transform from './Transform.ts';
+import { FirebaseDocument, FirebaseMap } from './Document.ts';
+import Database from './Database.ts';
 
 /** Trims spaces and slashes from a path */
 export function trimPath(path: string) {
