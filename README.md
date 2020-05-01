@@ -1,4 +1,4 @@
-# Firebase firestore lite (WIP) [![codecov](https://codecov.io/gh/samuelgozi/firebase-firestore-lite/branch/master/graph/badge.svg)](https://codecov.io/gh/samuelgozi/firebase-firestore-lite) ![bundlephobia](https://badgen.net/bundlephobia/minzip/firebase-auth-lite)
+# Firebase firestore lite [![codecov](https://codecov.io/gh/samuelgozi/firebase-firestore-lite/branch/master/graph/badge.svg)](https://codecov.io/gh/samuelgozi/firebase-firestore-lite) ![bundlephobia](https://badgen.net/bundlephobia/minzip/firebase-auth-lite)
 
 This project goal is to provide an alternative library to the official Firestore JS SDK.
 The problem with the official library is that it is too heavy ([92kb at the time of writing](https://bundlephobia.com/result?p=@firebase/firestore@1.11.2)),
@@ -7,44 +7,45 @@ of kilobytes without any app logic](https://github.com/samuelgozi/firebase-fires
 
 [Our Alternative SDK performs in average 13 times better and is 27 times smaller than the official ones](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks).
 
-## What will we give up for a lighter bundle?
+## What am I giving up by using this?
 
-Hopefully nothing, but as it seems right now I will leave the "real time" and "offline support" parts for last, and the API might be a bit different.
-And the browser support, will be targeting only "evergreen" ones.
+All database operations are available except realtime updates(read below why) and we don't provide offline support out of the box. In addition, its important to understand that old browser support is not one of my goals with this library, so you might need to transpile and provide polyfills on your own.
+
+I do plan to support Realtime and offline in the future. The reason its not yet implemented is because currently that API is not exposed by firebase unless I use gRPC, and i don't want to because it will add at least 10KB(more than twice this library).
+I am considering all possibilities, and I issued a feature request for this multiple times to the firebase team, but if they won't budge, than ill find a workaround.
 
 ## Roadmap / Features list
-
-### General
 
 - [x] Run queries.
 - [x] Batch Get.
 - [x] Batch Write(by using transactions).
 - [x] Transactions.
+- [x] Read, add, update and delete documents.
+- [x] Read all documents in a collection.
+- [x] Atomic operations on document level(Transforms).
 - [ ] Real time **\***
 - [ ] Offline support **\***
 
 **\*** = Will start work on this once the rest of the API is stable.
 
-### Documents
-
-- [x] Read, add, update and delete documents.
-
-### Collections
-
-- [x] Read all documents in a collection.
-
 ## Getting started
+
+### NPM
 
 Install this package with NPM/Yarn:
 
 ```
 npm install firebase-firestore-lite
-```
-
-Or
-
-```
+# or
 yarn add firebase-firestore-lite
+```
+
+### Deno
+
+For deno just replace the import URLs with:
+
+```js
+import { Database } from 'https://denopkg.com/samuelgozi/firebase-firestore-lite';
 ```
 
 ## Initialize an instance
@@ -53,10 +54,10 @@ It is possible to use authentication but not necessary.
 First I'll show you how to use it without it:
 
 ```js
-import Firestore from 'firebase-firestore-lite';
+import { Database } from 'firebase-firestore-lite';
 
 // All you need is the projectId. It can be found on the firebase console and in the firebase config.
-const db = new Firestore({ projectId: 'nano-inventory' });
+const db = new Database({ projectId: 'nano-inventory' });
 ```
 
 Now you can start working with the database.
@@ -64,7 +65,7 @@ Now you can start working with the database.
 Most apps apply some kind of user based restrictions. If you want to access the database as an authenticated user it can be done with the ["firebase-auth-lite"](https://github.com/samuelgozi/firebase-auth-lite) library. Here's how:
 
 ```js
-import Firestore from 'firebase-firestore-lite';
+import { Database } from 'firebase-firestore-lite';
 import Auth from 'firebase-auth-lite';
 
 // Please read the docs of the Auth library for further instructions
@@ -74,7 +75,7 @@ const auth = new Auth({
 });
 
 // Now pass the auth instance as well as the projectId.
-const db = new Firestore({ projectId: 'nano-inventory', auth });
+const db = new Database({ projectId: 'nano-inventory', auth });
 ```
 
 The firestore instance will now make all of the requests with the authenticates user's credentials.
@@ -260,7 +261,11 @@ const usersQuery = users.query({
 });
 
 // The above will be identical to
-const usersQuery = users.query().where('age', '=>', 21).orderBy('age').limit(10);
+const usersQuery = users
+	.query()
+	.where('age', '=>', 21)
+	.orderBy('age')
+	.limit(10);
 ```
 
 The `users.query()` method optionally accepts an options object, and then returns a new Query instance. All of the options can also be set by using the query methods, and they can also be chained(as seen in the second example). You can then `run()` the query:

@@ -6,7 +6,7 @@ import {
 } from './utils';
 import { Document } from './Document';
 import Reference from './Reference';
-import Database from './mod';
+import Database from './Database';
 
 interface FromOption {
 	/** Reference to the collection */

@@ -1,4 +1,4 @@
-import Database from './mod';
+import Database from './Database';
 import Query from './Query';
 import { Document, FirebaseDocument, FirebaseMap } from './Document';
 import { List } from './List';

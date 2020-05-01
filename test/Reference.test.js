@@ -2,7 +2,7 @@ import { Document } from '../src/Document.ts';
 import Reference from '../src/Reference.ts';
 import { List } from '../src/List.ts';
 import Query from '../src/Query.ts';
-import Database from '../src/mod.ts';
+import Database from '../src/Database.ts';
 import Transform from '../src/Transform.ts';
 
 const db = new Database({ projectId: 'projectId' });

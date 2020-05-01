@@ -1,4 +1,4 @@
-import Database from '../src/mod.ts';
+import Database from '../src/Database.ts';
 import Reference from '../src/Reference.ts';
 import { Document } from '../src/Document.ts';
 import Transaction from '../src/Transaction.ts';

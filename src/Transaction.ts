@@ -7,7 +7,7 @@ import {
 } from './utils';
 import { Document, FirebaseDocument } from './Document';
 import Reference from './Reference';
-import Database from './mod';
+import Database from './Database';
 
 type ref = Reference | Document | string;
 
