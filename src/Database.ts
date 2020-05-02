@@ -38,7 +38,7 @@ export default class Database {
 	name: string;
 	rootPath: string;
 	endpoint: string;
-	auth: Auth;
+	auth?: Auth;
 
 	constructor({ projectId, auth, name = '(default)' }: DatabaseOptions) {
 		if (projectId === undefined)
