@@ -24,9 +24,9 @@ interface DatabaseOptions {
 	/** Firebase's project ID */
 	projectId: string;
 	/** The name to use for this database instance */
-	name: string;
+	name?: string;
 	/** Auth instance */
-	auth: Auth;
+	auth?: Auth;
 }
 
 interface UpdateFunction {
