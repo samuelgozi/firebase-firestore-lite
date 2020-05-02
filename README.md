@@ -57,7 +57,7 @@ First I'll show you how to use it without it:
 import { Database } from 'firebase-firestore-lite';
 
 // All you need is the projectId. It can be found on the firebase console and in the firebase config.
-const db = new Database({ projectId: 'nano-inventory' });
+const db = new Database({ projectId: 'sandbox' });
 ```
 
 Now you can start working with the database.
@@ -75,7 +75,7 @@ const auth = new Auth({
 });
 
 // Now pass the auth instance as well as the projectId.
-const db = new Database({ projectId: 'nano-inventory', auth });
+const db = new Database({ projectId: 'sandbox', auth });
 ```
 
 The firestore instance will now make all of the requests with the authenticates user's credentials.
