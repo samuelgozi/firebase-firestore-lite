@@ -2,7 +2,6 @@
 	"env": {
 		"es6": true,
 		"browser": true,
-		"node": true,
 		"jest/globals": true
 	},
 	"parser": "@typescript-eslint/parser",
@@ -11,7 +10,7 @@
 		"plugin:jest/recommended",
 		"plugin:@typescript-eslint/eslint-recommended",
 		"plugin:@typescript-eslint/recommended",
-    "prettier"
+		"prettier"
 	],
 	"rules": {
 		"no-console": ["error", { "allow": ["error"] }],
@@ -25,7 +24,7 @@
 		"@typescript-eslint/no-explicit-any": "off",
 		"@typescript-eslint/no-use-before-define": "warn",
 		"@typescript-eslint/explicit-function-return-type": "off",
-    "prettier/prettier": "error"
+		"prettier/prettier": "error"
 	},
 	"plugins": ["jest", "prettier"]
 }

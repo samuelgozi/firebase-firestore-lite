@@ -1,3 +1,4 @@
+// @ts-ignore
 import {
 	trimPath,
 	isDocPath,
@@ -5,15 +6,20 @@ import {
 	encode,
 	isDocReference
 } from './utils.ts';
+// @ts-ignore
 import { Document, FirebaseDocument } from './Document.ts';
+// @ts-ignore
 import Reference from './Reference.ts';
+// @ts-ignore
 import Database from './Database.ts';
+// @ts-ignore
+import Transform from './Transform.ts';
 
 type ref = Reference | Document | string;
 
 export default class Transaction {
-	writes = [];
-	preconditions = {};
+	writes: any[] = [];
+	preconditions: any = {};
 
 	constructor(private db: Database) {}
 
@@ -26,7 +32,7 @@ export default class Transaction {
 	private handleArguments(
 		ref: ref,
 		data = {},
-		transforms?: []
+		transforms?: Transform[]
 	): FirebaseDocument {
 		const isDoc = ref instanceof Document;
 
@@ -63,7 +69,7 @@ export default class Transaction {
 	async get(refs: Array<Reference | string>) {
 		const docs = await this.db.batchGet(refs);
 
-		docs.forEach(doc => {
+		docs.forEach((doc: any) => {
 			const { name, updateTime } = doc.__meta__ || { name: doc.__missing__ };
 			this.preconditions[name] = updateTime
 				? { updateTime }
@@ -78,7 +84,7 @@ export default class Transaction {
 	 * it didn't exist before, and overwrite all fo the data if it did.
 	 */
 	set(ref: ref, data: any) {
-		const transforms = [];
+		const transforms: Transform[] = [];
 		const doc = this.handleArguments(ref, data, transforms as []);
 
 		this.writes.push({

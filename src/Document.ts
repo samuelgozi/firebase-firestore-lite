@@ -1,4 +1,6 @@
+// @ts-ignore
 import { isRawDocument, decode } from './utils.ts';
+// @ts-ignore
 import Database from './Database.ts';
 
 export interface FirebaseMap {
@@ -42,6 +44,7 @@ export interface Meta {
  * data to the database.
  */
 export class Document {
+	// @ts-ignore
 	__meta__: Meta;
 
 	constructor(rawDoc: FirebaseDocument, db: Database) {

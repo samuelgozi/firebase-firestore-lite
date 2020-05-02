@@ -1,7 +1,14 @@
+// @ts-ignore
 import Database from './Database.ts';
+// @ts-ignore
+import Transform from './Transform.ts';
+// @ts-ignore
 import Query from './Query.ts';
+// @ts-ignore
 import { Document, FirebaseDocument, FirebaseMap } from './Document.ts';
+// @ts-ignore
 import { List } from './List.ts';
+// @ts-ignore
 import {
 	trimPath,
 	isDocPath,
@@ -29,7 +36,7 @@ export default class Reference {
 		// the beginning or the end and trimming spaces.
 		path = trimPath(path);
 
-		this.id = path.split('/').pop();
+		this.id = path.split('/').pop() ?? '';
 		this.path = path;
 		this.name = `${db.rootPath}/${path}`;
 		this.endpoint = `${db.endpoint}/${path}`;
@@ -59,7 +66,7 @@ export default class Reference {
 	}
 
 	/** Returns a reference to the specified child path */
-	child(path) {
+	child(path: string) {
 		// Remove starting forward slash
 		path = path.replace(/^\/?/, '');
 
@@ -91,7 +98,7 @@ export default class Reference {
 	): FirebaseMap | Promise<Document> {
 		if (typeof obj !== 'object')
 			throw Error(`"${update ? 'update' : 'set'}" received no arguments`);
-		const transforms = [];
+		const transforms: Transform[] = [];
 		const doc = encode(obj, transforms);
 
 		if (transforms.length === 0) return doc;
@@ -124,7 +131,7 @@ export default class Reference {
 	 * Will throw is the reference points to a collection.
 	 * @returns {Document} The newly created/updated document.
 	 */
-	async set(obj) {
+	async set(obj: object) {
 		const doc = this.handleTransforms(obj);
 		if (doc instanceof Promise) return await doc;
 

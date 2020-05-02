@@ -1,4 +1,6 @@
+// @ts-ignore
 import { Document, FirebaseDocument } from './Document.ts';
+// @ts-ignore
 import Reference from './Reference.ts';
 
 interface FirebaseList {

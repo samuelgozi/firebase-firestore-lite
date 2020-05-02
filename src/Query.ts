@@ -1,11 +1,15 @@
+// @ts-ignore
 import {
 	isDocReference,
 	isColReference,
 	isPositiveInteger,
 	encodeValue
 } from './utils.ts';
+// @ts-ignore
 import { Document } from './Document.ts';
+// @ts-ignore
 import Reference from './Reference.ts';
+// @ts-ignore
 import Database from './Database.ts';
 
 interface FromOption {
@@ -19,7 +23,7 @@ type FilterOption = [
 	/** Property name */
 	string,
 	/** Operator */
-	'<' | '<=' | 'LESS_THAN_OR_EQUAL' | '>' | '>=' | '==' | 'contains',
+	'<' | '<=' | '>' | '>=' | '==' | 'contains',
 	/** The value to compare against */
 	any
 ];
@@ -39,6 +43,7 @@ interface CursorOption {
 }
 
 interface QueryOptions {
+	[key: string]: any;
 	/** The fields to return, leave empty to return the whole doc. */
 	select?: string[];
 	/** The collection to query, Should be set automatically if you are using `ref.query()` */
@@ -71,7 +76,7 @@ const operators = {
  * @param {*} filter A the value to check
  * @returns {boolean} True if the value is a valid filter.
  */
-function validateFilter(filter) {
+function validateFilter(filter: any) {
 	if (!Array.isArray(filter) || filter.length !== 3) return false;
 
 	const [fieldPath, op, value] = filter;
@@ -168,6 +173,8 @@ const options = [
  * Query class that represents a Firestore query.
  */
 export default class Query {
+	[key: string]: any;
+
 	private db: Database;
 	private parentDocument: Reference;
 	private options: any = {
@@ -193,7 +200,7 @@ export default class Query {
 					(option === 'where' && Array.isArray(optionValue[0])) ||
 					(option === 'orderBy' && Array.isArray(optionValue))
 				) {
-					optionValue.forEach((val, i) => {
+					optionValue.forEach((val: any, i: number) => {
 						// Use try/catch in order to provide context for the error.
 						try {
 							// Try to save the value.
@@ -271,7 +278,7 @@ export default class Query {
 		};
 
 		let { field: fieldPath = order, direction = dir } = order as OrderOption;
-		direction = dirMap[direction] as OrderOption['direction'];
+		direction = dirMap[direction] as 'asc' | 'desc';
 
 		if (typeof fieldPath !== 'string')
 			throw Error('"field" property needs to be a string');
@@ -314,17 +321,17 @@ export default class Query {
 				method: 'POST',
 				body: JSON.stringify(this)
 			})
-		).map(result => new Document(result.document, this.db));
+		).map((result: any) => new Document(result.document, this.db));
 	}
 
 	toJSON() {
-		const encoded = {};
+		const encoded: any = {};
 
 		for (const option in this.options) {
 			const optionValue = this.options[option];
 
 			if (option in encoders) {
-				encoded[option] = encoders[option](optionValue);
+				encoded[option] = (encoders as any)[option](optionValue);
 				continue;
 			}
 

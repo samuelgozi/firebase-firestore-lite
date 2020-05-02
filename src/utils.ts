@@ -1,7 +1,12 @@
+// @ts-ignore
 import Reference from './Reference.ts';
+// @ts-ignore
 import GeoPoint from './GeoPoint.ts';
+// @ts-ignore
 import Transform from './Transform.ts';
+// @ts-ignore
 import { FirebaseDocument, FirebaseMap } from './Document.ts';
+// @ts-ignore
 import Database from './Database.ts';
 
 /** Trims spaces and slashes from a path */
@@ -46,7 +51,7 @@ export function isPositiveInteger(val: any): boolean {
 }
 
 /** Converts an Object to a URI query String */
-export function objectToQuery(obj = {}): string {
+export function objectToQuery(obj: any = {}): string {
 	const props = [];
 
 	for (const prop in obj) {
@@ -54,7 +59,7 @@ export function objectToQuery(obj = {}): string {
 
 		// If it is an array then we should encode each value in separate, and then join.
 		const encodedValue = Array.isArray(obj[prop])
-			? obj[prop].map(val => encodeURIComponent(val)).join()
+			? obj[prop].map((val: string) => encodeURIComponent(val)).join()
 			: encodeURIComponent(obj[prop]);
 
 		props.push(`${prop}=${encodedValue}`);
@@ -67,8 +72,8 @@ export function objectToQuery(obj = {}): string {
  * Returns an array of keyPaths of an object.
  * Skips over arrays values.
  */
-export function getKeyPaths(object: object, parentPath?: string): string[] {
-	let mask = [];
+export function getKeyPaths(object: any, parentPath?: string): string[] {
+	let mask: string[] = [];
 
 	for (const key in object) {
 		const keyPath = parentPath ? `${parentPath}.${key}` : key;
@@ -108,7 +113,9 @@ function decodeValue(value: any, db: Database) {
 			return Number(value);
 
 		case 'arrayValue':
-			return value.values ? value.values.map(val => decodeValue(val, db)) : [];
+			return value.values
+				? value.values.map((val: any) => decodeValue(val, db))
+				: [];
 
 		case 'mapValue':
 			return decode(value as FirebaseMap, db);
@@ -141,7 +148,7 @@ function decodeValue(value: any, db: Database) {
 export function decode(map: FirebaseMap | FirebaseDocument, db: Database) {
 	if (db === undefined) throw Error('Argument "db" is required but missing');
 
-	const object = {};
+	const object: any = {};
 	for (const key in map.fields) {
 		object[key] = decodeValue(map.fields[key], db);
 	}
@@ -191,15 +198,15 @@ export function encodeValue(
 
 /** Converts an object into a write instruction */
 export function encode(
-	object: object,
-	transforms: Transform[],
+	object: any,
+	transforms?: Transform[],
 	parentPath?: string
 ): FirebaseMap {
 	const keys = Object.keys(object);
 
 	if (keys.length === 0) return {};
 
-	const map = { fields: {} };
+	const map: any = { fields: {} };
 
 	for (const key of keys) {
 		const value = object[key];

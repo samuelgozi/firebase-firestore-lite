@@ -1,6 +1,7 @@
+// @ts-ignore
 import { encodeValue } from './utils.ts';
 
-function isNumber(v) {
+function isNumber(v: any) {
 	return typeof v === 'number' && !isNaN(v - v);
 }
 
@@ -47,6 +48,7 @@ type transform =
  * can't be known in the client, as it evaluates in the server.
  */
 export default class Transform {
+	[key: string]: any;
 	fieldPath?: string;
 
 	/**

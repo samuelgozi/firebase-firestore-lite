@@ -1,9 +1,13 @@
+// @ts-ignore
 import Reference from './Reference.ts';
+// @ts-ignore
 import { Document } from './Document.ts';
+// @ts-ignore
 import { isDocPath, isDocReference } from './utils.ts';
+// @ts-ignore
 import Transaction from './Transaction.ts';
 
-async function handleApiResponse(res) {
+async function handleApiResponse(res: Response) {
 	if (!res.ok) {
 		const data = await res.json();
 		throw Array.isArray(data) ? data : Object.assign(new Error(), data.error);
@@ -88,7 +92,7 @@ export default class Database {
 			})
 		});
 
-		return response.map(entry =>
+		return response.map((entry: any) =>
 			entry.found
 				? new Document(entry.found, this)
 				: Object.defineProperty({}, '__missing__', { value: entry.missing })
