@@ -2,8 +2,8 @@
 
 This project goal is to provide an alternative library to the official Firestore JS SDK.
 The problem with the official library is that it is too heavy ([92kb at the time of writing](https://bundlephobia.com/result?p=@firebase/firestore@1.11.2)),
-and if you include the Auth library as well, and `firebase/app`(which you have too), then it could [add up to hundreds
-of kilobytes without any app logic](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks#sizes-and-loading-times)...
+and if you include the Auth library as well, and `firebase/app`(which you have to), then it could [add up to hundreds
+of kilobytes without any app logic](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks#sizes-and-loading-times).
 
 [Our Alternative SDK performs in average 13 times better and is 27 times smaller than the official ones](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks).
 
