@@ -75,14 +75,27 @@ export default class Reference {
 	}
 
 	/**
-	 * Fetches the collection/document that this reference refers to.
+	 * Fetches the collection that this reference refers to.
+	 * Will return a Document instance if it is a document, and a List instance if it is a collection.
+	 */
+	async list(options?: object) {
+		if (!this.isCollection)
+			throw Error('You can\'t "list" a document, try "get" instead');
+
+		const data = await this.db.fetch(this.endpoint + objectToQuery(options));
+		return new List(data, this, options);
+	}
+
+	/**
+	 * Document that this reference refers to.
 	 * Will return a Document instance if it is a document, and a List instance if it is a collection.
 	 */
 	async get(options?: object) {
+		if (this.isCollection)
+			throw Error('You can\'t "get" a collection, try "list" instead');
+
 		const data = await this.db.fetch(this.endpoint + objectToQuery(options));
-		return this.isCollection
-			? new List(data, this, options)
-			: new Document(data, this.db);
+		return new Document(data, this.db);
 	}
 
 	/**
