@@ -48,6 +48,6 @@ export class List {
 
 	/** Fetches the next page in the query */
 	getNextPage() {
-		return this.ref.get(this.options) as Promise<List>;
+		return this.ref.list(this.options);
 	}
 }
