@@ -4,19 +4,40 @@ import Database from '../src/Database.ts';
 import { Document } from '../src/Document.ts';
 
 const db = new Database({ projectId: 'projectId' });
-const rawDoc = {
-	name: 'projects/projectId/databases/(default)/documents/public/types',
-	fields: {
-		one: {
-			stringValue: 'one'
-		}
-	},
-	createTime: '2019-10-10T14:00:00.617973Z',
-	updateTime: '2019-10-10T14:44:42.885653Z'
-};
 
 const rawList = {
-	documents: [rawDoc],
+	documents: [
+		{
+			name: 'projects/projectId/databases/(default)/documents/public/1',
+			fields: {
+				one: {
+					stringValue: 'one'
+				}
+			},
+			createTime: '2019-10-10T14:00:00.617973Z',
+			updateTime: '2019-10-10T14:44:42.885653Z'
+		},
+		{
+			name: 'projects/projectId/databases/(default)/documents/public/2',
+			fields: {
+				two: {
+					stringValue: 'two'
+				}
+			},
+			createTime: '2019-10-10T14:00:00.617973Z',
+			updateTime: '2019-10-10T14:44:42.885653Z'
+		},
+		{
+			name: 'projects/projectId/databases/(default)/documents/public/3',
+			fields: {
+				three: {
+					stringValue: 'three'
+				}
+			},
+			createTime: '2019-10-10T14:00:00.617973Z',
+			updateTime: '2019-10-10T14:44:42.885653Z'
+		}
+	],
 	nextPageToken: 'token'
 };
 
@@ -39,7 +60,24 @@ describe('List', () => {
 		const ref = new Reference('col', db);
 		const list = new List(rawList, ref);
 
-		expect(list.documents).toEqual([{ one: 'one' }]);
+		expect(list.documents).toEqual([
+			{ one: 'one' },
+			{ two: 'two' },
+			{ three: 'three' }
+		]);
 		expect(list.documents[0]).toBeInstanceOf(Document);
+	});
+
+	test('Implements iterator protocol', () => {
+		const ref = new Reference('col', db);
+		const list = new List(rawList, ref);
+
+		const ids = [];
+
+		for (const doc of list) {
+			ids.push(doc.__meta__.id);
+		}
+
+		expect(ids).toEqual(['1', '2', '3']);
 	});
 });
