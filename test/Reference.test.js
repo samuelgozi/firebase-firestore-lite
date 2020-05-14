@@ -147,23 +147,34 @@ describe('Get', () => {
 		test('Requests the correct endpoint', async () => {
 			fetch.mockResponse(rawDoc);
 
-			await new Reference('/col/doc', db).get();
-			await new Reference('/col/doc/col/doc', db).get();
+			await new Reference('col/doc', db).get();
 
 			const endpoint = fetch.mock.calls[0][0];
-			const endpoint2 = fetch.mock.calls[1][0];
 
 			expect(endpoint).toEqual(`${db.endpoint}/col/doc`);
-			expect(endpoint2).toEqual(`${db.endpoint}/col/doc/col/doc`);
 		});
 
 		test('Returns an instance of Document', async () => {
-			const ref = new Reference('/col/doc', db);
+			const ref = new Reference('col/doc', db);
 			fetch.mockResponse(rawDoc);
 			const doc = await ref.get();
 
 			expect(doc).toBeInstanceOf(Document);
 		});
+	});
+
+	test('Collection', async () => {
+		await expect(new Reference('col', db).get()).rejects.toThrow(
+			'You can\'t "get" a collection, try "list" instead'
+		);
+	});
+});
+
+describe('List', () => {
+	test('Document', async () => {
+		await expect(new Reference('col/doc', db).list()).rejects.toThrow(
+			'You can\'t "list" a document, try "get" instead'
+		);
 	});
 
 	describe('Collection', () => {
@@ -176,22 +187,17 @@ describe('Get', () => {
 			fetch.resetMocks();
 			fetch.mockResponse(mockFirestoreList);
 
-			await new Reference('/col', db).get();
-			await new Reference('/col/doc/col', db).get();
+			await new Reference('/col', db).list();
 
 			const endpoint = fetch.mock.calls[0][0];
-			const endpoint2 = fetch.mock.calls[1][0];
 
 			expect(endpoint).toEqual(`${db.endpoint}/col`);
-			expect(endpoint2).toEqual(`${db.endpoint}/col/doc/col`);
 		});
 
 		test('Returns an instance of List', async () => {
-			const col = await new Reference('/col', db).get();
-			const col2 = await new Reference('/col/doc/col', db).get();
+			const col = await new Reference('/col', db).list();
 
 			expect(col).toBeInstanceOf(List);
-			expect(col2).toBeInstanceOf(List);
 		});
 	});
 });
