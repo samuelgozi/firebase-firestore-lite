@@ -365,8 +365,8 @@ In order to configure the library to work with the Firestore emulator we need to
 This is how it would look:
 
 ```js
-const auth = new Auth({
-	apiKey: '[The Firebase API key]',
+const db = new Database({
+	projectId: 'sandbox',
 	host: 'localhost:8080',
 	ssl: false
 });
