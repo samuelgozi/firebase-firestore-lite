@@ -22,6 +22,26 @@ describe('Constructor', () => {
 			'https://firestore.googleapis.com/v1/projects/test-project/databases/db-name/documents'
 		);
 	});
+
+	test('Constructs the correct endpoint with custom host', () => {
+		const db = new Database({ projectId: 'test-project', host: 'localhost' });
+
+		expect(db.endpoint).toEqual(
+			'https://localhost/v1/projects/test-project/databases/(default)/documents'
+		);
+	});
+
+	test('Constructs the correct endpoint with ssl set to false', () => {
+		const db = new Database({
+			projectId: 'test-project',
+			host: 'localhost',
+			ssl: false
+		});
+
+		expect(db.endpoint).toEqual(
+			'http://localhost/v1/projects/test-project/databases/(default)/documents'
+		);
+	});
 });
 
 describe('batchGet', () => {

@@ -27,6 +27,14 @@ interface DatabaseOptions {
 	name?: string;
 	/** Auth instance */
 	auth?: Auth;
+
+	/**
+	 * Host to use as the firebase endpoint, intended for use with emulators.
+	 * Don't include trailing slashes.
+	 */
+	host?: String;
+	/** Whether to use the HTTPS protocol or not. Set to false for emulators.*/
+	ssl?: boolean;
 }
 
 interface UpdateFunction {
@@ -40,7 +48,13 @@ export default class Database {
 	endpoint: string;
 	auth?: Auth;
 
-	constructor({ projectId, auth, name = '(default)' }: DatabaseOptions) {
+	constructor({
+		projectId,
+		auth,
+		name = '(default)',
+		host = 'firestore.googleapis.com',
+		ssl = true
+	}: DatabaseOptions) {
 		if (projectId === undefined)
 			throw Error(
 				'Database constructor expected the "config" argument to have a valid "projectId" property'
@@ -49,7 +63,7 @@ export default class Database {
 		this.name = name;
 		this.auth = auth;
 		this.rootPath = `projects/${projectId}/databases/${name}/documents`;
-		this.endpoint = 'https://firestore.googleapis.com/v1/' + this.rootPath;
+		this.endpoint = `http${ssl ? 's' : ''}://${host}/v1/${this.rootPath}`;
 	}
 
 	/**
