@@ -355,6 +355,23 @@ function updateFunction(tx) {
 await db.runTransaction(updateFunction, 10);
 ```
 
+## Firestore emulator
+
+In order to configure the library to work with the Firestore emulator we need to change two settings when creating the Database instance.
+
+- `host` set it to `localhost:8080` to work with the official emulator.
+- `ssl` set to false.
+
+This is how it would look:
+
+```js
+const auth = new Auth({
+	apiKey: '[The Firebase API key]',
+	host: 'localhost:8080',
+	ssl: false
+});
+```
+
 ## API Reference
 
 The API will be changing up until version 1.0, so it won't always be up-to-date. If something is off, feel free to open an issue.
