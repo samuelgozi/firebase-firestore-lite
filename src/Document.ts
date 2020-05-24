@@ -44,6 +44,7 @@ export interface Meta {
  * data to the database.
  */
 export class Document {
+	[key: string]: any;
 	// @ts-ignore
 	__meta__: Meta;
 
