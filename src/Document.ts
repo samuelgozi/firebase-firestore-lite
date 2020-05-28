@@ -5,6 +5,7 @@ import Database from './Database.ts';
 
 export interface FirebaseMap {
 	/** The map's fields */
+	name?: string;
 	fields?: {
 		[key: string]: any;
 	};

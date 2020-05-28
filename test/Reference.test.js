@@ -206,7 +206,7 @@ describe('Set', () => {
 	describe('Requests the correct endpoint', () => {
 		test('Throws when no argument is provided', async () => {
 			await expect(new Reference('col/doc', db).set()).rejects.toThrow(
-				'"set" received no arguments'
+				'The document argument is missing'
 			);
 		});
 
@@ -260,15 +260,19 @@ describe('Set', () => {
 			fetch.resetMocks();
 			fetch.mockResponses('{}', rawDoc);
 
-			const promise = new Reference('col', db).set({
+			const ref = new Reference('col', db);
+			ref.set({
 				one: 'one',
 				two: 'two',
 				tran: new Transform('serverTimestamp')
 			});
 
-			await expect(promise).rejects.toThrow(
-				"Transforms can't be used when creating documents with server generated IDs"
-			);
+			const expectedDocName = ref.name + '/abcdefghijklmnopqrstuv';
+			const reqWrites = JSON.parse(fetch.mock.calls[0][1].body).writes;
+
+			expect(reqWrites.length).toEqual(2);
+			expect(reqWrites[0].update.name).toEqual(expectedDocName);
+			expect(reqWrites[1].transform.document).toEqual(expectedDocName);
 		});
 
 		test('Makes the correct requests', async () => {
@@ -335,7 +339,7 @@ describe('Set', () => {
 describe('Update', () => {
 	test('Throws when no argument is provided', async () => {
 		await expect(new Reference('col/doc', db).update()).rejects.toThrow(
-			'"update" received no arguments'
+			'The document argument is missing'
 		);
 	});
 
@@ -353,7 +357,23 @@ describe('Update', () => {
 
 		const mockCall = fetch.mock.calls[0];
 
-		expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc`);
+		expect(mockCall[0]).toEqual(
+			`${db.endpoint}/col/doc?currentDocument.exists=true`
+		);
+		expect(mockCall[1].method).toEqual('PATCH');
+	});
+
+	test('Requests the correct endpoint', async () => {
+		fetch.resetMocks();
+		fetch.mockResponse(rawDoc);
+
+		await new Reference('/col/doc', db).update({});
+
+		const mockCall = fetch.mock.calls[0];
+
+		expect(mockCall[0]).toEqual(
+			`${db.endpoint}/col/doc?currentDocument.exists=true`
+		);
 		expect(mockCall[1].method).toEqual('PATCH');
 	});
 
@@ -368,9 +388,6 @@ describe('Update', () => {
 			JSON.stringify({
 				fields: {
 					one: { stringValue: 'one' }
-				},
-				currentDocument: {
-					exists: true
 				}
 			})
 		);

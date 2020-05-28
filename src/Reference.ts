@@ -5,7 +5,7 @@ import Transform from './Transform.ts';
 // @ts-ignore
 import Query from './Query.ts';
 // @ts-ignore
-import { Document, FirebaseDocument, FirebaseMap } from './Document.ts';
+import { Document, FirebaseMap } from './Document.ts';
 // @ts-ignore
 import { List } from './List.ts';
 // @ts-ignore
@@ -13,9 +13,9 @@ import {
 	trimPath,
 	isDocPath,
 	objectToQuery,
-	maskFromObject,
 	encode,
-	getKeyPaths
+	getKeyPaths,
+	fid
 } from './utils.ts';
 
 export default class Reference {
@@ -105,51 +105,57 @@ export default class Reference {
 	 * Else, if it doesn't have any Transforms then we return the parsed
 	 * document and let the caller handle the request.
 	 */
-	private handleTransforms(
-		obj: object,
-		update = false
-	): FirebaseMap | Promise<Document> {
+	private transact(obj: object, options = {}): FirebaseMap | Promise<Document> {
 		if (typeof obj !== 'object')
-			throw Error(`"${update ? 'update' : 'set'}" received no arguments`);
+			throw Error(`The document argument is missing`);
+
 		const transforms: Transform[] = [];
 		const doc = encode(obj, transforms);
+		let ref: Reference = this;
+
+		// If this is a collections, then generate a name,
+		// and also make sure the doc doesn't exist.
+		if (this.isCollection) {
+			options = { ...options, currentDocument: { exists: false } };
+			ref = this.child(fid());
+		}
 
 		if (transforms.length === 0) return doc;
 
-		if (this.isCollection && transforms.length)
-			throw Error(
-				"Transforms can't be used when creating documents with server generated IDs"
-			);
-
 		const tx = this.db.transaction();
-		(doc as FirebaseDocument).name = this.name;
+		// In 'createDocument' operations, the server computes the document ID.
+		// Transactions don't support 'createDocument' operations, therefore
+		// we need to generate it on the client.
+		// If you, like me, think this is a bad idea, the worry not(or less),
+		// its "virtually" impossible to have a clash.
+		doc.name = ref.name;
 		tx.writes.push(
 			{
 				update: doc,
-				updateMask: update ? { fieldPaths: getKeyPaths(obj) } : undefined,
-				currentDocument: update ? { exists: true } : undefined
+				...options
 			},
 			{
 				transform: {
-					document: this.name,
+					document: ref.name,
 					fieldTransforms: transforms
 				}
 			}
 		);
-		return tx.commit().then(() => this.get()) as Promise<Document>;
+		tx.commit();
+		return ref.get();
 	}
 
 	/**
 	 * Create a new document or overwrites an existing one matching this reference.
 	 * Will throw is the reference points to a collection.
-	 * @returns {Document} The newly created/updated document.
+	 * @returns The newly created/updated document.
 	 */
-	async set(obj: object) {
-		const doc = this.handleTransforms(obj);
+	async set(obj: object, options = {}) {
+		const doc = this.transact(obj, options);
 		if (doc instanceof Promise) return await doc;
 
 		return new Document(
-			await this.db.fetch(this.endpoint, {
+			await this.db.fetch(this.endpoint + objectToQuery(options), {
 				// If this is a path to a specific document use
 				// patch instead, else, create a new document.
 				method: this.isCollection ? 'POST' : 'PATCH',
@@ -166,13 +172,16 @@ export default class Reference {
 	async update(obj: object, existsOptional = false): Promise<Document> {
 		if (this.isCollection) throw Error("Can't update a collection");
 
-		const doc = this.handleTransforms(obj, true);
+		const options = {
+			updateMask: { fieldPaths: getKeyPaths(obj) },
+			currentDocument: existsOptional ? undefined : { exists: true }
+		};
 
+		const doc = this.transact(obj, options);
 		if (doc instanceof Promise) return await doc;
-		if (!existsOptional) (doc as any).currentDocument = { exists: true };
 
 		return new Document(
-			await this.db.fetch(this.endpoint + maskFromObject(obj), {
+			await this.db.fetch(this.endpoint + objectToQuery(options), {
 				method: 'PATCH',
 				body: JSON.stringify(doc)
 			}),
@@ -190,7 +199,7 @@ export default class Reference {
 
 	/**
 	 * Queries the child documents/collections of this reference.
-	 * @returns {List} The results of the query.
+	 * @returns The results of the query.
 	 */
 	query(options = {}) {
 		if (!this.isCollection)
