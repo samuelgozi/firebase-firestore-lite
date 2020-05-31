@@ -254,7 +254,7 @@ lets look at an example:
 const users = db.reference('users');
 
 const usersQuery = users.query({
-	where: [['age', '=>', 21]], // Array of query operations.
+	where: [['age', '>=', 21]], // Array of query operations.
 	orderBy: 'age', // Can also be an object { field: 'age', direction: 'asc'|'desc' }
 	limit: 10 // The max results
 });
