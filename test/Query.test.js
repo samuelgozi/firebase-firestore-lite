@@ -532,5 +532,16 @@ describe('Query', () => {
 				expect(doc).toBeInstanceOf(Document);
 			});
 		});
+
+		test('Returns an empty array for empty query results', async () => {
+			fetch.resetMocks();
+			fetch.mockResponse('[{"readTime": "2020-06-01T15:45:21.155041Z"}]');
+
+			const response = await new Query({
+				from: colRef
+			}).run();
+
+			expect(response).toEqual([]);
+		});
 	});
 });

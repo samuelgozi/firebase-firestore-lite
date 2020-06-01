@@ -309,12 +309,17 @@ export default class Query {
 	}
 
 	async run() {
-		return (
-			await this.db.fetch(this.parentDocument.endpoint + ':runQuery', {
+		const results = await this.db.fetch(
+			this.parentDocument.endpoint + ':runQuery',
+			{
 				method: 'POST',
 				body: JSON.stringify(this)
-			})
-		).map(result => new Document(result.document, this.db));
+			}
+		);
+
+		if (results.length === 1 && !results[0].document) return [];
+
+		return results.map(result => new Document(result.document, this.db));
 	}
 
 	toJSON() {
