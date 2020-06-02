@@ -1,24 +1,41 @@
-// @ts-ignore
-import Database from './Database.ts';
-// @ts-ignore
-import Transform from './Transform.ts';
-// @ts-ignore
-import Query from './Query.ts';
-// @ts-ignore
-import { Document, FirebaseMap } from './Document.ts';
-// @ts-ignore
-import { List } from './List.ts';
-// @ts-ignore
+import Database from './Database';
+import Transform from './Transform';
+import Query from './Query';
+import { Document, FirebaseMap } from './Document';
+import { List } from './List';
 import {
+	compileOptions,
 	trimPath,
 	isDocPath,
 	objectToQuery,
 	encode,
 	getKeyPaths,
 	fid
-} from './utils.ts';
+} from './utils';
 
-export default class Reference {
+export interface CrudOptions {
+	[key: string]: any;
+	/**
+	 * When set to true, the update will only patch the given
+	 * object properties instead of overwriting the whole document.
+	 */
+	updateMask?: boolean;
+	/** An array of the key paths to return back after the operation */
+	mask?: string[];
+	/**
+	 * When set to true, the target document must exist.
+	 * When set to false, the target document must not exist.
+	 * When undefined, it doesn't matter.
+	 */
+	exists?: boolean;
+	/**
+	 * When set, the target document must exist and have been last updated at that time.
+	 * A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds.
+	 */
+	updateTime?: string;
+}
+
+export class Reference {
 	/** The ID of the document inside the collection */
 	id: string;
 	/** The path to the document relative to the database root */
@@ -75,30 +92,6 @@ export default class Reference {
 	}
 
 	/**
-	 * Fetches the collection that this reference refers to.
-	 * Will return a Document instance if it is a document, and a List instance if it is a collection.
-	 */
-	async list(options?: object) {
-		if (!this.isCollection)
-			throw Error('You can\'t "list" a document, try "get" instead');
-
-		const data = await this.db.fetch(this.endpoint + objectToQuery(options));
-		return new List(data, this, options);
-	}
-
-	/**
-	 * Document that this reference refers to.
-	 * Will return a Document instance if it is a document, and a List instance if it is a collection.
-	 */
-	async get(options?: object) {
-		if (this.isCollection)
-			throw Error('You can\'t "get" a collection, try "list" instead');
-
-		const data = await this.db.fetch(this.endpoint + objectToQuery(options));
-		return new Document(data, this.db);
-	}
-
-	/**
 	 * Helper that handles Transforms in objects.
 	 * If the object has a transform then a transaction will be made,
 	 * and a promise for the resulting document will be returned.
@@ -145,12 +138,16 @@ export default class Reference {
 		return ref.get();
 	}
 
-	/**
-	 * Create a new document or overwrites an existing one matching this reference.
-	 * Will throw is the reference points to a collection.
-	 * @returns The newly created/updated document.
-	 */
-	async set(obj: object, options = {}) {
+	private restrict(colOrDoc: boolean) {
+		if (this.isCollection !== colOrDoc)
+			throw Error(
+				`Tried to access a ${colOrDoc ? 'collection' : 'document'} method`
+			);
+	}
+
+	/** Create a new document with a randomly generated id */
+	async add(obj: object, options = {}) {
+		this.restrict(true);
 		const doc = this.transact(obj, options);
 		if (doc instanceof Promise) return await doc;
 
@@ -158,24 +155,53 @@ export default class Reference {
 			await this.db.fetch(this.endpoint + objectToQuery(options), {
 				// If this is a path to a specific document use
 				// patch instead, else, create a new document.
-				method: this.isCollection ? 'POST' : 'PATCH',
+				method: 'POST',
 				body: JSON.stringify(doc)
 			}),
 			this.db
 		);
 	}
 
-	/**
-	 * Updates a document.
-	 * Will throw is the reference points to a collection.
-	 */
-	async update(obj: object, existsOptional = false): Promise<Document> {
-		if (this.isCollection) throw Error("Can't update a collection");
+	/** returns all documents in the collection */
+	async list(options?: object) {
+		this.restrict(true);
+		return new List(
+			await this.db.fetch(this.endpoint + objectToQuery(options)),
+			this,
+			options
+		);
+	}
 
-		const options = {
-			updateMask: { fieldPaths: getKeyPaths(obj) },
-			currentDocument: existsOptional ? undefined : { exists: true }
-		};
+	/** Returns the document of this reference. */
+	async get(options?: object) {
+		this.restrict(false);
+		return new Document(
+			await this.db.fetch(this.endpoint + objectToQuery(options)),
+			this.db
+		);
+	}
+
+	/** Create a new document or overwrites an existing one matching this reference. */
+	async set(obj: object, options = {}) {
+		this.restrict(false);
+		return this.update(obj, {
+			updateMask: false,
+			exists: undefined,
+			...options
+		});
+	}
+
+	/** Updates a document while ignoring all missing fields in the provided object. */
+	async update(obj: object, options = {}): Promise<Document> {
+		this.restrict(false);
+		options = compileOptions(
+			{
+				updateMask: true,
+				exists: true,
+				...options
+			},
+			obj
+		);
 
 		const doc = this.transact(obj, options);
 		if (doc instanceof Promise) return await doc;
@@ -189,21 +215,15 @@ export default class Reference {
 		);
 	}
 
-	/**
-	 * Deletes the referenced document.
-	 */
+	/** Deletes the referenced document from the database. */
 	delete() {
-		if (this.isCollection) throw Error("Can't delete a collection");
+		this.restrict(false);
 		return this.db.fetch(this.endpoint, { method: 'DELETE' });
 	}
 
-	/**
-	 * Queries the child documents/collections of this reference.
-	 * @returns The results of the query.
-	 */
+	/** Queries the child documents/collections of this reference. */
 	query(options = {}) {
-		if (!this.isCollection)
-			throw Error('Query can only be called on collections');
+		this.restrict(true);
 
 		return new Query({
 			from: this,

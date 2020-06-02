@@ -1,10 +1,6 @@
-// @ts-ignore
-import Database from './Database.ts';
-// @ts-ignore
-import Reference from './Reference.ts';
-// @ts-ignore
-import GeoPoint from './GeoPoint.ts';
-// @ts-ignore
-import Transaction from './Transaction.ts';
+import Database from './Database';
+import { Reference } from './Reference';
+import GeoPoint from './GeoPoint';
+import Transaction from './Transaction';
 
 export { Database, GeoPoint, Transaction, Reference };

@@ -1,11 +1,7 @@
-// @ts-ignore
-import Reference from './Reference.ts';
-// @ts-ignore
-import { Document } from './Document.ts';
-// @ts-ignore
-import { isDocPath, isDocReference } from './utils.ts';
-// @ts-ignore
-import Transaction from './Transaction.ts';
+import { Reference } from './Reference';
+import { Document } from './Document';
+import { isDocPath, isDocReference } from './utils';
+import Transaction from './Transaction';
 
 async function handleApiResponse(res: Response) {
 	if (!res.ok) {

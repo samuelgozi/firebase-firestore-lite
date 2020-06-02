@@ -4,6 +4,11 @@
 		"browser": true,
 		"jest/globals": true
 	},
+	"parserOptions": {
+		"ecmaVersion": 2017,
+		"sourceType": "module"
+	},
+	"parser": "babel-eslint",
 	"extends": ["eslint:recommended", "plugin:jest/recommended", "prettier"],
 	"rules": {
 		"no-console": ["error", { "allow": ["error"] }],
@@ -16,5 +21,11 @@
 		"prefer-const": "warn",
 		"prettier/prettier": "error"
 	},
+	"overrides": [
+		{
+			"files": ["*.ts"],
+			"parser": "@typescript-eslint/parser"
+		}
+	],
 	"plugins": ["jest", "prettier"]
 }

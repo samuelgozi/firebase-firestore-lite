@@ -1,13 +1,8 @@
-// @ts-ignore
-import Reference from './Reference.ts';
-// @ts-ignore
-import GeoPoint from './GeoPoint.ts';
-// @ts-ignore
-import Transform from './Transform.ts';
-// @ts-ignore
-import { FirebaseDocument, FirebaseMap } from './Document.ts';
-// @ts-ignore
-import Database from './Database.ts';
+import { Reference, CrudOptions } from './Reference';
+import GeoPoint from './GeoPoint';
+import Transform from './Transform';
+import { FirebaseDocument, FirebaseMap } from './Document';
+import Database from './Database';
 
 // Used for generating random fids.
 const validChars =
@@ -83,10 +78,7 @@ export function objectToQuery(obj: any = {}, parentProp?: string): string {
 	return (!parentProp && params.length ? '?' : '') + params.join('&');
 }
 
-/**
- * Returns an array of keyPaths of an object.
- * Skips over arrays values.
- */
+/** Returns an array of keyPaths of an object but skips over arrays values */
 export function getKeyPaths(object: any, parentPath?: string): string[] {
 	let mask: string[] = [];
 
@@ -104,6 +96,30 @@ export function getKeyPaths(object: any, parentPath?: string): string[] {
 	}
 
 	return mask;
+}
+
+/** compile options object into firebase valid api arguments object */
+export function compileOptions(options: CrudOptions, obj: any) {
+	const compiled: any = {};
+
+	for (let [key, value] of Object.entries(options)) {
+		if (value === undefined) continue;
+
+		switch (key) {
+			case 'exists':
+			case 'updateTime':
+				if (!compiled.currentDocument) compiled.currentDocument = {};
+				compiled.currentDocument[key] = value;
+				break;
+			case 'updateMask':
+				if (value) compiled.updateMask = { fieldPaths: getKeyPaths(obj) };
+				break;
+			default:
+				compiled[key] = value;
+		}
+	}
+
+	return compiled;
 }
 
 /** Decodes a Firebase Value into a JS one */
@@ -234,6 +250,7 @@ export function encode(
 	return map;
 }
 
+/** Generates 22 chars long random alphanumerics unique identifiers */
 export function fid() {
 	const randBytes = crypto.getRandomValues(new Uint8Array(22));
 	return Array.from(randBytes)

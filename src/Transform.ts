@@ -1,5 +1,4 @@
-// @ts-ignore
-import { encodeValue } from './utils.ts';
+import { encodeValue } from './utils';
 
 function isNumber(v: any) {
 	return typeof v === 'number' && !isNaN(v - v);

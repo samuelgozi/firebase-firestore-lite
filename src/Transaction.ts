@@ -1,19 +1,14 @@
-// @ts-ignore
 import {
 	trimPath,
 	isDocPath,
 	getKeyPaths,
 	encode,
 	isDocReference
-} from './utils.ts';
-// @ts-ignore
-import { Document, FirebaseDocument } from './Document.ts';
-// @ts-ignore
-import Reference from './Reference.ts';
-// @ts-ignore
-import Database from './Database.ts';
-// @ts-ignore
-import Transform from './Transform.ts';
+} from './utils';
+import { Document, FirebaseDocument } from './Document';
+import { Reference } from './Reference';
+import Database from './Database';
+import Transform from './Transform';
 
 type ref = Reference | Document | string;
 

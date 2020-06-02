@@ -1,16 +1,12 @@
-// @ts-ignore
+import { Document } from './Document';
+import { Reference } from './Reference';
+import Database from './Database';
 import {
 	isDocReference,
 	isColReference,
 	isPositiveInteger,
 	encodeValue
-} from './utils.ts';
-// @ts-ignore
-import { Document } from './Document.ts';
-// @ts-ignore
-import Reference from './Reference.ts';
-// @ts-ignore
-import Database from './Database.ts';
+} from './utils';
 
 interface FromOption {
 	/** Reference to the collection */

@@ -1,5 +1,5 @@
 import { Document } from '../src/Document.ts';
-import Reference from '../src/Reference.ts';
+import { Reference } from '../src/Reference.ts';
 import { List } from '../src/List.ts';
 import Query from '../src/Query.ts';
 import Database from '../src/Database.ts';
@@ -165,7 +165,7 @@ describe('Get', () => {
 
 	test('Collection', async () => {
 		await expect(new Reference('col', db).get()).rejects.toThrow(
-			'You can\'t "get" a collection, try "list" instead'
+			'Tried to access a document method'
 		);
 	});
 });
@@ -173,7 +173,7 @@ describe('Get', () => {
 describe('List', () => {
 	test('Document', async () => {
 		await expect(new Reference('col/doc', db).list()).rejects.toThrow(
-			'You can\'t "list" a document, try "get" instead'
+			'Tried to access a collection method'
 		);
 	});
 
@@ -210,15 +210,16 @@ describe('Set', () => {
 			);
 		});
 
-		test('New document(collection endpoint)', async () => {
+		test('Calling on a collection', async () => {
 			fetch.resetMocks();
 			fetch.mockResponse(rawDoc);
 
-			await new Reference('col/doc/col', db).set({});
-			const mockCall = fetch.mock.calls[0];
+			async function fn() {
+				await new Reference('col/doc/col', db).set({});
+			}
 
-			expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc/col`);
-			expect(mockCall[1].method).toEqual('POST');
+			expect(fn).rejects.toThrow('Tried to access a document method');
+			expect(fetch.mock.calls.length).toEqual(0);
 		});
 
 		test('Patching a document', async () => {
@@ -234,7 +235,7 @@ describe('Set', () => {
 	});
 
 	describe('Requests body includes the encoded object', () => {
-		test('New document(collection endpoint)', async () => {
+		test('Patching a document', async () => {
 			fetch.resetMocks();
 			fetch.mockResponse(rawDoc);
 
@@ -243,38 +244,9 @@ describe('Set', () => {
 
 			expect(body).toEqual('{"fields":{"one":{"stringValue":"one"}}}');
 		});
-
-		test('Patching a document', async () => {
-			fetch.resetMocks();
-			fetch.mockResponse(rawDoc);
-
-			await new Reference('col/doc/col', db).set({ one: 'one' });
-			const body = fetch.mock.calls[0][1].body;
-
-			expect(body).toEqual('{"fields":{"one":{"stringValue":"one"}}}');
-		});
 	});
 
 	describe('Transforms', () => {
-		test('Throws when called on collection with a Transform', async () => {
-			fetch.resetMocks();
-			fetch.mockResponses('{}', rawDoc);
-
-			const ref = new Reference('col', db);
-			ref.set({
-				one: 'one',
-				two: 'two',
-				tran: new Transform('serverTimestamp')
-			});
-
-			const expectedDocName = ref.name + '/abcdefghijklmnopqrstuv';
-			const reqWrites = JSON.parse(fetch.mock.calls[0][1].body).writes;
-
-			expect(reqWrites.length).toEqual(2);
-			expect(reqWrites[0].update.name).toEqual(expectedDocName);
-			expect(reqWrites[1].transform.document).toEqual(expectedDocName);
-		});
-
 		test('Makes the correct requests', async () => {
 			fetch.resetMocks();
 			fetch.mockResponses('{}', rawDoc);
@@ -345,7 +317,7 @@ describe('Update', () => {
 
 	test('Throws when the reference points to a collection', async () => {
 		await expect(new Reference('/col', db).update({})).rejects.toThrow(
-			"Can't update a collection"
+			'Tried to access a document method'
 		);
 	});
 
@@ -465,7 +437,7 @@ describe('Remove', () => {
 	test('Throws when the reference points to a collection', () => {
 		expect(() => {
 			new Reference('/col', db).delete();
-		}).toThrow("Can't delete a collection");
+		}).toThrow('Tried to access a document method');
 	});
 
 	test('Requests the correct endpoint', async () => {

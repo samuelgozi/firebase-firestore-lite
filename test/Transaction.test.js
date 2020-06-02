@@ -1,5 +1,5 @@
 import Transaction from '../src/Transaction.ts';
-import Reference from '../src/Reference.ts';
+import { Reference } from '../src/Reference.ts';
 import Database from '../src/Database.ts';
 import batchGetResponse from './mockBatchGetResponse.json';
 

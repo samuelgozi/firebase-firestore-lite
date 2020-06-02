@@ -8,9 +8,10 @@ import {
 	encodeValue,
 	encode,
 	decode,
-	objectToQuery
+	objectToQuery,
+	compileOptions
 } from '../src/utils.ts';
-import Reference from '../src/Reference.ts';
+import { Reference } from '../src/Reference.ts';
 import GeoPoint from '../src/GeoPoint.ts';
 import Transform from '../src/Transform.ts';
 import firestoreDocument from './mockDocument.json';
@@ -381,5 +382,42 @@ describe('encode', () => {
 
 		expect(encode(given, transforms)).toEqual(expectedDoc);
 		expect(transforms).toMatchObject(expectedTransforms);
+	});
+});
+
+describe('compileOptions()', () => {
+	test('Outputs correct options', () => {
+		const withUpdateMask = compileOptions(
+			{
+				exists: false,
+				updateTime: 'utf-date-here',
+				updateMask: true
+			},
+			{ one: '1', two: '2', three: '3' }
+		);
+
+		const expectedWithUpdateMask = {
+			currentDocument: {
+				exists: false,
+				updateTime: 'utf-date-here'
+			},
+			updateMask: {
+				fieldPaths: ['one', 'two', 'three']
+			}
+		};
+
+		const withoutPreconditions = compileOptions(
+			{ updateMask: ['one', 'two', 'three'] },
+			{ one: '1', two: '2', three: '3' }
+		);
+
+		const expectedWithoutPreconditions = {
+			updateMask: {
+				fieldPaths: ['one', 'two', 'three']
+			}
+		};
+
+		expect(withUpdateMask).toEqual(expectedWithUpdateMask);
+		expect(withoutPreconditions).toEqual(expectedWithoutPreconditions);
 	});
 });
