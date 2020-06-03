@@ -14,7 +14,8 @@
 		"url": "https://github.com/samuelgozi/firebase-firestore-lite.git"
 	},
 	"scripts": {
-		"build": "tsc",
+		"cleanup": "node scripts/cleanup.js dist",
+		"build": "npm run cleanup && tsc",
 		"lint": "eslint . --ext .ts",
 		"test": "jest",
 		"prepublishOnly": "tsc"

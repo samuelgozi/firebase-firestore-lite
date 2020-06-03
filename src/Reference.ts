@@ -1,8 +1,8 @@
-import Database from './Database';
-import Transform from './Transform';
-import Query from './Query';
-import { Document, FirebaseMap } from './Document';
-import { List } from './List';
+import Database from './Database.js';
+import Transform from './Transform.js';
+import Query from './Query.js';
+import { Document, FirebaseMap } from './Document.js';
+import { List } from './List.js';
 import {
 	compileOptions,
 	trimPath,

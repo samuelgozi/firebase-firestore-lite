@@ -1,6 +1,6 @@
-import { Document } from './Document';
-import { Reference } from './Reference';
-import Database from './Database';
+import { Document } from './Document.js';
+import { Reference } from './Reference.js';
+import Database from './Database.js';
 import {
 	isDocReference,
 	isColReference,

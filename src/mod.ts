@@ -1,6 +1,6 @@
-import Database from './Database';
-import { Reference } from './Reference';
-import GeoPoint from './GeoPoint';
-import Transaction from './Transaction';
+import Database from './Database.js';
+import { Reference } from './Reference.js';
+import GeoPoint from './GeoPoint.js';
+import Transaction from './Transaction.js';
 
 export { Database, GeoPoint, Transaction, Reference };
