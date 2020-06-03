@@ -183,7 +183,6 @@ export class Reference {
 
 	/** Create a new document or overwrites an existing one matching this reference. */
 	async set(obj: object, options = {}) {
-		this.restrict(false);
 		return this.update(obj, {
 			updateMask: false,
 			exists: undefined,
@@ -216,9 +215,9 @@ export class Reference {
 	}
 
 	/** Deletes the referenced document from the database. */
-	delete() {
+	async delete() {
 		this.restrict(false);
-		return this.db.fetch(this.endpoint, { method: 'DELETE' });
+		return void (await this.db.fetch(this.endpoint, { method: 'DELETE' }));
 	}
 
 	/** Queries the child documents/collections of this reference. */

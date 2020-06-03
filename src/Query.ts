@@ -72,8 +72,9 @@ const operators = {
  * @param {*} filter A the value to check
  * @returns {boolean} True if the value is a valid filter.
  */
-function validateFilter(filter: any) {
-	if (!Array.isArray(filter) || filter.length !== 3) return false;
+function validateFilter(filter: any): void {
+	if (!Array.isArray(filter) || filter.length !== 3)
+		throw Error('Filter missing arguments');
 
 	const [fieldPath, op, value] = filter;
 	if (typeof fieldPath !== 'string') throw Error('Invalid field path');
