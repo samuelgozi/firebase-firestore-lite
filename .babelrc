@@ -9,5 +9,13 @@
 			}
 		],
 		"@babel/preset-typescript"
+	],
+	"plugins": [
+		[
+			"replace-import-extensions",
+			{
+				".(js)$": ""
+			}
+		]
 	]
 }
