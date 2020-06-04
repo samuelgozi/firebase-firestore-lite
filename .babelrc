@@ -1,21 +1,21 @@
 {
-	"presets": [
-		[
-			"@babel/preset-env",
-			{
-				"targets": {
-					"node": "current"
-				}
-			}
-		],
-		"@babel/preset-typescript"
-	],
-	"plugins": [
-		[
-			"replace-import-extensions",
-			{
-				".(js)$": ""
-			}
-		]
-	]
+	"env": {
+		"development": {
+			"presets": ["@babel/preset-typescript"],
+			"plugins": ["babel-plugin-add-import-extension"]
+		},
+		"test": {
+			"presets": [
+				[
+					"@babel/preset-env",
+					{
+						"targets": {
+							"node": "current"
+						}
+					}
+				],
+				"@babel/preset-typescript"
+			]
+		}
+	}
 }

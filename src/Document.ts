@@ -1,5 +1,5 @@
-import { isRawDocument, decode } from './utils.js';
-import Database from './Database.js';
+import { isRawDocument, decode } from './utils';
+import Database from './Database';
 
 export interface FirebaseMap {
 	/** The map's fields */

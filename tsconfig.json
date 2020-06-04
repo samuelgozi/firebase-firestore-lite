@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"moduleResolution": "node",
 		"declaration": true,
-		"target": "ES2017",
+		"target": "ESNext",
 		"module": "ESNext",
 		"outDir": "dist",
 		"allowJs": false,

@@ -1,4 +1,4 @@
-import { encodeValue } from './utils.js';
+import { encodeValue } from './utils';
 
 function isNumber(v: any) {
 	return typeof v === 'number' && !isNaN(v - v);

@@ -4,11 +4,11 @@ import {
 	getKeyPaths,
 	encode,
 	isDocReference
-} from './utils.js';
-import { Document, FirebaseDocument } from './Document.js';
-import { Reference } from './Reference.js';
-import Database from './Database.js';
-import Transform from './Transform.js';
+} from './utils';
+import { Document, FirebaseDocument } from './Document';
+import { Reference } from './Reference';
+import Database from './Database';
+import Transform from './Transform';
 
 type ref = Reference | Document | string;
 
