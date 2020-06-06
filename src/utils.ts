@@ -46,21 +46,32 @@ export function isPositiveInteger(val: any): boolean {
 }
 
 /** Converts an Object to a URI query String */
-export function objectToQuery(obj = {}): string {
-	const props = [];
+export function objectToQuery(obj: any = {}, parentProp?: string): string {
+	const params = [];
+	const encode = encodeURIComponent;
 
 	for (const prop in obj) {
 		if (obj[prop] === undefined) continue; // Skip over undefined props.
+		const propPath = parentProp ? `${parentProp}.${prop}` : prop;
 
-		// If it is an array then we should encode each value in separate, and then join.
-		const encodedValue = Array.isArray(obj[prop])
-			? obj[prop].map(val => encodeURIComponent(val)).join()
-			: encodeURIComponent(obj[prop]);
+		// If it is an array then we should encode each value independently, and then join.
+		if (Array.isArray(obj[prop])) {
+			obj[prop].forEach((v: string) => {
+				params.push(`${propPath}=${encode(v)}`);
+			});
+			continue;
+		}
 
-		props.push(`${prop}=${encodedValue}`);
+		if (typeof obj[prop] === 'object') {
+			const val = objectToQuery(obj[prop], propPath);
+			val && params.push(val);
+			continue;
+		}
+
+		params.push(`${propPath}=${encode(obj[prop])}`);
 	}
 
-	return props.length === 0 ? '' : `?${props.join('&')}`;
+	return (!parentProp && params.length ? '?' : '') + params.join('&');
 }
 
 /**
@@ -84,14 +95,6 @@ export function getKeyPaths(object: object, parentPath?: string): string[] {
 	}
 
 	return mask;
-}
-
-/** Returns a string that represents a query parameter field mask */
-export function maskFromObject(object = {}): string {
-	const paths = getKeyPaths(object);
-	return paths.length === 0
-		? ''
-		: paths.map(p => `updateMask.fieldPaths=${p}`).join('&');
 }
 
 /** Decodes a Firebase Value into a JS one */

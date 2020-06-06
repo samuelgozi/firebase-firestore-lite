@@ -148,11 +148,15 @@ export default class Reference {
 
 		const doc = this.handleTransforms(obj, true);
 
+		const options: any = {
+			fieldPaths: getKeyPaths(obj)
+		};
+
 		if (doc instanceof Promise) return await doc;
-		if (!existsOptional) (doc as any).currentDocument = { exists: true };
+		if (!existsOptional) options.currentDocument = { exists: true };
 
 		return new Document(
-			await this.db.fetch(this.endpoint + maskFromObject(obj), {
+			await this.db.fetch(this.endpoint + objectToQuery(options), {
 				method: 'PATCH',
 				body: JSON.stringify(doc)
 			}),

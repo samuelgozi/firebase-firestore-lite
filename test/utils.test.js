@@ -152,7 +152,7 @@ describe('ObjectToQuery', () => {
 				three: 'three',
 				array: ['one', 'two', 'three']
 			})
-		).toEqual('?one=one&two=two&three=three&array=one,two,three');
+		).toEqual('?one=one&two=two&three=three&array=one&array=two&array=three');
 	});
 
 	test('Ignores undefined', () => {
@@ -163,62 +163,32 @@ describe('ObjectToQuery', () => {
 				three: 'three',
 				array: ['one', 'two', 'three']
 			})
-		).toEqual('?one=one&three=three&array=one,two,three');
-	});
-});
-
-describe('maskFromObject', () => {
-	test('Empty object', () => {
-		const obj = {};
-		const expected = '';
-
-		expect(maskFromObject(obj)).toEqual(expected);
+		).toEqual('?one=one&three=three&array=one&array=two&array=three');
 	});
 
-	test('Shallow object', () => {
-		const obj = {
-			one: 'one',
-			two: 'two',
-			three: 'three',
-			four: 'four'
-		};
-		const expected =
-			'updateMask.fieldPaths=one&updateMask.fieldPaths=two&updateMask.fieldPaths=three&updateMask.fieldPaths=four';
-
-		expect(maskFromObject(obj)).toEqual(expected);
-	});
-
-	test('Nested object', () => {
-		const obj = {
-			one: 'one',
-			two: {
+	test('Nested objects', () => {
+		expect(
+			objectToQuery({
 				one: 'one',
-				two: 'two'
-			},
-			three: {
-				one: {
-					one: 'one'
+				two: undefined,
+				three: 'three',
+				four: {
+					one: 'one',
+					two: undefined,
+					three: 'three'
 				}
-			}
-		};
-		const expected =
-			'updateMask.fieldPaths=one&updateMask.fieldPaths=two.one&updateMask.fieldPaths=two.two&updateMask.fieldPaths=three.one.one';
-
-		expect(maskFromObject(obj)).toEqual(expected);
+			})
+		).toEqual('?one=one&three=three&four.one=one&four.three=three');
 	});
 
-	test('Arrays', () => {
-		const obj = {
-			one: ['one'],
-			two: {
-				one: 'one',
-				two: []
-			}
-		};
-		const expected =
-			'updateMask.fieldPaths=one&updateMask.fieldPaths=two.one&updateMask.fieldPaths=two.two';
-
-		expect(maskFromObject(obj)).toEqual(expected);
+	test('Nested array in object', () => {
+		expect(
+			objectToQuery({
+				one: {
+					two: ['three', 'four']
+				}
+			})
+		).toEqual('?one.two=three&one.two=four');
 	});
 });
 

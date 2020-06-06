@@ -344,11 +344,15 @@ describe('Update', () => {
 		fetch.mockResponse(rawDoc);
 
 		await new Reference('/col/doc', db).update({});
+		await new Reference('/col/doc', db).update({ one: 'one', two: 'two' });
 
-		const mockCall = fetch.mock.calls[0];
-
-		expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc`);
-		expect(mockCall[1].method).toEqual('PATCH');
+		expect(fetch.mock.calls[0][0]).toEqual(
+			`${db.endpoint}/col/doc?currentDocument.exists=true`
+		);
+		expect(fetch.mock.calls[0][1].method).toEqual('PATCH');
+		expect(fetch.mock.calls[1][0]).toEqual(
+			`${db.endpoint}/col/doc?fieldPaths=one&fieldPaths=two&currentDocument.exists=true`
+		);
 	});
 
 	test('Requests body includes the encoded object', async () => {
@@ -362,9 +366,6 @@ describe('Update', () => {
 			JSON.stringify({
 				fields: {
 					one: { stringValue: 'one' }
-				},
-				currentDocument: {
-					exists: true
 				}
 			})
 		);
