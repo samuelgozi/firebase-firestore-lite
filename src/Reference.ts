@@ -6,7 +6,6 @@ import {
 	trimPath,
 	isDocPath,
 	objectToQuery,
-	maskFromObject,
 	encode,
 	getKeyPaths
 } from './utils';
