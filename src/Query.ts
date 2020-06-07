@@ -1,6 +1,6 @@
 import { Document } from './Document';
 import { Reference } from './Reference';
-import Database from './Database';
+import { Database } from './Database';
 import {
 	isDocReference,
 	isColReference,

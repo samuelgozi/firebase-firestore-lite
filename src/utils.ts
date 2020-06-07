@@ -2,7 +2,7 @@ import { Reference, CrudOptions } from './Reference';
 import GeoPoint from './GeoPoint';
 import Transform from './Transform';
 import { FirebaseDocument, FirebaseMap } from './Document';
-import Database from './Database';
+import { Database } from './Database';
 
 // Used for generating random fids.
 const validChars =

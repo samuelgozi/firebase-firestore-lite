@@ -7,12 +7,12 @@ import {
 } from './utils';
 import { Document, FirebaseDocument } from './Document';
 import { Reference } from './Reference';
-import Database from './Database';
+import { Database } from './Database';
 import Transform from './Transform';
 
 type ref = Reference | Document | string;
 
-export default class Transaction {
+export class Transaction {
 	writes: any[] = [];
 	preconditions: any = {};
 

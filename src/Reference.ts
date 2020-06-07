@@ -1,4 +1,4 @@
-import Database from './Database';
+import { Database } from './Database';
 import Transform from './Transform';
 import Query from './Query';
 import { Document, FirebaseMap } from './Document';
@@ -9,7 +9,6 @@ import {
 	isDocPath,
 	objectToQuery,
 	encode,
-	getKeyPaths,
 	fid
 } from './utils';
 

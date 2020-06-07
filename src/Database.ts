@@ -1,7 +1,7 @@
 import { Reference } from './Reference';
 import { Document } from './Document';
 import { isDocPath, isDocReference } from './utils';
-import Transaction from './Transaction';
+import { Transaction } from './Transaction';
 
 async function handleApiResponse(res: Response) {
 	if (!res.ok) {
@@ -16,7 +16,7 @@ interface Auth {
 	authorizedRequest(input: RequestInfo, init?: RequestInit): Promise<Response>;
 }
 
-interface DatabaseOptions {
+export interface DatabaseOptions {
 	/** Firebase's project ID */
 	projectId: string;
 	/** The name to use for this database instance */
@@ -38,7 +38,7 @@ interface UpdateFunction {
 }
 
 /** Database Instance */
-export default class Database {
+export class Database {
 	name: string;
 	rootPath: string;
 	endpoint: string;
