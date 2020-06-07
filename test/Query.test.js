@@ -1,5 +1,5 @@
-import Database from '../src/Database.ts';
-import Query from '../src/Query.ts';
+import { Database } from '../src/Database.ts';
+import { Query } from '../src/Query.ts';
 import { Reference } from '../src/Reference.ts';
 import { Document } from '../src/Document.ts';
 

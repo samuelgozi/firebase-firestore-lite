@@ -169,7 +169,7 @@ const options = [
 /**
  * Query class that represents a Firestore query.
  */
-export default class Query {
+export class Query {
 	[key: string]: any;
 
 	private db: Database;

@@ -1,7 +1,7 @@
-import Database from '../src/Database';
+import { Database } from '../src/Database';
 import { Reference } from '../src/Reference';
 import { Document } from '../src/Document';
-import Transaction from '../src/Transaction';
+import { Transaction } from '../src/Transaction';
 
 describe('Constructor', () => {
 	test('Throws when `projectId` is missing', () => {

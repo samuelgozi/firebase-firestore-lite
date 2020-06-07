@@ -1,6 +1,6 @@
 import { Database } from './Database';
 import Transform from './Transform';
-import Query from './Query';
+import { Query } from './Query';
 import { Document, FirebaseMap } from './Document';
 import { List } from './List';
 import {
