@@ -351,7 +351,7 @@ describe('Update', () => {
 		);
 		expect(fetch.mock.calls[0][1].method).toEqual('PATCH');
 		expect(fetch.mock.calls[1][0]).toEqual(
-			`${db.endpoint}/col/doc?fieldPaths=one&fieldPaths=two&currentDocument.exists=true`
+			`${db.endpoint}/col/doc?updateMask.fieldPaths=one&updateMask.fieldPaths=two&currentDocument.exists=true`
 		);
 	});
 

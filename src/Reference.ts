@@ -123,7 +123,7 @@ export default class Reference {
 	 * Will throw is the reference points to a collection.
 	 * @returns {Document} The newly created/updated document.
 	 */
-	async set(obj) {
+	async set(obj: any) {
 		const doc = this.handleTransforms(obj);
 		if (doc instanceof Promise) return await doc;
 
@@ -148,7 +148,9 @@ export default class Reference {
 		const doc = this.handleTransforms(obj, true);
 
 		const options: any = {
-			fieldPaths: getKeyPaths(obj)
+			updateMask: {
+				fieldPaths: getKeyPaths(obj)
+			}
 		};
 
 		if (doc instanceof Promise) return await doc;
