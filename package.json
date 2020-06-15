@@ -1,6 +1,6 @@
 {
 	"name": "firebase-firestore-lite",
-	"version": "0.7.3",
+	"version": "0.7.4",
 	"description": "A lightweight cloud firestore library for the browser",
 	"main": "dist/mod.js",
 	"types": "dist/mod.d.ts",
