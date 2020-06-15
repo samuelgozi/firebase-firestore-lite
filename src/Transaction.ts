@@ -85,6 +85,14 @@ export default class Transaction {
 			update: doc,
 			currentDocument: this.preconditions[doc.name]
 		});
+
+		if (transforms.length !== 0)
+			this.writes.push({
+				transform: {
+					document: doc.name,
+					fieldTransforms: transforms
+				}
+			});
 	}
 
 	/**
@@ -92,13 +100,22 @@ export default class Transaction {
 	 * it didn't exist before, and merge the data if it does exist.
 	 */
 	update(ref: ref, data: any) {
-		const doc = this.handleArguments(ref, data);
+		const transforms = [];
+		const doc = this.handleArguments(ref, data, transforms as []);
 
 		this.writes.push({
 			update: doc,
 			updateMask: { fieldPaths: getKeyPaths(data) },
 			currentDocument: this.preconditions[doc.name] || { exists: true }
 		});
+
+		if (transforms.length !== 0)
+			this.writes.push({
+				transform: {
+					document: doc.name,
+					fieldTransforms: transforms
+				}
+			});
 	}
 
 	/**
