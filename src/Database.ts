@@ -1,6 +1,6 @@
 import { Reference } from './Reference';
 import { Document } from './Document';
-import { isDocPath, isDocReference } from './utils';
+import { isPath, isRef, getPathFromRef, restrictTo } from './utils';
 import { Transaction } from './Transaction';
 
 async function handleApiResponse(res: Response) {
@@ -67,8 +67,6 @@ export class Database {
 	 * Uses native fetch, but adds authorization headers
 	 * if the Reference was instantiated with an auth instance.
 	 * The API is exactly the same as native fetch.
-	 * @param {Request|Object|string} resource the resource to send the request to, or an options object.
-	 * @param {Object} init an options object.
 	 * @private
 	 */
 	fetch(input: RequestInfo, init?: RequestInit) {
@@ -83,7 +81,7 @@ export class Database {
 	 * @param {(string|Document)} path Path to the collection or document.
 	 * @returns {Reference} instance of a reference.
 	 */
-	reference(path: string | Document): Reference {
+	ref(path: string | Document): Reference {
 		if (path instanceof Document) path = path.__meta__.path;
 		return new Reference(path as string, this);
 	}
@@ -93,11 +91,8 @@ export class Database {
 			method: 'POST',
 			body: JSON.stringify({
 				documents: refs.map(ref => {
-					if (!isDocPath(ref) && !isDocReference(ref))
-						throw Error(
-							'The array can only contain References or paths pointing to documents'
-						);
-					return (ref as Reference).name || `${this.rootPath}/${ref}`;
+					const path = restrictTo('doc', ref);
+					return `${this.rootPath}/${path}`;
 				})
 			})
 		});

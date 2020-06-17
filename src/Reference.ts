@@ -2,7 +2,7 @@ import { Database } from './Database';
 import { Query } from './Query';
 import { Document } from './Document';
 import { List } from './List';
-import { trimPath, isColPath, objectToQuery, restrictTo } from './utils';
+import { trimPath, isPath, objectToQuery, restrictTo } from './utils';
 
 export interface CrudOptions {
 	[key: string]: any;
@@ -38,7 +38,8 @@ export class Reference {
 	readonly endpoint: string;
 
 	constructor(path: string, readonly db: Database) {
-		if (db === undefined) throw Error('Argument "db" is required but missing');
+		if (typeof path !== 'string')
+			throw Error('The "path" argument should be a string');
 
 		// Normalize the path by removing slashes from
 		// the beginning or the end and trimming spaces.
@@ -70,7 +71,7 @@ export class Reference {
 
 	/** Returns true if this reference is a collection */
 	get isCollection() {
-		return isColPath(this.path);
+		return isPath('col', this.path);
 	}
 
 	/** Returns a reference to the specified child path */

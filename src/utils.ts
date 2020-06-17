@@ -11,37 +11,44 @@ const validChars =
 
 // General type that can allow to get the full Document Name
 export type Ref = Reference | Document | string;
+type RefType = 'doc' | 'col';
 
 /** Trims spaces and slashes from a path */
 export function trimPath(path: string) {
 	return path.trim().replace(/^\/?/, '').replace(/\/?$/, '');
 }
 
-/** Returns true if a variable is a path that points to a document */
-export function isDocPath(s: any): boolean {
-	return (
-		typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 0
-	);
-}
-
 /** Returns true if a variable is a path that points to a collection */
-export function isColPath(s: any): boolean {
+export function isPath(type: RefType, s: any): boolean {
 	return (
-		typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 1
+		typeof s === 'string' &&
+		s !== '' &&
+		trimPath(s).split('/').length % 2 === (type === 'doc' ? 0 : 1)
 	);
 }
 
 /** Checks if a value is a Reference to a Document */
-export function isDocReference(val: any): boolean {
-	return val instanceof Reference && !val.isCollection;
+export function isRef(type: RefType, val: any): boolean {
+	return (
+		val instanceof Reference &&
+		(type === 'doc' ? !val.isCollection : val.isCollection)
+	);
 }
 
-/** Returns true if a value is a Reference to a Collection */
-export function isColReference(val: any): boolean {
-	return val instanceof Reference && val.isCollection;
+export function isRefType(ref: any): boolean {
+	return (
+		ref instanceof Reference ||
+		ref instanceof Document ||
+		typeof ref === 'string'
+	);
 }
 
 export function getPathFromRef(ref: Ref) {
+	if (!isRefType(ref))
+		throw TypeError(
+			'Expected a Reference, Document or a path but got something else'
+		);
+
 	return (
 		(ref as Document)?.__meta__?.path ??
 		(ref as Reference).path ??
@@ -49,14 +56,14 @@ export function getPathFromRef(ref: Ref) {
 	);
 }
 
-export function restrictTo(type: 'col' | 'doc', ref: Ref) {
+export function restrictTo(type: RefType, ref: Ref) {
 	const isDoc = type === 'doc';
 	const path = getPathFromRef(ref);
-	if (isDoc ? !isDocPath(path) : !isColPath(path))
-		throw Error(
+	if (!isPath(type, path))
+		throw TypeError(
 			`You are trying to access a method reserved for ${
 				isDoc ? 'Documents' : 'Collections'
-			}, on a ${isDoc ? 'Collection' : 'Document'}`
+			} with a ${isDoc ? 'Collection' : 'Document'}`
 		);
 
 	return path;

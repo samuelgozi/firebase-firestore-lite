@@ -90,10 +90,10 @@ Lets create one:
 
 ```js
 // Reference to a collection
-const usersCollection = db.reference('users');
+const usersCollection = db.ref('users');
 
 // Reference to a document
-const samuel = db.reference('users/samuel');
+const samuel = db.ref('users/samuel');
 ```
 
 `usersCollection` points to a collection. The way we know it is because of the path. The path is `users` and we know that the root of the database only has collections. So it is the same as writing `/users`.
@@ -103,11 +103,11 @@ const samuel = db.reference('users/samuel');
 BTW, We can also create a reference to the root of the database(which technically is a document):
 
 ```js
-const root = db.reference('/');
+const root = db.ref('/');
 
 // Or
 
-const root = db.reference('');
+const root = db.ref('');
 ```
 
 A reference has some helpful instance methods and properties.
@@ -130,7 +130,7 @@ To create/update a document with a known id just create a reference that points 
 
 ```js
 // Create a reference to the document named "samuel" inside the collection "users".
-const ref = db.reference('users/samuel');
+const ref = db.ref('users/samuel');
 
 // Set its data(if it doesn't exist, it will be created).
 // Will return an instance of Document containing all of the
@@ -147,7 +147,7 @@ To add a new document with a generated ID, you need to call the `set` method on 
 
 ```js
 // Create a reference the collection in which we want the new document.
-const ref = db.reference('users');
+const ref = db.ref('users');
 
 // A new document will be created with a database generated ID.
 const doc = await ref.set({
@@ -194,9 +194,9 @@ The `batchGet` method can receives an array of document references, or if you pr
 
 ```js
 // Using an array of references:
-const doc1 = db.reference('col/doc1');
-const doc2 = db.reference('col/doc2');
-const doc3 = db.reference('col/doc3');
+const doc1 = db.ref('col/doc1');
+const doc2 = db.ref('col/doc2');
+const doc3 = db.ref('col/doc3');
 
 db.batchGet([doc1, doc2, doc3]);
 
@@ -252,7 +252,7 @@ Queries are done by using the `query` method of a reference instance. The query 
 lets look at an example:
 
 ```js
-const users = db.reference('users');
+const users = db.ref('users');
 
 const usersQuery = users.query({
 	where: [['age', '=>', 21]], // Array of query operations.

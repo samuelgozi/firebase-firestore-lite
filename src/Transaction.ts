@@ -1,10 +1,7 @@
 import {
 	compileOptions,
-	trimPath,
-	isColPath,
 	encode,
 	fid,
-	isColReference,
 	getPathFromRef,
 	Ref,
 	restrictTo
@@ -87,7 +84,7 @@ export class Transaction {
 	add(ref: string | Reference, data: any, options: CrudOptions = {}) {
 		const path = `${restrictTo('col', ref)}/${fid()}`;
 		this.write(path, data, { exists: false, ...options });
-		return this.db.reference(path);
+		return this.db.ref(path);
 	}
 
 	set(ref: Ref, data: any, options: CrudOptions = {}) {

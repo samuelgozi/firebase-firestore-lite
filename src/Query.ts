@@ -1,12 +1,7 @@
 import { Document } from './Document';
 import { Reference } from './Reference';
 import { Database } from './Database';
-import {
-	isDocReference,
-	isColReference,
-	isPositiveInteger,
-	encodeValue
-} from './utils';
+import { isRef, isPositiveInteger, encodeValue } from './utils';
 
 interface FromOption {
 	/** Reference to the collection */
@@ -244,7 +239,7 @@ export class Query {
 		const collection = (val as FromOption).collection || val;
 		const { allDescendants } = val as FromOption;
 
-		if (!isColReference(collection))
+		if (!isRef('col', collection))
 			throw Error('Expected a reference to a collection');
 
 		if (allDescendants !== undefined && typeof allDescendants !== 'boolean')
@@ -287,13 +282,13 @@ export class Query {
 	}
 
 	startAt(ref: QueryOptions['startAt']) {
-		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
+		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
 		this.options.startAt = ref;
 		return this;
 	}
 
 	endAt(ref: QueryOptions['endAt']) {
-		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
+		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
 		this.options.endAt = ref;
 		return this;
 	}

@@ -4,7 +4,7 @@ import { Reference } from '../src/Reference.ts';
 import { Document } from '../src/Document.ts';
 
 const db = new Database({ projectId: 'projectId' });
-const colRef = db.reference('col');
+const colRef = db.ref('col');
 
 describe('Query', () => {
 	describe('select', () => {
@@ -61,7 +61,7 @@ describe('Query', () => {
 			});
 
 			const query2 = new Query({
-				from: db.reference('col2')
+				from: db.ref('col2')
 			});
 
 			// Overwrite the from value.
@@ -79,7 +79,7 @@ describe('Query', () => {
 		test('Invalid arguments', () => {
 			expect(() => {
 				new Query({
-					from: db.reference('col/doc')
+					from: db.ref('col/doc')
 				});
 			}).toThrow(
 				'Invalid argument "from": Expected a reference to a collection'

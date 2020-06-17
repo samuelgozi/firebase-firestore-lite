@@ -1,9 +1,8 @@
 import {
 	trimPath,
-	isDocPath,
+	isPath,
+	isRef,
 	isRawDocument,
-	isDocReference,
-	isColReference,
 	isPositiveInteger,
 	encodeValue,
 	encode,
@@ -41,15 +40,28 @@ test('trimPath', () => {
 	expect(trimPath('  col/doc')).toEqual('col/doc');
 });
 
-test('IsDocPath', () => {
-	expect(isDocPath('')).toEqual(false);
-	expect(isDocPath('col')).toEqual(false);
-	expect(isDocPath('col/doc/col')).toEqual(false);
-	expect(isDocPath('col/doc/col/doc/col')).toEqual(false);
+describe('isPath()', () => {
+	test('document', () => {
+		expect(isPath('doc', '')).toEqual(false);
+		expect(isPath('doc', 'col')).toEqual(false);
+		expect(isPath('doc', 'col/doc/col')).toEqual(false);
+		expect(isPath('doc', 'col/doc/col/doc/col')).toEqual(false);
 
-	expect(isDocPath('col/doc')).toEqual(true);
-	expect(isDocPath('col/doc/col/doc')).toEqual(true);
-	expect(isDocPath('col/doc/col/doc/col/doc')).toEqual(true);
+		expect(isPath('doc', 'col/doc')).toEqual(true);
+		expect(isPath('doc', 'col/doc/col/doc')).toEqual(true);
+		expect(isPath('doc', 'col/doc/col/doc/col/doc')).toEqual(true);
+	});
+
+	test('collections', () => {
+		expect(isPath('col', '')).toEqual(false);
+		expect(isPath('col', 'col')).toEqual(true);
+		expect(isPath('col', 'col/doc/col')).toEqual(true);
+		expect(isPath('col', 'col/doc/col/doc/col')).toEqual(true);
+
+		expect(isPath('col', 'col/doc')).toEqual(false);
+		expect(isPath('col', 'col/doc/col/doc')).toEqual(false);
+		expect(isPath('col', 'col/doc/col/doc/col/doc')).toEqual(false);
+	});
 });
 
 describe('isRawDocument', () => {
@@ -92,42 +104,44 @@ describe('isRawDocument', () => {
 	});
 });
 
-test('IsDocReference', () => {
-	// random types.
-	expect(isDocReference(123)).toEqual(false);
-	expect(isDocReference("I'm a reference!!!")).toEqual(false);
-	expect(isDocReference({ reference: '???' })).toEqual(false);
-	expect(isDocReference([])).toEqual(false);
+describe('isRef()', () => {
+	test('Documents', () => {
+		// random types.
+		expect(isRef('doc', 123)).toEqual(false);
+		expect(isRef('doc', "I'm a reference!!!")).toEqual(false);
+		expect(isRef('doc', { reference: '???' })).toEqual(false);
+		expect(isRef('doc', [])).toEqual(false);
 
-	// References to collections
-	expect(isDocReference(new Reference('col', db))).toEqual(false);
-	expect(isDocReference(new Reference('col/doc/col', db))).toEqual(false);
+		// References to collections
+		expect(isRef('doc', new Reference('col', db))).toEqual(false);
+		expect(isRef('doc', new Reference('col/doc/col', db))).toEqual(false);
 
-	// References to documents.
-	expect(isDocReference(new Reference('col/doc', db))).toEqual(true);
-	expect(isDocReference(new Reference('col/doc/col/doc', db))).toEqual(true);
-});
+		// References to documents.
+		expect(isRef('doc', new Reference('col/doc', db))).toEqual(true);
+		expect(isRef('doc', new Reference('col/doc/col/doc', db))).toEqual(true);
+	});
 
-test('IsColReference', () => {
-	// random types.
-	expect(isColReference(123)).toEqual(false);
-	expect(isColReference("I'm a reference!!!")).toEqual(false);
-	expect(isColReference({ reference: '???' })).toEqual(false);
-	expect(isColReference([])).toEqual(false);
+	test('IsColReference', () => {
+		// random types.
+		expect(isRef('col', 123)).toEqual(false);
+		expect(isRef('col', "I'm a reference!!!")).toEqual(false);
+		expect(isRef('col', { reference: '???' })).toEqual(false);
+		expect(isRef('col', [])).toEqual(false);
 
-	// References to collections
-	expect(isColReference(new Reference('col', db))).toEqual(true);
-	expect(isColReference(new Reference('col/doc/col', db))).toEqual(true);
-	expect(isColReference(new Reference('col/doc/col/doc/col', db))).toEqual(
-		true
-	);
+		// References to collections
+		expect(isRef('col', new Reference('col', db))).toEqual(true);
+		expect(isRef('col', new Reference('col/doc/col', db))).toEqual(true);
+		expect(isRef('col', new Reference('col/doc/col/doc/col', db))).toEqual(
+			true
+		);
 
-	// References to documents.
-	expect(isColReference(new Reference('col/doc', db))).toEqual(false);
-	expect(isColReference(new Reference('col/doc/col/doc', db))).toEqual(false);
-	expect(isColReference(new Reference('col/doc/col/doc/col/doc', db))).toEqual(
-		false
-	);
+		// References to documents.
+		expect(isRef('col', new Reference('col/doc', db))).toEqual(false);
+		expect(isRef('col', new Reference('col/doc/col/doc', db))).toEqual(false);
+		expect(isRef('col', new Reference('col/doc/col/doc/col/doc', db))).toEqual(
+			false
+		);
+	});
 });
 
 test('IsPositiveInteger', () => {

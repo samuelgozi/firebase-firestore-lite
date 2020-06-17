@@ -18,10 +18,10 @@ beforeEach(() => {
 });
 
 describe('Constructor', () => {
-	test('Throws if database is missing', () => {
+	test('Throws if path is not a string', () => {
 		expect(() => {
-			new Reference('test');
-		}).toThrow('Argument "db" is required but missing');
+			new Reference(32);
+		}).toThrow('The "path" argument should be a string');
 	});
 
 	test('Path is normalized correctly', () => {
@@ -160,7 +160,7 @@ describe('list()', () => {
 
 	test('throws when called on a document', async () => {
 		await expect(new Reference('col/doc', db).list()).rejects.toThrow(
-			'You are trying to access a method reserved for Collections, on a Document'
+			'You are trying to access a method reserved for Collections with a Document'
 		);
 	});
 
@@ -187,7 +187,7 @@ describe('list()', () => {
 describe('get()', () => {
 	test('throws when called on a collection', async () => {
 		await expect(new Reference('col', db).get()).rejects.toThrow(
-			'You are trying to access a method reserved for Documents, on a Collection'
+			'You are trying to access a method reserved for Documents with a Collection'
 		);
 	});
 
@@ -220,7 +220,7 @@ describe('get()', () => {
 describe('add()', () => {
 	test('throws when called on a document', async () => {
 		await expect(new Reference('col/doc', db).add()).rejects.toThrow(
-			'You are trying to access a method reserved for Collections, on a Document'
+			'You are trying to access a method reserved for Collections with a Document'
 		);
 	});
 
@@ -256,7 +256,7 @@ describe('add()', () => {
 describe('set()', () => {
 	test('throws when called on a collection', async () => {
 		await expect(new Reference('col', db).set()).rejects.toThrow(
-			'You are trying to access a method reserved for Documents, on a Collection'
+			'You are trying to access a method reserved for Documents with a Collection'
 		);
 	});
 
@@ -296,7 +296,7 @@ describe('set()', () => {
 describe('update()', () => {
 	test('throws when called on a collection', async () => {
 		await expect(new Reference('col', db).update()).rejects.toThrow(
-			'You are trying to access a method reserved for Documents, on a Collection'
+			'You are trying to access a method reserved for Documents with a Collection'
 		);
 	});
 
@@ -338,7 +338,7 @@ describe('update()', () => {
 describe('delete()', () => {
 	test('throws when called on a collection', async () => {
 		await expect(new Reference('col', db).delete()).rejects.toThrow(
-			'You are trying to access a method reserved for Documents, on a Collection'
+			'You are trying to access a method reserved for Documents with a Collection'
 		);
 	});
 
