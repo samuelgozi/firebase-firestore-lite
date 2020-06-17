@@ -243,7 +243,7 @@ describe('add()', () => {
 						update: {
 							fields: { test: { stringValue: 'test' } },
 							name:
-								'projects/projectId/databases/(default)/documents/col/abcdefghijklmnopqrstuv'
+								'projects/projectId/databases/(default)/documents/col/abcdefghijklmnopqrst'
 						},
 						currentDocument: { exists: false }
 					}

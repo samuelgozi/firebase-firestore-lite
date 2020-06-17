@@ -7,26 +7,13 @@ of kilobytes without any app logic](https://github.com/samuelgozi/firebase-fires
 
 [Our Alternative SDK performs in average 13 times better and is 27 times smaller than the official ones](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks).
 
-## What am I giving up by using this?
+## Whats the catch?
 
-All database operations are available except realtime updates(read below why) and we don't provide offline support out of the box. In addition, its important to understand that old browser support is not one of my goals with this library, so you might need to transpile and provide polyfills on your own.
+No realtime support(yet*) and no out of the box offline support*. You should also transpile and polyfill the code yourself for your target browsers. I don't try to support old browsers(ehm... IE), but it is possible and was done by some of the community.
 
-I do plan to support Realtime and offline in the future. The reason its not yet implemented is because currently that API is not exposed by firebase unless I use gRPC, and i don't want to because it will add at least 10KB(more than twice this library).
-I am considering all possibilities, and I issued a feature request for this multiple times to the firebase team, but if they won't budge, than ill find a workaround.
+\* Realtime is planned, but will take some time because of lack of documentation on how the API works.
 
-## Roadmap / Features list
-
-- [x] Run queries.
-- [x] Batch Get.
-- [x] Batch Write(by using transactions).
-- [x] Transactions.
-- [x] Read, add, update and delete documents.
-- [x] Read all documents in a collection.
-- [x] Atomic operations on document level(Transforms).
-- [ ] Real time **\***
-- [ ] Offline support **\***
-
-**\*** = Will start work on this once the rest of the API is stable.
+\* Offline support will be available in the future, but probably as a third party addition, and is currently not a high priority.
 
 ## Getting started
 
@@ -34,21 +21,15 @@ I am considering all possibilities, and I issued a feature request for this mult
 
 Install this package with NPM/Yarn:
 
-```
+```bash
 npm install firebase-firestore-lite
+
 # or
+
 yarn add firebase-firestore-lite
 ```
 
-### Deno
-
-For deno just replace the import URLs with:
-
-```js
-import { Database } from 'https://denopkg.com/samuelgozi/firebase-firestore-lite';
-```
-
-## Initialize an instance
+## Create a Database instance
 
 It is possible to use authentication but not necessary.
 First I'll show you how to use it without it:
@@ -100,7 +81,7 @@ const samuel = db.ref('users/samuel');
 
 `samuel` points to a document because the path we used to create it was a path to a document.
 
-BTW, We can also create a reference to the root of the database(which technically is a document):
+We can also create a reference to the root of the database:
 
 ```js
 const root = db.ref('/');
@@ -110,75 +91,82 @@ const root = db.ref('/');
 const root = db.ref('');
 ```
 
+### Reference's props and methods
+
 A reference has some helpful instance methods and properties.
 Please read more about them in the API reference.
 
 ## Add and manage data
 
-There are a variety of ways to manipulate data in Firestore:
+There are multiple ways to manipulate data in Firestore:
 
 - Directly getting, adding, updating or deleting by using a `Reference`.
-- Getting all documents within a collection by using a `Reference`(to a collection).
+- Getting all documents within a collection.
 - `batchGet` to retrieve a list of documents.
 - `Transaction` to either batch write, or read and write at the same time.
 
-### Set a document
+### Get a document
 
-Set can be used to create/update a document with a known ID, or create a new document with a generated ID.
-
-To create/update a document with a known id just create a reference that points to it(even if it doesn't exist):
+You can use `get` to fetch a single document from the database.
 
 ```js
-// Create a reference to the document named "samuel" inside the collection "users".
 const ref = db.ref('users/samuel');
-
-// Set its data(if it doesn't exist, it will be created).
-// Will return an instance of Document containing all of the
-// data of the updated/created document.
-const doc = await ref.set({
-	email: 'samuel@example.com'
-});
+const doc = await ref.get(); // Returns an instance of Document
 ```
 
-If the document does not exist, it will be created. If the document does exist, its contents will be overwritten with the newly provided data. If you want to merge the data with the existing, use the
-"update" methods instead.
+### Get all the documents in a collection
 
-To add a new document with a generated ID, you need to call the `set` method on a reference that points to a collection:
+You can use `list` to fetch a all of the documents in a collection.
+Be mindful that this request is expensive in terms of bandwidth and writes.
 
 ```js
-// Create a reference the collection in which we want the new document.
+const ref = db.ref('users');
+const doc = await ref.list(); // Returns an instance of List
+```
+
+### Add a document
+
+This method is only accessible through collection references. It will create a document with a randomly generated name.
+
+```js
+// Create a reference to the collection to which the new document will be added
 const ref = db.ref('users');
 
-// A new document will be created with a database generated ID.
-const doc = await ref.set({
+// Creates the new document with the provided data, and if successful it will return a Reference it.
+const newRef = await ref.add({
 	email: 'samuel@example.com'
 });
 
-// The operation will return the new document with its ID.
+console.log(newRef.id); // q9YUI8CQWa1KEYgZTK6t
+```
+
+### Set a document
+
+Set can be used to create/update a document with a known ID.
+
+If the document does not exist, it will be created. If the document does exist, its contents will be overwritten with the newly provided data. If you want to merge the data instead, use the "update"(below) method.
+
+```js
+const ref = db.ref('users/samuel');
+
+await ref.set({
+	email: 'samuel@example.com'
+});
 ```
 
 ### Update a document
 
-The `update` method works the same as `set` except it will merge instead of overwrite the data if the document already exists.
-
-For example, if we want to add the "samuel" username a new prop without deleting the existing ones we can do it with the "update" method:
+The `update` method will merge the data passed to it with the data of the document in the database and the write will fail if the document doesn't exist.
 
 ```js
-const doc = await ref.update({
+await ref.update({
 	profession: 'web-dev'
 });
-
-console.log(doc);
-// Will log:
-// {
-//    email: 'samuel@example.com',
-//    profession: 'web-dev'
-// }
 ```
 
 ### Delete a document
 
-Deleting a document is pretty straight forward:
+This will delete the document from the database.
 
 ```js
 ref.delete(); // Returns a promise that resolves if deleted successfully.
@@ -190,7 +178,7 @@ Just like that, its gone.
 
 It is possible to get multiple documents with one request by using the `db.batchGet` method.
 
-The `batchGet` method can receives an array of document references, or if you prefer you can just pass document paths.
+The `batchGet` method can receives an array of References(of documents) or if you prefer you can just pass the paths.
 
 ```js
 // Using an array of references:
@@ -198,13 +186,11 @@ const doc1 = db.ref('col/doc1');
 const doc2 = db.ref('col/doc2');
 const doc3 = db.ref('col/doc3');
 
-db.batchGet([doc1, doc2, doc3]);
-
-// Using an array of document paths:
-db.batchGet(['col/doc1', 'col/doc2', 'col/doc3']);
+const docs = await db.batchGet([doc1, doc2, doc3]);
+const sameDocs = await db.batchGet(['col/doc1', 'col/doc2', 'col/doc3']);
 ```
 
-As you can see, using document paths instead of references is much cleaner, and it also performs a little bit better since you don't have to create Reference instances just for a single use.
+As you can see, using document paths instead of references is much cleaner, and it also performs a tiny bit better.
 
 This method will return an array of `Document` instances.
 
@@ -220,15 +206,18 @@ Lets start with a batch write. First we create a transaction:
 const tx = db.transaction();
 ```
 
-Now `tx` holds a `Transaction` instance. The instance has three methods that help us describe operations:
+Now `tx` holds a `Transaction` instance. The instance has four methods that help us describe operations:
 
-- `set` - Add or overwrite a document.
-- `update` - Update(merge) data of an existing document.
-- `delete` - Delete a document.
+- `add` Add a document with a randomly generated id to a collection.
+- `set` Add or overwrite a document.
+- `update` Update(merge) data of an existing document.
+- `delete` Delete a document.
 
 These methods do not make any network requests yet. They are just helpers to describe the operations to be done as part of this transaction. In order to commit this changes we use the `commit` method. Now lets describe the transaction, and then commit it:
 
 ```js
+// Add a new document with a random id
+tx.add('users', { name: 'random', email: 'random@example.com' });
 // Create a new document or overwrite an existing one.
 tx.set('users/samuel', { name: 'samuel', email: 'samuel@example.com' });
 // Update an existing document.
@@ -244,46 +233,6 @@ try {
 	// Handle the failed transaction.
 }
 ```
-
-## Queries
-
-Queries are done by using the `query` method of a reference instance. The query will search through the children of document/collection.
-
-lets look at an example:
-
-```js
-const users = db.ref('users');
-
-const usersQuery = users.query({
-	where: [['age', '=>', 21]], // Array of query operations.
-	orderBy: 'age', // Can also be an object { field: 'age', direction: 'asc'|'desc' }
-	limit: 10 // The max results
-});
-
-// The above will be identical to
-const usersQuery = users
-	.query()
-	.where('age', '=>', 21)
-	.orderBy('age')
-	.limit(10);
-```
-
-The `users.query()` method optionally accepts an options object, and then returns a new Query instance. All of the options can also be set by using the query methods, and they can also be chained(as seen in the second example). You can then `run()` the query:
-
-```js
-const results = await usersQuery.run(); // Will return the query results.
-```
-
-All the query options can be seen in the [API reference for Query](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Query-instance#queryoptions--object), bet here is a quick recap of the important ones:
-
-- `select` Array of field paths to be returned, if left empty will return the whole document.
-- `where` Comparative operations for filtering the query.
-- `from` Set by default for you to eb the current collection of the reference.
-- `orderBy` The field and direction to order by.
-- `startAt` A reference to a specific document from which to start the query.
-- `endAt` A reference to a specific document at which to end the query.
-- `offset` Number of results to skip
-- `limit` The maximum number of documents to return.
 
 ### Read and write in a transaction
 
@@ -354,6 +303,45 @@ function updateFunction(tx) {
 // Will try up to 10 times.
 await db.runTransaction(updateFunction, 10);
 ```
+
+## Queries
+
+Queries are done by using the `query` method of a reference instance. The query will search through the children of document/collection.
+
+lets look at an example:
+
+```js
+const users = db.ref('users');
+const usersQuery = users.query({
+	where: [['age', '=>', 21]], // Array of query operations.
+	orderBy: 'age', // Can also be an object { field: 'age', direction: 'asc'|'desc' }
+	limit: 10 // The max results
+});
+
+// The above will be identical to
+const usersQuery = users
+	.query()
+	.where('age', '=>', 21)
+	.orderBy('age')
+	.limit(10);
+```
+
+The `users.query()` method optionally accepts an options object, and then returns a new Query instance. All of the options can also be set by using the query methods, and they can also be chained(as seen in the second example). You can then `run()` the query:
+
+```js
+const results = await usersQuery.run(); // Will return the query results.
+```
+
+All the query options can be seen in the [API reference for Query](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Query-instance#queryoptions--object), bet here is a quick recap of the important ones:
+
+- `select` Array of field paths to be returned, if left empty will return the whole document.
+- `where` Comparative operations for filtering the query.
+- `from` Set by default for you to eb the current collection of the reference.
+- `orderBy` The field and direction to order by.
+- `startAt` A reference to a specific document from which to start the query.
+- `endAt` A reference to a specific document at which to end the query.
+- `offset` Number of results to skip
+- `limit` The maximum number of documents to return.
 
 ## Firestore emulator
 

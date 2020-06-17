@@ -297,7 +297,7 @@ export function encode(
 
 /** Generates 22 chars long random alphanumerics unique identifiers */
 export function fid() {
-	const randBytes = crypto.getRandomValues(new Uint8Array(22));
+	const randBytes = crypto.getRandomValues(new Uint8Array(20));
 	return Array.from(randBytes)
 		.map(b => validChars[b % 63])
 		.join('');
