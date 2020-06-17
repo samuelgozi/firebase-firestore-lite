@@ -1,16 +1,18 @@
 import {
 	compileOptions,
 	trimPath,
-	isDocPath,
+	isColPath,
 	encode,
-	isDocReference
+	fid,
+	isColReference,
+	getPathFromRef,
+	Ref,
+	restrictTo
 } from './utils';
 import { Document, FirebaseDocument } from './Document';
 import { Reference, CrudOptions } from './Reference';
 import { Database } from './Database';
 import Transform from './Transform';
-
-type Ref = Reference | Document | string;
 
 export class Transaction {
 	writes: any[] = [];
@@ -23,32 +25,24 @@ export class Transaction {
 	 * transaction writes array.
 	 * @private
 	 */
-	private write(ref: Ref, data = {}, options: CrudOptions = {}) {
+	private write(ref: Ref, data: any, options: CrudOptions = {}) {
+		if (typeof data !== 'object') throw Error('The data argument is missing');
+
 		const transforms: Transform[] = [];
-		const isDoc = ref instanceof Document;
-
-		if (!isDocPath(ref) && !isDocReference(ref) && !isDoc)
-			throw Error(
-				'Expected a Document, Reference or a string path pointing to a document.'
-			);
-
-		if (typeof data !== 'object')
-			throw Error('The data object should be an object');
-
+		const name = `${this.db.rootPath}/${getPathFromRef(ref)}`;
+		const precondition = this.preconditions[name];
 		// Compile the JS Object into a Firebase Document.
-		const doc = encode(isDoc ? ref : data, transforms) as FirebaseDocument;
+		const doc = encode(
+			ref instanceof Document ? ref : data,
+			transforms
+		) as FirebaseDocument;
 		// Compile the options object into Firebase API arguments.
 		options = compileOptions(options, data);
 		// Check if there is any precondition created by getting a document
 		// as part of this transaction, and if there is then use it.
-		this.preconditions[doc.name] &&
-			(options.currentDocument = this.preconditions[doc.name]);
-
-		// Get the document's name
-		doc.name = isDoc
-			? (ref as Document).__meta__.name
-			: (ref as Reference).name ||
-			  `${this.db.rootPath}/${trimPath(ref as string)}`;
+		precondition && (options.currentDocument = precondition);
+		// Set the document's name
+		doc.name = name;
 
 		// Add the static properties.
 		this.writes.push({
@@ -90,27 +84,37 @@ export class Transaction {
 		return docs;
 	}
 
-	set(ref: Ref, data: any) {
-		this.write(ref, data);
+	add(ref: string | Reference, data: any, options: CrudOptions = {}) {
+		const path = `${restrictTo('col', ref)}/${fid()}`;
+		this.write(path, data, { exists: false, ...options });
+		return this.db.reference(path);
 	}
 
-	update(ref: Ref, data: any) {
-		this.write(ref, data, { exists: true });
+	set(ref: Ref, data: any, options: CrudOptions = {}) {
+		restrictTo('doc', ref);
+		this.write(ref, data, options);
+	}
+
+	update(ref: Ref, data: any, options: CrudOptions = {}) {
+		restrictTo('doc', ref);
+		this.write(ref, data, { exists: true, updateMask: true, ...options });
 	}
 
 	/**
 	 * Adds a delete operation to the transaction.
 	 */
-	delete(ref: Ref) {
-		const isDoc = ref instanceof Document;
-		const name = isDoc
-			? (ref as Document).__meta__.name
-			: (ref as Reference).name ||
-			  `${this.db.rootPath}/${trimPath(ref as string)}`;
+	delete(ref: Ref, options: CrudOptions = {}) {
+		const name = `${this.db.rootPath}/${restrictTo('doc', ref)}`;
+
+		options = compileOptions(options);
+		// Check if there is any precondition created by getting a document
+		// as part of this transaction, and if there is then use it.
+		this.preconditions[name] &&
+			(options.currentDocument = this.preconditions[name]);
 
 		this.writes.push({
 			delete: name,
-			currentDocument: this.preconditions[name]
+			...options
 		});
 	}
 

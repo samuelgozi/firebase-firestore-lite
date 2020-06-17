@@ -2,7 +2,10 @@
 	"env": {
 		"development": {
 			"presets": ["@babel/preset-typescript"],
-			"plugins": ["babel-plugin-add-import-extension"]
+			"plugins": [
+				"babel-plugin-add-import-extension",
+				"@babel/plugin-proposal-class-properties"
+			]
 		},
 		"test": {
 			"presets": [

@@ -152,46 +152,6 @@ describe('child()', () => {
 	});
 });
 
-describe('add()', () => {
-	test('throws when called on a document', async () => {
-		await expect(new Reference('col/doc', db).add()).rejects.toThrow(
-			'Tried to access a collection method'
-		);
-	});
-
-	test('endpoint', async () => {
-		fetch.mockResponse(rawDoc);
-		await new Reference('col', db).add({});
-
-		/* Todo: add test with options */
-
-		expect(fetch.mock.calls.length).toEqual(1);
-		expect(fetch.mock.calls[0][1].method).toEqual('POST');
-		expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}/col`);
-	});
-
-	test('body', async () => {
-		fetch.mockResponse(rawDoc);
-		await new Reference('col', db).add({ test: 'test' });
-
-		expect(fetch.mock.calls[0][1].body).toEqual(
-			JSON.stringify({
-				fields: {
-					test: {
-						stringValue: 'test'
-					}
-				}
-			})
-		);
-	});
-
-	test('returns an instance of Document', async () => {
-		fetch.mockResponse(rawDoc);
-		const doc = await new Reference('col', db).add({});
-		expect(doc).toBeInstanceOf(Document);
-	});
-});
-
 describe('list()', () => {
 	const mockFirestoreList = JSON.stringify({
 		documents: [JSON.parse(rawDoc)],
@@ -200,7 +160,7 @@ describe('list()', () => {
 
 	test('throws when called on a document', async () => {
 		await expect(new Reference('col/doc', db).list()).rejects.toThrow(
-			'Tried to access a collection method'
+			'You are trying to access a method reserved for Collections, on a Document'
 		);
 	});
 
@@ -227,7 +187,7 @@ describe('list()', () => {
 describe('get()', () => {
 	test('throws when called on a collection', async () => {
 		await expect(new Reference('col', db).get()).rejects.toThrow(
-			'Tried to access a document method'
+			'You are trying to access a method reserved for Documents, on a Collection'
 		);
 	});
 
@@ -257,28 +217,61 @@ describe('get()', () => {
 	});
 });
 
-describe('set()', () => {
-	test('throws when called on a collection', async () => {
-		await expect(new Reference('col', db).set()).rejects.toThrow(
-			'Tried to access a document method'
-		);
-	});
-
-	test('throws when there are missing arguments', async () => {
-		await expect(new Reference('col/doc', db).set()).rejects.toThrow(
-			'The document argument is missing'
+describe('add()', () => {
+	test('throws when called on a document', async () => {
+		await expect(new Reference('col/doc', db).add()).rejects.toThrow(
+			'You are trying to access a method reserved for Collections, on a Document'
 		);
 	});
 
 	test('endpoint', async () => {
 		fetch.mockResponse(rawDoc);
-		await new Reference('col/doc', db).set({});
+		await new Reference('col', db).add({ test: 'test' });
 
-		/* Todo: add test with options */
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
+	});
 
-		expect(fetch.mock.calls.length).toEqual(1);
-		expect(fetch.mock.calls[0][1].method).toEqual('PATCH');
-		expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}/col/doc`);
+	test('body', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col', db).add({ test: 'test' });
+
+		expect(fetch.mock.calls[0][1].body).toEqual(
+			JSON.stringify({
+				writes: [
+					{
+						update: {
+							fields: { test: { stringValue: 'test' } },
+							name:
+								'projects/projectId/databases/(default)/documents/col/abcdefghijklmnopqrstuv'
+						},
+						currentDocument: { exists: false }
+					}
+				]
+			})
+		);
+	});
+});
+
+describe('set()', () => {
+	test('throws when called on a collection', async () => {
+		await expect(new Reference('col', db).set()).rejects.toThrow(
+			'You are trying to access a method reserved for Documents, on a Collection'
+		);
+	});
+
+	test('throws when there are missing arguments', async () => {
+		await expect(new Reference('col/doc', db).set()).rejects.toThrow(
+			'The data argument is missing'
+		);
+	});
+
+	test('endpoint', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col', db).add({ test: 'test' });
+
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
 	});
 
 	test('body', async () => {
@@ -287,47 +280,38 @@ describe('set()', () => {
 
 		expect(fetch.mock.calls[0][1].body).toEqual(
 			JSON.stringify({
-				fields: {
-					test: {
-						stringValue: 'test'
+				writes: [
+					{
+						update: {
+							fields: { test: { stringValue: 'test' } },
+							name: 'projects/projectId/databases/(default)/documents/col/doc'
+						}
 					}
-				}
+				]
 			})
 		);
-	});
-
-	test('Returns an instance of Document', async () => {
-		fetch.mockResponse(rawDoc);
-		const doc = await new Reference('col/doc', db).set({});
-
-		expect(doc).toBeInstanceOf(Document);
 	});
 });
 
 describe('update()', () => {
 	test('throws when called on a collection', async () => {
 		await expect(new Reference('col', db).update()).rejects.toThrow(
-			'Tried to access a document method'
+			'You are trying to access a method reserved for Documents, on a Collection'
 		);
 	});
 
 	test('throws when there are missing arguments', async () => {
 		await expect(new Reference('col/doc', db).update()).rejects.toThrow(
-			'The document argument is missing'
+			'The data argument is missing'
 		);
 	});
 
 	test('endpoint', async () => {
 		fetch.mockResponse(rawDoc);
-		await new Reference('col/doc', db).update({});
+		await new Reference('col', db).add({ test: 'test' });
 
-		/* Todo: add test with options */
-
-		expect(fetch.mock.calls.length).toEqual(1);
-		expect(fetch.mock.calls[0][1].method).toEqual('PATCH');
-		expect(fetch.mock.calls[0][0]).toEqual(
-			`${db.endpoint}/col/doc?currentDocument.exists=true`
-		);
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
 	});
 
 	test('body', async () => {
@@ -336,44 +320,50 @@ describe('update()', () => {
 
 		expect(fetch.mock.calls[0][1].body).toEqual(
 			JSON.stringify({
-				fields: {
-					test: {
-						stringValue: 'test'
+				writes: [
+					{
+						update: {
+							fields: { test: { stringValue: 'test' } },
+							name: 'projects/projectId/databases/(default)/documents/col/doc'
+						},
+						currentDocument: { exists: true },
+						updateMask: { fieldPaths: ['test'] }
 					}
-				}
+				]
 			})
 		);
-	});
-
-	test('Returns an instance of Document', async () => {
-		fetch.mockResponse(rawDoc);
-		const doc = await new Reference('col/doc', db).update({});
-
-		expect(doc).toBeInstanceOf(Document);
 	});
 });
 
 describe('delete()', () => {
 	test('throws when called on a collection', async () => {
 		await expect(new Reference('col', db).delete()).rejects.toThrow(
-			'Tried to access a document method'
+			'You are trying to access a method reserved for Documents, on a Collection'
 		);
 	});
 
 	test('endpoint', async () => {
 		fetch.mockResponse(rawDoc);
-		await new Reference('col/doc', db).delete();
+		await new Reference('col', db).add({ test: 'test' });
 
-		expect(fetch.mock.calls.length).toEqual(1);
-		expect(fetch.mock.calls[0][1].method).toEqual('DELETE');
-		expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}/col/doc`);
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
 	});
 
 	test('body', async () => {
 		fetch.mockResponse(rawDoc);
 		await new Reference('col/doc', db).delete({ test: 'test' });
 
-		expect(fetch.mock.calls[0][1]).toEqual({ method: 'DELETE' });
+		expect(fetch.mock.calls[0][1].body).toEqual(
+			JSON.stringify({
+				writes: [
+					{
+						delete: 'projects/projectId/databases/(default)/documents/col/doc',
+						test: 'test'
+					}
+				]
+			})
+		);
 	});
 
 	test('Returns nothing', async () => {
@@ -381,206 +371,6 @@ describe('delete()', () => {
 		const ref = new Reference('col/doc', db);
 
 		expect(await ref.delete()).toEqual(undefined);
-	});
-});
-
-describe('transact()', () => {
-	describe('add()', () => {
-		test('endpoint', async () => {
-			fetch.mockResponse(rawDoc);
-			await new Reference('col', db).add({
-				test: new Transform('serverTimestamp')
-			});
-
-			/* Todo: add test with options */
-
-			// Two requests
-			expect(fetch.mock.calls.length).toEqual(2);
-			// One for committing a transaction
-			expect(fetch.mock.calls[0][1].method).toEqual('POST');
-			expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}:commit`);
-			// And one for reading the result
-			expect(fetch.mock.calls[1][1]).toEqual(undefined);
-			expect(fetch.mock.calls[1][0]).toEqual(
-				`${db.endpoint}/col/abcdefghijklmnopqrstuv`
-			);
-		});
-
-		test('body', async () => {
-			fetch.mockResponse(rawDoc);
-			await new Reference('col', db).add({
-				tra: new Transform('serverTimestamp'),
-				str: 'string'
-			});
-
-			expect(fetch.mock.calls[0][1].body).toEqual(
-				JSON.stringify({
-					writes: [
-						{
-							update: {
-								fields: {
-									str: {
-										stringValue: 'string'
-									}
-								},
-								name:
-									'projects/projectId/databases/(default)/documents/col/abcdefghijklmnopqrstuv'
-							},
-							currentDocument: { exists: false }
-						},
-						{
-							transform: {
-								document:
-									'projects/projectId/databases/(default)/documents/col/abcdefghijklmnopqrstuv',
-								fieldTransforms: [
-									{ setToServerValue: 'REQUEST_TIME', fieldPath: 'tra' }
-								]
-							}
-						}
-					]
-				})
-			);
-		});
-
-		test('Returns an instance of Document', async () => {
-			fetch.mockResponse(rawDoc);
-			const doc = await new Reference('col', db).add({
-				tra: new Transform('serverTimestamp'),
-				str: 'string'
-			});
-
-			expect(doc).toBeInstanceOf(Document);
-		});
-	});
-
-	describe('set()', () => {
-		test('endpoint', async () => {
-			fetch.mockResponse(rawDoc);
-			await new Reference('col/doc', db).set({
-				test: new Transform('serverTimestamp')
-			});
-
-			/* Todo: add test with options */
-
-			// Two requests
-			expect(fetch.mock.calls.length).toEqual(2);
-			// One for committing a transaction
-			expect(fetch.mock.calls[0][1].method).toEqual('POST');
-			expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}:commit`);
-			// And one for reading the result
-			expect(fetch.mock.calls[1][1]).toEqual(undefined);
-			expect(fetch.mock.calls[1][0]).toEqual(`${db.endpoint}/col/doc`);
-		});
-
-		test('body', async () => {
-			fetch.mockResponse(rawDoc);
-			await new Reference('col/doc', db).set({
-				tra: new Transform('serverTimestamp'),
-				str: 'string'
-			});
-
-			expect(fetch.mock.calls[0][1].body).toEqual(
-				JSON.stringify({
-					writes: [
-						{
-							update: {
-								fields: {
-									str: {
-										stringValue: 'string'
-									}
-								},
-								name: 'projects/projectId/databases/(default)/documents/col/doc'
-							}
-						},
-						{
-							transform: {
-								document:
-									'projects/projectId/databases/(default)/documents/col/doc',
-								fieldTransforms: [
-									{ setToServerValue: 'REQUEST_TIME', fieldPath: 'tra' }
-								]
-							}
-						}
-					]
-				})
-			);
-		});
-
-		test('Returns an instance of Document', async () => {
-			fetch.mockResponse(rawDoc);
-			const doc = await new Reference('col/doc', db).set({
-				tra: new Transform('serverTimestamp'),
-				str: 'string'
-			});
-
-			expect(doc).toBeInstanceOf(Document);
-		});
-	});
-
-	describe('update()', () => {
-		test('endpoint', async () => {
-			fetch.mockResponse(rawDoc);
-			await new Reference('col/doc', db).update({
-				test: new Transform('serverTimestamp')
-			});
-
-			/* Todo: add test with options */
-
-			// Two requests
-			expect(fetch.mock.calls.length).toEqual(2);
-			// One for committing a transaction
-			expect(fetch.mock.calls[0][1].method).toEqual('POST');
-			expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}:commit`);
-			// And one for reading the result
-			expect(fetch.mock.calls[1][1]).toEqual(undefined);
-			expect(fetch.mock.calls[1][0]).toEqual(`${db.endpoint}/col/doc`);
-		});
-
-		test('body', async () => {
-			fetch.mockResponse(rawDoc);
-			await new Reference('col/doc', db).update({
-				tra: new Transform('serverTimestamp'),
-				str: 'string'
-			});
-
-			expect(fetch.mock.calls[0][1].body).toEqual(
-				JSON.stringify({
-					writes: [
-						{
-							update: {
-								fields: {
-									str: {
-										stringValue: 'string'
-									}
-								},
-								name: 'projects/projectId/databases/(default)/documents/col/doc'
-							},
-							updateMask: { fieldPaths: ['str'] },
-							currentDocument: { exists: true }
-						},
-						{
-							transform: {
-								document:
-									'projects/projectId/databases/(default)/documents/col/doc',
-								fieldTransforms: [
-									{ setToServerValue: 'REQUEST_TIME', fieldPath: 'tra' }
-								]
-							}
-						}
-					]
-				})
-			);
-		});
-
-		test('Returns an instance of Document', async () => {
-			fetch.mockResponse(rawDoc);
-			const doc = await new Reference('col/doc', db).update({
-				tra: new Transform('serverTimestamp'),
-				str: 'string'
-			});
-
-			expect(doc).toBeInstanceOf(Document);
-		});
 	});
 });
 

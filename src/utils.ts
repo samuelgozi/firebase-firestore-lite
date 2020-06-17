@@ -3,10 +3,14 @@ import GeoPoint from './GeoPoint';
 import Transform from './Transform';
 import { FirebaseDocument, FirebaseMap } from './Document';
 import { Database } from './Database';
+import { Document } from './Document';
 
 // Used for generating random fids.
 const validChars =
 	'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890';
+
+// General type that can allow to get the full Document Name
+export type Ref = Reference | Document | string;
 
 /** Trims spaces and slashes from a path */
 export function trimPath(path: string) {
@@ -18,6 +22,44 @@ export function isDocPath(s: any): boolean {
 	return (
 		typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 0
 	);
+}
+
+/** Returns true if a variable is a path that points to a collection */
+export function isColPath(s: any): boolean {
+	return (
+		typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 1
+	);
+}
+
+/** Checks if a value is a Reference to a Document */
+export function isDocReference(val: any): boolean {
+	return val instanceof Reference && !val.isCollection;
+}
+
+/** Returns true if a value is a Reference to a Collection */
+export function isColReference(val: any): boolean {
+	return val instanceof Reference && val.isCollection;
+}
+
+export function getPathFromRef(ref: Ref) {
+	return (
+		(ref as Document)?.__meta__?.path ??
+		(ref as Reference).path ??
+		trimPath(ref as string)
+	);
+}
+
+export function restrictTo(type: 'col' | 'doc', ref: Ref) {
+	const isDoc = type === 'doc';
+	const path = getPathFromRef(ref);
+	if (isDoc ? !isDocPath(path) : !isColPath(path))
+		throw Error(
+			`You are trying to access a method reserved for ${
+				isDoc ? 'Documents' : 'Collections'
+			}, on a ${isDoc ? 'Collection' : 'Document'}`
+		);
+
+	return path;
 }
 
 /** Returns true if an object is a "raw" firebase document */
@@ -32,16 +74,6 @@ export function isRawDocument(document: any): boolean {
 	}
 
 	return true;
-}
-
-/** Checks if a value is a Reference to a Document */
-export function isDocReference(val: any): boolean {
-	return val instanceof Reference && !val.isCollection;
-}
-
-/** Returns true if a value is a Reference to a Collection */
-export function isColReference(val: any): boolean {
-	return val instanceof Reference && val.isCollection;
 }
 
 /** Checks if a value is a number that is not negative and is an integer */
@@ -87,7 +119,11 @@ export function getKeyPaths(object: any, parentPath?: string): string[] {
 
 		if (object[key] instanceof Transform) continue;
 
-		if (typeof object[key] === 'object' && !Array.isArray(object[key])) {
+		if (
+			object[key] !== null &&
+			typeof object[key] === 'object' &&
+			!Array.isArray(object[key])
+		) {
 			mask = mask.concat(getKeyPaths(object[key], keyPath));
 			continue;
 		}
@@ -99,7 +135,7 @@ export function getKeyPaths(object: any, parentPath?: string): string[] {
 }
 
 /** compile options object into firebase valid api arguments object */
-export function compileOptions(options: CrudOptions, obj: any) {
+export function compileOptions(options: CrudOptions, obj?: any) {
 	const compiled: any = {};
 
 	for (let [key, value] of Object.entries(options)) {
@@ -112,6 +148,7 @@ export function compileOptions(options: CrudOptions, obj: any) {
 				compiled.currentDocument[key] = value;
 				break;
 			case 'updateMask':
+				if (!obj) break;
 				if (value) compiled.updateMask = { fieldPaths: getKeyPaths(obj) };
 				break;
 			default:
@@ -232,6 +269,7 @@ export function encode(
 	const map: any = { fields: {} };
 
 	for (const key of keys) {
+		if (object[key] === undefined) continue;
 		const value = object[key];
 		const path = parentPath ? `${parentPath}.${key}` : key;
 

@@ -393,7 +393,7 @@ describe('compileOptions()', () => {
 				updateTime: 'utf-date-here',
 				updateMask: true
 			},
-			{ one: '1', two: '2', three: '3' }
+			{ one: '1', two: null, three: undefined }
 		);
 
 		const expectedWithUpdateMask = {
@@ -408,7 +408,7 @@ describe('compileOptions()', () => {
 
 		const withoutPreconditions = compileOptions(
 			{ updateMask: ['one', 'two', 'three'] },
-			{ one: '1', two: '2', three: '3' }
+			{ one: '1', two: null, three: undefined }
 		);
 
 		const expectedWithoutPreconditions = {

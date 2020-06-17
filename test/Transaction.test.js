@@ -48,7 +48,7 @@ describe('Transaction', () => {
 
 			expect(tx.writes).toEqual([{ update: rawDoc }]);
 			expect(() => tx.set(col)).toThrow(
-				'Expected a Document, Reference or a string path pointing to a document.'
+				'You are trying to access a method reserved for Documents, on a Collection'
 			);
 		});
 
@@ -59,7 +59,7 @@ describe('Transaction', () => {
 
 			expect(tx.writes).toEqual([{ update: rawDoc }]);
 			expect(() => tx.set('col')).toThrow(
-				'Expected a Document, Reference or a string path pointing to a document.'
+				'You are trying to access a method reserved for Documents, on a Collection'
 			);
 		});
 
@@ -105,7 +105,7 @@ describe('Transaction', () => {
 			]);
 
 			expect(() => tx.update(col, doc)).toThrow(
-				'Expected a Document, Reference or a string path pointing to a document.'
+				'You are trying to access a method reserved for Documents, on a Collection'
 			);
 		});
 
@@ -123,7 +123,7 @@ describe('Transaction', () => {
 			]);
 
 			expect(() => tx.update('col')).toThrow(
-				'Expected a Document, Reference or a string path pointing to a document.'
+				'You are trying to access a method reserved for Documents, on a Collection'
 			);
 		});
 
@@ -160,7 +160,7 @@ describe('Transaction', () => {
 
 			expect(tx.writes).toEqual([{ delete: rawDoc.name }]);
 			expect(() => tx.delete(col)).toThrow(
-				'Expected a Document, Reference or a string path pointing to a document.'
+				'You are trying to access a method reserved for Documents, on a Collection'
 			);
 		});
 
@@ -171,7 +171,7 @@ describe('Transaction', () => {
 
 			expect(tx.writes).toEqual([{ delete: rawDoc.name }]);
 			expect(() => tx.delete('col')).toThrow(
-				'Expected a Document, Reference or a string path pointing to a document.'
+				'You are trying to access a method reserved for Documents, on a Collection'
 			);
 		});
 

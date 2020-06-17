@@ -6,6 +6,7 @@ const db = {
 };
 
 export default {
+	undefined: undefined,
 	null: null,
 	boolean: false,
 	integer: 42,

@@ -1,16 +1,8 @@
 import { Database } from './Database';
-import Transform from './Transform';
 import { Query } from './Query';
-import { Document, FirebaseMap } from './Document';
+import { Document } from './Document';
 import { List } from './List';
-import {
-	compileOptions,
-	trimPath,
-	isDocPath,
-	objectToQuery,
-	encode,
-	fid
-} from './utils';
+import { trimPath, isColPath, objectToQuery, restrictTo } from './utils';
 
 export interface CrudOptions {
 	[key: string]: any;
@@ -78,7 +70,7 @@ export class Reference {
 
 	/** Returns true if this reference is a collection */
 	get isCollection() {
-		return this.path !== '' && !isDocPath(this.path);
+		return isColPath(this.path);
 	}
 
 	/** Returns a reference to the specified child path */
@@ -90,80 +82,19 @@ export class Reference {
 		return new Reference(`${this.path}/${path}`, this.db);
 	}
 
-	/**
-	 * Helper that handles Transforms in objects.
-	 * If the object has a transform then a transaction will be made,
-	 * and a promise for the resulting document will be returned.
-	 * Else, if it doesn't have any Transforms then we return the parsed
-	 * document and let the caller handle the request.
-	 */
-	private transact(obj: object, options = {}): FirebaseMap | Promise<Document> {
-		if (typeof obj !== 'object')
-			throw Error(`The document argument is missing`);
-
-		const transforms: Transform[] = [];
-		const doc = encode(obj, transforms);
-		let ref: Reference = this;
-
-		// If this is a collections, then generate a name,
-		// and also make sure the doc doesn't exist.
-		if (this.isCollection) {
-			options = { ...options, currentDocument: { exists: false } };
-			ref = this.child(fid());
-		}
-
-		if (transforms.length === 0) return doc;
-
+	private async transact(
+		method: 'add' | 'set' | 'update' | 'delete',
+		obj: object,
+		options: CrudOptions = {}
+	) {
 		const tx = this.db.transaction();
-		// In 'createDocument' operations, the server computes the document ID.
-		// Transactions don't support 'createDocument' operations, therefore
-		// we need to generate it on the client.
-		// If you, like me, think this is a bad idea, the worry not(or less),
-		// its "virtually" impossible to have a clash.
-		doc.name = ref.name;
-		tx.writes.push(
-			{
-				update: doc,
-				...options
-			},
-			{
-				transform: {
-					document: ref.name,
-					fieldTransforms: transforms
-				}
-			}
-		);
-		tx.commit();
-		return ref.get();
+		const res = tx[method](this, obj, options);
+		return await tx.commit().then(() => res);
 	}
 
-	private restrict(colOrDoc: boolean) {
-		if (this.isCollection !== colOrDoc)
-			throw Error(
-				`Tried to access a ${colOrDoc ? 'collection' : 'document'} method`
-			);
-	}
-
-	/** Create a new document with a randomly generated id */
-	async add(obj: object, options = {}) {
-		this.restrict(true);
-		const doc = this.transact(obj, options);
-		if (doc instanceof Promise) return await doc;
-
-		return new Document(
-			await this.db.fetch(this.endpoint + objectToQuery(options), {
-				// If this is a path to a specific document use
-				// patch instead, else, create a new document.
-				method: 'POST',
-				body: JSON.stringify(doc)
-			}),
-			this.db
-		);
-	}
-
-	/** returns all documents in the collection */
+	/** Returns all documents in the collection */
 	async list(options?: object) {
-		this.restrict(true);
+		restrictTo('col', this);
 		return new List(
 			await this.db.fetch(this.endpoint + objectToQuery(options)),
 			this,
@@ -172,56 +103,42 @@ export class Reference {
 	}
 
 	/** Returns the document of this reference. */
-	async get(options?: object) {
-		this.restrict(false);
+	async get(options: CrudOptions = {}) {
+		restrictTo('doc', this);
+
 		return new Document(
 			await this.db.fetch(this.endpoint + objectToQuery(options)),
 			this.db
 		);
 	}
 
+	/** Create a new document with a randomly generated id */
+	async add(obj: object, options: CrudOptions = {}) {
+		restrictTo('col', this);
+		return this.transact('add', obj, options);
+	}
+
 	/** Create a new document or overwrites an existing one matching this reference. */
-	async set(obj: object, options = {}) {
-		return this.update(obj, {
-			updateMask: false,
-			exists: undefined,
-			...options
-		});
+	async set(obj: object, options: CrudOptions = {}) {
+		restrictTo('doc', this);
+		return this.transact('set', obj, options);
 	}
 
 	/** Updates a document while ignoring all missing fields in the provided object. */
-	async update(obj: object, options = {}): Promise<Document> {
-		this.restrict(false);
-		options = compileOptions(
-			{
-				updateMask: true,
-				exists: true,
-				...options
-			},
-			obj
-		);
-
-		const doc = this.transact(obj, options);
-		if (doc instanceof Promise) return await doc;
-
-		return new Document(
-			await this.db.fetch(this.endpoint + objectToQuery(options), {
-				method: 'PATCH',
-				body: JSON.stringify(doc)
-			}),
-			this.db
-		);
+	async update(obj: object, options: CrudOptions = {}) {
+		restrictTo('doc', this);
+		return this.transact('update', obj, options);
 	}
 
 	/** Deletes the referenced document from the database. */
-	async delete() {
-		this.restrict(false);
-		return void (await this.db.fetch(this.endpoint, { method: 'DELETE' }));
+	async delete(options: CrudOptions = {}) {
+		restrictTo('doc', this);
+		return this.transact('delete', options);
 	}
 
 	/** Queries the child documents/collections of this reference. */
 	query(options = {}) {
-		this.restrict(true);
+		restrictTo('col', this);
 
 		return new Query({
 			from: this,
