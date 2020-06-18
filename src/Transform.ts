@@ -1,15 +1,19 @@
 import { encodeValue } from './utils';
 
+/** @private */
 function isNumber(v: any) {
 	return typeof v === 'number' && !isNaN(v - v);
 }
 
+/** @private */
 type validator = (v: any) => boolean;
 
+/** @private */
 interface TransformsMap {
 	[key: string]: [string, validator?];
 }
 
+/** @private */
 const transformsMap: TransformsMap = {
 	serverTimestamp: ['setToServerValue'],
 	increment: ['increment', isNumber],
@@ -19,7 +23,7 @@ const transformsMap: TransformsMap = {
 	removeFromArray: ['removeAllFromArray', Array.isArray]
 };
 
-type transform =
+type TransformName =
 	/** Is replaces by the server with the time the request was processed */
 	| 'serverTimestamp'
 	/** The server will increment this field by the given amount */
@@ -54,7 +58,7 @@ export default class Transform {
 	 * @param value when applicable, the value will be used.
 	 * for example when using `increment` the value will be the number to increment by.
 	 */
-	constructor(name: transform, value: number | any[]) {
+	constructor(name: TransformName, value: number | any[]) {
 		if (!(name in transformsMap))
 			throw Error(`Invalid transform name: "${name}"`);
 		const [transformName, validator] = transformsMap[name];

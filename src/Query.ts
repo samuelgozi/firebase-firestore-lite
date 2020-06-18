@@ -53,7 +53,8 @@ interface QueryOptions {
 	limit?: number;
 }
 
-const operators = {
+/** @private */
+const operatorsMap = {
 	'<': 'LESS_THAN',
 	'<=': 'LESS_THAN_OR_EQUAL',
 	'>': 'GREATER_THAN',
@@ -64,8 +65,7 @@ const operators = {
 
 /**
  * Checks if a value is a valid filter array.
- * @param {*} filter A the value to check
- * @returns {boolean} True if the value is a valid filter.
+ * @private
  */
 function validateFilter(filter: any): void {
 	if (!Array.isArray(filter) || filter.length !== 3)
@@ -73,16 +73,17 @@ function validateFilter(filter: any): void {
 
 	const [fieldPath, op, value] = filter;
 	if (typeof fieldPath !== 'string') throw Error('Invalid field path');
-	if (!(op in operators)) throw Error('Invalid operator');
+	if (!(op in operatorsMap)) throw Error('Invalid operator');
 	if ((value === null || Number.isNaN(value)) && filter[1] !== '==')
 		throw Error('Null and NaN can only be used with the == operator');
 	if (value === undefined) throw Error('Invalid comparative value');
 }
 
-/*
+/**
  * A map of functions used to encode each argument for a query.
  * Each function receives the Library arguments and returns an object
  * that will be converted to Json and sent to the Firestore REST API.
+ * @private
  */
 const encoders = {
 	/**
@@ -108,7 +109,7 @@ const encoders = {
 		return {
 			fieldFilter: {
 				field: { fieldPath },
-				op: operators[op],
+				op: operatorsMap[op],
 				value: encodeValue(value)
 			}
 		};
@@ -150,7 +151,8 @@ const encoders = {
 	}
 };
 
-const options = [
+/** @private */
+const queryOptions = [
 	'select',
 	'from',
 	'where',
@@ -177,7 +179,7 @@ export class Query {
 
 	constructor(init = {} as QueryOptions) {
 		// Loop through all the valid options, validate them and then save them.
-		for (const option of options) {
+		for (const option of queryOptions) {
 			const optionValue = init[option];
 
 			if (option in init) {

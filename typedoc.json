@@ -1,0 +1,6 @@
+{
+	"mode": "file",
+	"out": "docs",
+	"theme": "minimal",
+	"excludePrivate": true
+}

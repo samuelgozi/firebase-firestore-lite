@@ -5,20 +5,30 @@ import { FirebaseDocument, FirebaseMap } from './Document';
 import { Database } from './Database';
 import { Document } from './Document';
 
-// Used for generating random fids.
+/**
+ * Used for generating random fids.
+ * @private
+ */
 const validChars =
 	'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890';
 
-// General type that can allow to get the full Document Name
 export type Ref = Reference | Document | string;
+
+/** @private */
 type RefType = 'doc' | 'col';
 
-/** Trims spaces and slashes from a path */
+/**
+ * Trims spaces and slashes from a path
+ * @private
+ */
 export function trimPath(path: string) {
 	return path.trim().replace(/^\/?/, '').replace(/\/?$/, '');
 }
 
-/** Returns true if a variable is a path that points to a collection */
+/**
+ * Returns true if a variable is a path that points to a collection
+ * @private
+ */
 export function isPath(type: RefType, s: any): boolean {
 	return (
 		typeof s === 'string' &&
@@ -27,7 +37,10 @@ export function isPath(type: RefType, s: any): boolean {
 	);
 }
 
-/** Checks if a value is a Reference to a Document */
+/**
+ * Checks if a value is a Reference to a Document
+ * @private
+ */
 export function isRef(type: RefType, val: any): boolean {
 	return (
 		val instanceof Reference &&
@@ -35,6 +48,7 @@ export function isRef(type: RefType, val: any): boolean {
 	);
 }
 
+/** @private */
 export function isRefType(ref: any): boolean {
 	return (
 		ref instanceof Reference ||
@@ -43,6 +57,7 @@ export function isRefType(ref: any): boolean {
 	);
 }
 
+/** @private */
 export function getPathFromRef(ref: Ref) {
 	if (!isRefType(ref))
 		throw TypeError(
@@ -56,6 +71,7 @@ export function getPathFromRef(ref: Ref) {
 	);
 }
 
+/** @private */
 export function restrictTo(type: RefType, ref: Ref) {
 	const isDoc = type === 'doc';
 	const path = getPathFromRef(ref);
@@ -69,7 +85,10 @@ export function restrictTo(type: RefType, ref: Ref) {
 	return path;
 }
 
-/** Returns true if an object is a "raw" firebase document */
+/**
+ * Returns true if an object is a "raw" firebase document
+ * @private
+ */
 export function isRawDocument(document: any): boolean {
 	if (typeof document !== 'object') return false;
 
@@ -83,12 +102,18 @@ export function isRawDocument(document: any): boolean {
 	return true;
 }
 
-/** Checks if a value is a number that is not negative and is an integer */
+/**
+ * Checks if a value is a number that is not negative and is an integer
+ * @private
+ */
 export function isPositiveInteger(val: any): boolean {
 	return Number.isInteger(val) && val >= 0;
 }
 
-/** Converts an Object to a URI query String */
+/**
+ * Converts an Object to a URI query String
+ * @private
+ */
 export function objectToQuery(obj: any = {}, parentProp?: string): string {
 	const params = [];
 	const encode = encodeURIComponent;
@@ -117,7 +142,10 @@ export function objectToQuery(obj: any = {}, parentProp?: string): string {
 	return (!parentProp && params.length ? '?' : '') + params.join('&');
 }
 
-/** Returns an array of keyPaths of an object but skips over arrays values */
+/**
+ * Returns an array of keyPaths of an object but skips over arrays values
+ * @private
+ */
 export function getKeyPaths(object: any, parentPath?: string): string[] {
 	let mask: string[] = [];
 
@@ -141,7 +169,10 @@ export function getKeyPaths(object: any, parentPath?: string): string[] {
 	return mask;
 }
 
-/** compile options object into firebase valid api arguments object */
+/**
+ * Compile options object into firebase valid api arguments object
+ * @private
+ */
 export function compileOptions(options: CrudOptions, obj?: any) {
 	const compiled: any = {};
 
@@ -166,7 +197,10 @@ export function compileOptions(options: CrudOptions, obj?: any) {
 	return compiled;
 }
 
-/** Decodes a Firebase Value into a JS one */
+/**
+ * Decodes a Firebase Value into a JS one
+ * @private
+ */
 function decodeValue(value: any, db: Database) {
 	// Get the value type.
 	const type = Object.keys(value)[0];
@@ -211,7 +245,10 @@ function decodeValue(value: any, db: Database) {
 	throw Error(`Invalid Firestore value_type "${type}"`);
 }
 
-/** Decodes a map into a JS object */
+/**
+ * Decodes a Firebase map into a JS object
+ * @private
+ */
 export function decode(map: FirebaseMap | FirebaseDocument, db: Database) {
 	if (db === undefined) throw Error('Argument "db" is required but missing');
 
@@ -223,7 +260,10 @@ export function decode(map: FirebaseMap | FirebaseDocument, db: Database) {
 	return object;
 }
 
-/** Encodes a JS variable into a Firebase Value */
+/**
+ * Encodes a JS variable into a Firebase Value
+ * @private
+ */
 export function encodeValue(
 	value: any,
 	transforms?: Transform[],
@@ -263,7 +303,10 @@ export function encodeValue(
 	return { [valueType]: value };
 }
 
-/** Converts an object into a write instruction */
+/**
+ * Converts a Javascript object into a write instruction
+ * @private
+ */
 export function encode(
 	object: any,
 	transforms?: Transform[],
@@ -295,7 +338,10 @@ export function encode(
 	return map;
 }
 
-/** Generates 22 chars long random alphanumerics unique identifiers */
+/**
+ * Generates 22 chars long random alphanumerics unique identifiers
+ * @private
+ */
 export function fid() {
 	const randBytes = crypto.getRandomValues(new Uint8Array(20));
 	return Array.from(randBytes)

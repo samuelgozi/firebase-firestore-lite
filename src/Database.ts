@@ -3,6 +3,7 @@ import { Document } from './Document';
 import { isPath, isRef, getPathFromRef, restrictTo } from './utils';
 import { Transaction } from './Transaction';
 
+/** @private */
 async function handleApiResponse(res: Response) {
 	if (!res.ok) {
 		const data = await res.json();

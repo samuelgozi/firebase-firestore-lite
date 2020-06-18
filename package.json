@@ -18,6 +18,7 @@
 		"build": "npm run cleanup && tsc --emitDeclarationOnly && babel src --out-dir dist --extensions \".ts\"",
 		"lint": "eslint . --ext .ts",
 		"test": "jest",
+		"doc": "typedoc",
 		"prepublishOnly": "tsc"
 	},
 	"devDependencies": {
@@ -36,6 +37,7 @@
 		"firebase-auth-lite": "^0.8.2",
 		"jest": "^26.0.1",
 		"jest-fetch-mock": "^3.0.3",
+		"typedoc": "^0.17.7",
 		"typescript": "^3.9.3"
 	}
 }
