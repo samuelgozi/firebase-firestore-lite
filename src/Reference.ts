@@ -1,3 +1,9 @@
+import { Database } from './Database';
+import { Query } from './Query';
+import { Document } from './Document';
+import { List } from './List';
+import { trimPath, isPath, objectToQuery, restrictTo } from './utils';
+
 export interface CrudOptions {
 	[key: string]: any;
 	/**
@@ -101,7 +107,7 @@ export class Reference {
 	async get(options: CrudOptions = {}) {
 		restrictTo('doc', this);
 
-    return new Document(
+		return new Document(
 			await this.db.fetch(this.endpoint + objectToQuery(options)),
 			this.db
 		);
