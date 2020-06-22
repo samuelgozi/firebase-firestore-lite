@@ -9,6 +9,7 @@ jobs:
         with:
           node-version: '12'
       - name: Build with typescript
+        run: |
           npm install
           npm run build
       - name: Generate coverage report
