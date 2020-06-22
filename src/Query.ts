@@ -319,8 +319,7 @@ export class Query {
 		);
 
 		if (results.length === 1 && !results[0].document) return [];
-
-		return results.map(result => new Document(result.document, this.db));
+		return results.map((result: any) => new Document(result.document, this.db));
 	}
 
 	toJSON() {

@@ -5,24 +5,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-       - uses: actions/setup-node@v2-beta
-         with:
-           node-version: '14'
-       - name: TypeScript Error Reporter
-         uses: andoshin11/typescript-error-reporter-action@v1.0.2
-       - name: Generate coverage report
-       - name: Build with typescript
-         run: |
-           npm install
-           npm run tsc
-       - name: Generate coverage report
-         run: |
-           npm i codecov -g
-           npm run test
-           codecov
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.2
+      - uses: actions/setup-node@v2-beta
         with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          flags: unittests
-          name: codecov-umbrella
+          node-version: '14'
+      - name: TypeScript Error Reporter
+        uses: andoshin11/typescript-error-reporter-action@v1.0.2
+      - name: Generate coverage report
+      - name: Build with typescript
+        run: |
+          npm install
+          npm run tsc
+      - name: Generate coverage report
+        run: |
+          npm i codecov -g
+          npm run test
+          codecov
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.0.2
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        flags: unittests
+        name: codecov-umbrella
