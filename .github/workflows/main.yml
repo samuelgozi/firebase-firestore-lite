@@ -11,7 +11,7 @@ jobs:
       - name: Build with typescript
         run: |
           npm install
-          npm run tsc
+          npm run build
       - name: Generate coverage report
         run: |
           npm i codecov -g
