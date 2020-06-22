@@ -118,7 +118,6 @@ export function objectToQuery(obj: any = {}, parentProp?: string): string {
 			val && params.push(val);
 			continue;
 		}
-
 		params.push(`${propPath}=${encode(obj[prop])}`);
 	}
 
