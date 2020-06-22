@@ -1,16 +1,32 @@
-import Database from './mod';
-import Query from './Query';
-import { Document, FirebaseDocument, FirebaseMap } from './Document';
+import { Database } from './Database';
+import { Query } from './Query';
+import { Document } from './Document';
 import { List } from './List';
-import {
-	trimPath,
-	isDocPath,
-	objectToQuery,
-	encode,
-	getKeyPaths
-} from './utils';
+import { trimPath, isPath, objectToQuery, restrictTo } from './utils';
 
-export default class Reference {
+export interface CrudOptions {
+	[key: string]: any;
+	/**
+	 * When set to true, the update will only patch the given
+	 * object properties instead of overwriting the whole document.
+	 */
+	updateMask?: boolean;
+	/** An array of the key paths to return back after the operation */
+	mask?: string[];
+	/**
+	 * When set to true, the target document must exist.
+	 * When set to false, the target document must not exist.
+	 * When undefined, it doesn't matter.
+	 */
+	exists?: boolean;
+	/**
+	 * When set, the target document must exist and have been last updated at that time.
+	 * A timestamp in RFC3339 UTC "Zulu" format, accurate to nanoseconds.
+	 */
+	updateTime?: string;
+}
+
+export class Reference {
 	/** The ID of the document inside the collection */
 	id: string;
 	/** The path to the document relative to the database root */
@@ -22,13 +38,14 @@ export default class Reference {
 	readonly endpoint: string;
 
 	constructor(path: string, readonly db: Database) {
-		if (db === undefined) throw Error('Argument "db" is required but missing');
+		if (typeof path !== 'string')
+			throw Error('The "path" argument should be a string');
 
 		// Normalize the path by removing slashes from
 		// the beginning or the end and trimming spaces.
 		path = trimPath(path);
 
-		this.id = path.split('/').pop();
+		this.id = path.split('/').pop() ?? '';
 		this.path = path;
 		this.name = `${db.rootPath}/${path}`;
 		this.endpoint = `${db.endpoint}/${path}`;
@@ -54,11 +71,11 @@ export default class Reference {
 
 	/** Returns true if this reference is a collection */
 	get isCollection() {
-		return this.path !== '' && !isDocPath(this.path);
+		return isPath('col', this.path);
 	}
 
 	/** Returns a reference to the specified child path */
-	child(path) {
+	child(path: string) {
 		// Remove starting forward slash
 		path = path.replace(/^\/?/, '');
 
@@ -66,120 +83,63 @@ export default class Reference {
 		return new Reference(`${this.path}/${path}`, this.db);
 	}
 
-	/**
-	 * Fetches the collection/document that this reference refers to.
-	 * Will return a Document instance if it is a document, and a List instance if it is a collection.
-	 */
-	async get(options?: object) {
-		const data = await this.db.fetch(this.endpoint + objectToQuery(options));
-		return this.isCollection
-			? new List(data, this, options)
-			: new Document(data, this.db);
-	}
-
-	/**
-	 * Helper that handles Transforms in objects.
-	 * If the object has a transform then a transaction will be made,
-	 * and a promise for the resulting document will be returned.
-	 * Else, if it doesn't have any Transforms then we return the parsed
-	 * document and let the caller handle the request.
-	 */
-	private handleTransforms(
+	private async transact(
+		method: 'add' | 'set' | 'update' | 'delete',
 		obj: object,
-		update = false
-	): FirebaseMap | Promise<Document> {
-		if (typeof obj !== 'object')
-			throw Error(`"${update ? 'update' : 'set'}" received no arguments`);
-		const transforms = [];
-		const doc = encode(obj, transforms);
-
-		if (transforms.length === 0) return doc;
-
-		if (this.isCollection && transforms.length)
-			throw Error(
-				"Transforms can't be used when creating documents with server generated IDs"
-			);
-
+		options: CrudOptions = {}
+	) {
 		const tx = this.db.transaction();
-		(doc as FirebaseDocument).name = this.name;
-		tx.writes.push(
-			{
-				update: doc,
-				updateMask: update ? { fieldPaths: getKeyPaths(obj) } : undefined,
-				currentDocument: update ? { exists: true } : undefined
-			},
-			{
-				transform: {
-					document: this.name,
-					fieldTransforms: transforms
-				}
-			}
-		);
-		return tx.commit().then(() => this.get()) as Promise<Document>;
+		const res = tx[method](this, obj, options);
+		return await tx.commit().then(() => res);
 	}
 
-	/**
-	 * Create a new document or overwrites an existing one matching this reference.
-	 * Will throw is the reference points to a collection.
-	 * @returns {Document} The newly created/updated document.
-	 */
-	async set(obj: any) {
-		const doc = this.handleTransforms(obj);
-		if (doc instanceof Promise) return await doc;
+	/** Returns all documents in the collection */
+	async list(options?: object) {
+		restrictTo('col', this);
+		return new List(
+			await this.db.fetch(this.endpoint + objectToQuery(options)),
+			this,
+			options
+		);
+	}
+
+	/** Returns the document of this reference. */
+	async get(options: CrudOptions = {}) {
+		restrictTo('doc', this);
 
 		return new Document(
-			await this.db.fetch(this.endpoint, {
-				// If this is a path to a specific document use
-				// patch instead, else, create a new document.
-				method: this.isCollection ? 'POST' : 'PATCH',
-				body: JSON.stringify(doc)
-			}),
+			await this.db.fetch(this.endpoint + objectToQuery(options)),
 			this.db
 		);
 	}
 
-	/**
-	 * Updates a document.
-	 * Will throw is the reference points to a collection.
-	 */
-	async update(obj: object, existsOptional = false): Promise<Document> {
-		if (this.isCollection) throw Error("Can't update a collection");
-
-		const doc = this.handleTransforms(obj, true);
-
-		const options: any = {
-			updateMask: {
-				fieldPaths: getKeyPaths(obj)
-			}
-		};
-
-		if (doc instanceof Promise) return await doc;
-		if (!existsOptional) options.currentDocument = { exists: true };
-
-		return new Document(
-			await this.db.fetch(this.endpoint + objectToQuery(options), {
-				method: 'PATCH',
-				body: JSON.stringify(doc)
-			}),
-			this.db
-		);
+	/** Create a new document with a randomly generated id */
+	async add(obj: object, options: CrudOptions = {}) {
+		restrictTo('col', this);
+		return this.transact('add', obj, options);
 	}
 
-	/**
-	 * Deletes the referenced document.
-	 */
-	delete() {
-		if (this.isCollection) throw Error("Can't delete a collection");
-		return this.db.fetch(this.endpoint, { method: 'DELETE' });
+	/** Create a new document or overwrites an existing one matching this reference. */
+	async set(obj: object, options: CrudOptions = {}) {
+		restrictTo('doc', this);
+		return this.transact('set', obj, options);
 	}
 
-	/**
-	 * Queries the child documents/collections of this reference.
-	 * @returns {List} The results of the query.
-	 */
+	/** Updates a document while ignoring all missing fields in the provided object. */
+	async update(obj: object, options: CrudOptions = {}) {
+		restrictTo('doc', this);
+		return this.transact('update', obj, options);
+	}
+
+	/** Deletes the referenced document from the database. */
+	async delete(options: CrudOptions = {}) {
+		restrictTo('doc', this);
+		return this.transact('delete', options);
+	}
+
+	/** Queries the child documents/collections of this reference. */
 	query(options = {}) {
-		if (!this.isCollection)
-			throw Error('Query can only be called on collections');
+		restrictTo('col', this);
 
 		return new Query({
 			from: this,

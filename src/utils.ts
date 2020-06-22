@@ -1,51 +1,102 @@
-import Reference from './Reference';
-import GeoPoint from './GeoPoint';
-import Transform from './Transform';
-import { FirebaseDocument, FirebaseMap } from './Document';
-import Database from './mod';
+import { Reference, CrudOptions } from './Reference.js';
+import GeoPoint from './GeoPoint.js';
+import Transform from './Transform.js';
+import { FirebaseDocument, FirebaseMap } from './Document.js';
+import { Database } from './Database.js';
+import { Document } from './Document.js';
 
-/** Trims spaces and slashes from a path */
+/**
+ * Used for generating random fids.
+ * @private
+ */
+const validChars =
+	'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890';
+
+export type Ref = Reference | Document | string;
+
+/** @private */
+type RefType = 'doc' | 'col';
+
+/**
+ * Trims spaces and slashes from a path
+ * @private
+ */
 export function trimPath(path: string) {
 	return path.trim().replace(/^\/?/, '').replace(/\/?$/, '');
 }
 
-/** Returns true if a variable is a path that points to a document */
-export function isDocPath(s: any): boolean {
+/**
+ * Returns true if a variable is a path that points to a collection
+ * @private
+ */
+export function isPath(type: RefType, s: any): boolean {
 	return (
-		typeof s === 'string' && s !== '' && trimPath(s).split('/').length % 2 === 0
+		typeof s === 'string' &&
+		s !== '' &&
+		trimPath(s).split('/').length % 2 === (type === 'doc' ? 0 : 1)
 	);
 }
 
-/** Returns true if an object is a "raw" firebase document */
-export function isRawDocument(document: any): boolean {
-	if (typeof document !== 'object') return false;
-
-	// A Firestore document must have these three keys.
-	// The fields key is optional.
-	// https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents
-	for (const fieldName of ['name', 'createTime', 'updateTime']) {
-		if (!(fieldName in document)) return false;
-	}
-
-	return true;
+/**
+ * Checks if a value is a Reference to a Document
+ * @private
+ */
+export function isRef(type: RefType, val: any): boolean {
+	return (
+		val instanceof Reference &&
+		(type === 'doc' ? !val.isCollection : val.isCollection)
+	);
 }
 
-/** Checks if a value is a Reference to a Document */
-export function isDocReference(val: any): boolean {
-	return val instanceof Reference && !val.isCollection;
+/** @private */
+export function isRefType(ref: any): boolean {
+	return (
+		ref instanceof Reference ||
+		ref instanceof Document ||
+		typeof ref === 'string'
+	);
 }
 
-/** Returns true if a value is a Reference to a Collection */
-export function isColReference(val: any): boolean {
-	return val instanceof Reference && val.isCollection;
+/** @private */
+export function getPathFromRef(ref: Ref) {
+	if (!isRefType(ref))
+		throw TypeError(
+			'Expected a Reference, Document or a path but got something else'
+		);
+
+	return (
+		(ref as Document)?.__meta__?.path ??
+		(ref as Reference).path ??
+		trimPath(ref as string)
+	);
 }
 
-/** Checks if a value is a number that is not negative and is an integer */
+/** @private */
+export function restrictTo(type: RefType, ref: Ref) {
+	const isDoc = type === 'doc';
+	const path = getPathFromRef(ref);
+	if (!isPath(type, path))
+		throw TypeError(
+			`You are trying to access a method reserved for ${
+				isDoc ? 'Documents' : 'Collections'
+			} with a ${isDoc ? 'Collection' : 'Document'}`
+		);
+
+	return path;
+}
+
+/**
+ * Checks if a value is a number that is not negative and is an integer
+ * @private
+ */
 export function isPositiveInteger(val: any): boolean {
 	return Number.isInteger(val) && val >= 0;
 }
 
-/** Converts an Object to a URI query String */
+/**
+ * Converts an Object to a URI query String
+ * @private
+ */
 export function objectToQuery(obj: any = {}, parentProp?: string): string {
 	const params = [];
 	const encode = encodeURIComponent;
@@ -67,7 +118,6 @@ export function objectToQuery(obj: any = {}, parentProp?: string): string {
 			val && params.push(val);
 			continue;
 		}
-
 		params.push(`${propPath}=${encode(obj[prop])}`);
 	}
 
@@ -75,18 +125,22 @@ export function objectToQuery(obj: any = {}, parentProp?: string): string {
 }
 
 /**
- * Returns an array of keyPaths of an object.
- * Skips over arrays values.
+ * Returns an array of keyPaths of an object but skips over arrays values
+ * @private
  */
-export function getKeyPaths(object: object, parentPath?: string): string[] {
-	let mask = [];
+export function getKeyPaths(object: any, parentPath?: string): string[] {
+	let mask: string[] = [];
 
 	for (const key in object) {
 		const keyPath = parentPath ? `${parentPath}.${key}` : key;
 
 		if (object[key] instanceof Transform) continue;
 
-		if (typeof object[key] === 'object' && !Array.isArray(object[key])) {
+		if (
+			object[key] !== null &&
+			typeof object[key] === 'object' &&
+			!Array.isArray(object[key])
+		) {
 			mask = mask.concat(getKeyPaths(object[key], keyPath));
 			continue;
 		}
@@ -97,7 +151,38 @@ export function getKeyPaths(object: object, parentPath?: string): string[] {
 	return mask;
 }
 
-/** Decodes a Firebase Value into a JS one */
+/**
+ * Compile options object into firebase valid api arguments object
+ * @private
+ */
+export function compileOptions(options: CrudOptions, obj?: any) {
+	const compiled: any = {};
+
+	for (let [key, value] of Object.entries(options)) {
+		if (value === undefined) continue;
+
+		switch (key) {
+			case 'exists':
+			case 'updateTime':
+				if (!compiled.currentDocument) compiled.currentDocument = {};
+				compiled.currentDocument[key] = value;
+				break;
+			case 'updateMask':
+				if (!obj) break;
+				if (value) compiled.updateMask = { fieldPaths: getKeyPaths(obj) };
+				break;
+			default:
+				compiled[key] = value;
+		}
+	}
+
+	return compiled;
+}
+
+/**
+ * Decodes a Firebase Value into a JS one
+ * @private
+ */
 function decodeValue(value: any, db: Database) {
 	// Get the value type.
 	const type = Object.keys(value)[0];
@@ -111,7 +196,9 @@ function decodeValue(value: any, db: Database) {
 			return Number(value);
 
 		case 'arrayValue':
-			return value.values ? value.values.map(val => decodeValue(val, db)) : [];
+			return value.values
+				? value.values.map((val: any) => decodeValue(val, db))
+				: [];
 
 		case 'mapValue':
 			return decode(value as FirebaseMap, db);
@@ -140,11 +227,14 @@ function decodeValue(value: any, db: Database) {
 	throw Error(`Invalid Firestore value_type "${type}"`);
 }
 
-/** Decodes a map into a JS object */
+/**
+ * Decodes a Firebase map into a JS object
+ * @private
+ */
 export function decode(map: FirebaseMap | FirebaseDocument, db: Database) {
 	if (db === undefined) throw Error('Argument "db" is required but missing');
 
-	const object = {};
+	const object: any = {};
 	for (const key in map.fields) {
 		object[key] = decodeValue(map.fields[key], db);
 	}
@@ -152,7 +242,10 @@ export function decode(map: FirebaseMap | FirebaseDocument, db: Database) {
 	return object;
 }
 
-/** Encodes a JS variable into a Firebase Value */
+/**
+ * Encodes a JS variable into a Firebase Value
+ * @private
+ */
 export function encodeValue(
 	value: any,
 	transforms?: Transform[],
@@ -192,19 +285,23 @@ export function encodeValue(
 	return { [valueType]: value };
 }
 
-/** Converts an object into a write instruction */
+/**
+ * Converts a Javascript object into a write instruction
+ * @private
+ */
 export function encode(
-	object: object,
-	transforms: Transform[],
+	object: any,
+	transforms?: Transform[],
 	parentPath?: string
 ): FirebaseMap {
 	const keys = Object.keys(object);
 
 	if (keys.length === 0) return {};
 
-	const map = { fields: {} };
+	const map: any = { fields: {} };
 
 	for (const key of keys) {
+		if (object[key] === undefined) continue;
 		const value = object[key];
 		const path = parentPath ? `${parentPath}.${key}` : key;
 
@@ -221,4 +318,15 @@ export function encode(
 	}
 
 	return map;
+}
+
+/**
+ * Generates 22 chars long random alphanumerics unique identifiers
+ * @private
+ */
+export function fid() {
+	const randBytes = crypto.getRandomValues(new Uint8Array(20));
+	return Array.from(randBytes)
+		.map(b => validChars[b % 63])
+		.join('');
 }

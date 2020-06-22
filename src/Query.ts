@@ -1,12 +1,7 @@
-import {
-	isDocReference,
-	isColReference,
-	isPositiveInteger,
-	encodeValue
-} from './utils';
-import { Document } from './Document';
-import Reference from './Reference';
-import Database from './mod';
+import { Document } from './Document.js';
+import { Reference } from './Reference.js';
+import { Database } from './Database.js';
+import { isRef, isPositiveInteger, encodeValue } from './utils.js';
 
 interface FromOption {
 	/** Reference to the collection */
@@ -19,7 +14,7 @@ type FilterOption = [
 	/** Property name */
 	string,
 	/** Operator */
-	'<' | '<=' | 'LESS_THAN_OR_EQUAL' | '>' | '>=' | '==' | 'contains',
+	'<' | '<=' | '>' | '>=' | '==' | 'contains',
 	/** The value to compare against */
 	any
 ];
@@ -39,6 +34,7 @@ interface CursorOption {
 }
 
 interface QueryOptions {
+	[key: string]: any;
 	/** The fields to return, leave empty to return the whole doc. */
 	select?: string[];
 	/** The collection to query, Should be set automatically if you are using `ref.query()` */
@@ -57,7 +53,8 @@ interface QueryOptions {
 	limit?: number;
 }
 
-const operators = {
+/** @private */
+const operatorsMap = {
 	'<': 'LESS_THAN',
 	'<=': 'LESS_THAN_OR_EQUAL',
 	'>': 'GREATER_THAN',
@@ -68,24 +65,25 @@ const operators = {
 
 /**
  * Checks if a value is a valid filter array.
- * @param {*} filter A the value to check
- * @returns {boolean} True if the value is a valid filter.
+ * @private
  */
-function validateFilter(filter) {
-	if (!Array.isArray(filter) || filter.length !== 3) return false;
+function validateFilter(filter: any): void {
+	if (!Array.isArray(filter) || filter.length !== 3)
+		throw Error('Filter missing arguments');
 
 	const [fieldPath, op, value] = filter;
 	if (typeof fieldPath !== 'string') throw Error('Invalid field path');
-	if (!(op in operators)) throw Error('Invalid operator');
+	if (!(op in operatorsMap)) throw Error('Invalid operator');
 	if ((value === null || Number.isNaN(value)) && filter[1] !== '==')
 		throw Error('Null and NaN can only be used with the == operator');
 	if (value === undefined) throw Error('Invalid comparative value');
 }
 
-/*
+/**
  * A map of functions used to encode each argument for a query.
  * Each function receives the Library arguments and returns an object
  * that will be converted to Json and sent to the Firestore REST API.
+ * @private
  */
 const encoders = {
 	/**
@@ -111,7 +109,7 @@ const encoders = {
 		return {
 			fieldFilter: {
 				field: { fieldPath },
-				op: operators[op],
+				op: operatorsMap[op],
 				value: encodeValue(value)
 			}
 		};
@@ -153,7 +151,8 @@ const encoders = {
 	}
 };
 
-const options = [
+/** @private */
+const queryOptions = [
 	'select',
 	'from',
 	'where',
@@ -167,7 +166,9 @@ const options = [
 /**
  * Query class that represents a Firestore query.
  */
-export default class Query {
+export class Query {
+	[key: string]: any;
+
 	private db: Database;
 	private parentDocument: Reference;
 	private options: any = {
@@ -178,7 +179,7 @@ export default class Query {
 
 	constructor(init = {} as QueryOptions) {
 		// Loop through all the valid options, validate them and then save them.
-		for (const option of options) {
+		for (const option of queryOptions) {
 			const optionValue = init[option];
 
 			if (option in init) {
@@ -193,7 +194,7 @@ export default class Query {
 					(option === 'where' && Array.isArray(optionValue[0])) ||
 					(option === 'orderBy' && Array.isArray(optionValue))
 				) {
-					optionValue.forEach((val, i) => {
+					optionValue.forEach((val: any, i: number) => {
 						// Use try/catch in order to provide context for the error.
 						try {
 							// Try to save the value.
@@ -240,7 +241,7 @@ export default class Query {
 		const collection = (val as FromOption).collection || val;
 		const { allDescendants } = val as FromOption;
 
-		if (!isColReference(collection))
+		if (!isRef('col', collection))
 			throw Error('Expected a reference to a collection');
 
 		if (allDescendants !== undefined && typeof allDescendants !== 'boolean')
@@ -271,7 +272,7 @@ export default class Query {
 		};
 
 		let { field: fieldPath = order, direction = dir } = order as OrderOption;
-		direction = dirMap[direction] as OrderOption['direction'];
+		direction = dirMap[direction] as 'asc' | 'desc';
 
 		if (typeof fieldPath !== 'string')
 			throw Error('"field" property needs to be a string');
@@ -283,13 +284,13 @@ export default class Query {
 	}
 
 	startAt(ref: QueryOptions['startAt']) {
-		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
+		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
 		this.options.startAt = ref;
 		return this;
 	}
 
 	endAt(ref: QueryOptions['endAt']) {
-		if (!isDocReference(ref)) throw Error('Expected a reference to a document');
+		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
 		this.options.endAt = ref;
 		return this;
 	}
@@ -318,18 +319,17 @@ export default class Query {
 		);
 
 		if (results.length === 1 && !results[0].document) return [];
-
-		return results.map(result => new Document(result.document, this.db));
+		return results.map((result: any) => new Document(result.document, this.db));
 	}
 
 	toJSON() {
-		const encoded = {};
+		const encoded: any = {};
 
 		for (const option in this.options) {
 			const optionValue = this.options[option];
 
 			if (option in encoders) {
-				encoded[option] = encoders[option](optionValue);
+				encoded[option] = (encoders as any)[option](optionValue);
 				continue;
 			}
 

@@ -1,8 +1,9 @@
-import { isRawDocument, decode } from './utils';
-import Database from './mod';
+import { decode } from './utils.js';
+import { Database } from './Database.js';
 
 export interface FirebaseMap {
 	/** The map's fields */
+	name?: string;
 	fields?: {
 		[key: string]: any;
 	};
@@ -42,11 +43,12 @@ export interface Meta {
  * data to the database.
  */
 export class Document {
+	[key: string]: any;
+	// @ts-ignore
 	__meta__: Meta;
 
 	constructor(rawDoc: FirebaseDocument, db: Database) {
 		if (db === undefined) throw Error('Argument "db" is required but missing');
-		if (!isRawDocument(rawDoc)) throw Error('Invalid Firestore Document');
 
 		const { name, createTime, updateTime } = rawDoc;
 		const meta = {

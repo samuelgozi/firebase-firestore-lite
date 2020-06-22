@@ -1,7 +1,7 @@
-import Database from '../src/mod.ts';
-import Reference from '../src/Reference.ts';
-import { Document } from '../src/Document.ts';
-import Transaction from '../src/Transaction.ts';
+import { Database } from '../src/Database';
+import { Reference } from '../src/Reference';
+import { Document } from '../src/Document';
+import { Transaction } from '../src/Transaction';
 
 describe('Constructor', () => {
 	test('Throws when `projectId` is missing', () => {
@@ -22,33 +22,51 @@ describe('Constructor', () => {
 			'https://firestore.googleapis.com/v1/projects/test-project/databases/db-name/documents'
 		);
 	});
+
+	test('Constructs the correct endpoint with custom host', () => {
+		const db = new Database({ projectId: 'test-project', host: 'localhost' });
+
+		expect(db.endpoint).toEqual(
+			'https://localhost/v1/projects/test-project/databases/(default)/documents'
+		);
+	});
+
+	test('Constructs the correct endpoint with ssl set to false', () => {
+		const db = new Database({
+			projectId: 'test-project',
+			host: 'localhost',
+			ssl: false
+		});
+
+		expect(db.endpoint).toEqual(
+			'http://localhost/v1/projects/test-project/databases/(default)/documents'
+		);
+	});
 });
 
 describe('batchGet', () => {
 	const db = new Database({ projectId: 'projectId' });
 
 	test('Throws when the array contains anything else than a doc', async () => {
-		const message =
-			'The array can only contain References or paths pointing to documents';
-		await expect(db.batchGet([123])).rejects.toThrow(message);
-		await expect(db.batchGet(['123'])).rejects.toThrow(message);
-		await expect(db.batchGet([db.reference('col/doc'), 123])).rejects.toThrow(
-			message
+		await expect(db.batchGet([123])).rejects.toThrow(
+			'Expected a Reference, Document or a path but got something else'
 		);
-		await expect(
-			db.batchGet([db.reference('col/doc/col'), 123])
-		).rejects.toThrow(message);
-		await expect(db.batchGet([db.reference('col/doc/col')])).rejects.toThrow(
-			message
+		await expect(db.batchGet(['123'])).rejects.toThrow(
+			'You are trying to access a method reserved for Documents with a Collection'
+		);
+		await expect(db.batchGet([db.ref('col/doc'), 123])).rejects.toThrow(
+			'Expected a Reference, Document or a path but got something else'
+		);
+		await expect(db.batchGet([db.ref('col/doc/col'), 123])).rejects.toThrow(
+			'You are trying to access a method reserved for Documents with a Collection'
+		);
+		await expect(db.batchGet([db.ref('col/doc/col')])).rejects.toThrow(
+			'You are trying to access a method reserved for Documents with a Collection'
 		);
 	});
 
 	test('Makes correct request', async () => {
-		const refs = [
-			db.reference('col/doc'),
-			db.reference('col/doc2'),
-			db.reference('col/doc3')
-		];
+		const refs = [db.ref('col/doc'), db.ref('col/doc2'), db.ref('col/doc3')];
 
 		fetch.mockResponse('[]');
 		await db.batchGet(refs);
@@ -86,7 +104,7 @@ describe('Reference', () => {
 		);
 		const ref = new Reference('col/doc', db);
 
-		expect(db.reference(doc)).toEqual(ref);
+		expect(db.ref(doc)).toEqual(ref);
 	});
 });
 

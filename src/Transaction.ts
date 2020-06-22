@@ -1,52 +1,60 @@
 import {
-	trimPath,
-	isDocPath,
-	getKeyPaths,
+	compileOptions,
 	encode,
-	isDocReference
-} from './utils';
-import { Document, FirebaseDocument } from './Document';
-import Reference from './Reference';
-import Database from './mod';
+	fid,
+	getPathFromRef,
+	Ref,
+	restrictTo
+} from './utils.js';
+import { Document, FirebaseDocument } from './Document.js';
+import { Reference, CrudOptions } from './Reference.js';
+import { Database } from './Database.js';
+import Transform from './Transform.js';
 
-type ref = Reference | Document | string;
-
-export default class Transaction {
-	writes = [];
-	preconditions = {};
+export class Transaction {
+	writes: any[] = [];
+	preconditions: any = {};
 
 	constructor(private db: Database) {}
 
 	/**
-	 * Validates that the arguments are of the correct types,
-	 * and that the documents are valid for this transaction.
-	 * Lastly we will return reliable data about the document.
+	 * Creates a write instruction and adds it into the
+	 * transaction writes array.
 	 * @private
 	 */
-	private handleArguments(
-		ref: ref,
-		data = {},
-		transforms?: []
-	): FirebaseDocument {
-		const isDoc = ref instanceof Document;
+	private write(ref: Ref, data: any, options: CrudOptions = {}) {
+		if (typeof data !== 'object') throw Error('The data argument is missing');
 
-		if (!isDocPath(ref) && !isDocReference(ref) && !isDoc)
-			throw Error(
-				'Expected a Document, Reference or a string path pointing to a document.'
-			);
+		const transforms: Transform[] = [];
+		const name = `${this.db.rootPath}/${getPathFromRef(ref)}`;
+		const precondition = this.preconditions[name];
+		// Compile the JS Object into a Firebase Document.
+		const doc = encode(
+			ref instanceof Document ? ref : data,
+			transforms
+		) as FirebaseDocument;
+		// Compile the options object into Firebase API arguments.
+		options = compileOptions(options, data);
+		// Check if there is any precondition created by getting a document
+		// as part of this transaction, and if there is then use it.
+		precondition && (options.currentDocument = precondition);
+		// Set the document's name
+		doc.name = name;
 
-		if (typeof data !== 'object')
-			throw Error('The data object should be an object');
+		// Add the static properties.
+		this.writes.push({
+			update: doc,
+			...options
+		});
 
-		const doc = encode(isDoc ? ref : data, transforms) as FirebaseDocument;
-
-		// Generate the name of the document.
-		doc.name = isDoc
-			? (ref as Document).__meta__.name
-			: (ref as Reference).name ||
-			  `${this.db.rootPath}/${trimPath(ref as string)}`;
-
-		return doc;
+		// Add the Transforms if available.
+		transforms.length &&
+			this.writes.push({
+				transform: {
+					document: doc.name,
+					fieldTransforms: transforms
+				}
+			});
 	}
 
 	/**
@@ -63,7 +71,7 @@ export default class Transaction {
 	async get(refs: Array<Reference | string>) {
 		const docs = await this.db.batchGet(refs);
 
-		docs.forEach(doc => {
+		docs.forEach((doc: any) => {
 			const { name, updateTime } = doc.__meta__ || { name: doc.__missing__ };
 			this.preconditions[name] = updateTime
 				? { updateTime }
@@ -73,60 +81,37 @@ export default class Transaction {
 		return docs;
 	}
 
-	/**
-	 * Adds a write operation to the transaction, will create a document if
-	 * it didn't exist before, and overwrite all fo the data if it did.
-	 */
-	set(ref: ref, data: any) {
-		const transforms = [];
-		const doc = this.handleArguments(ref, data, transforms as []);
-
-		this.writes.push({
-			update: doc,
-			currentDocument: this.preconditions[doc.name]
-		});
-
-		if (transforms.length !== 0)
-			this.writes.push({
-				transform: {
-					document: doc.name,
-					fieldTransforms: transforms
-				}
-			});
+	add(ref: string | Reference, data: any, options: CrudOptions = {}) {
+		const path = `${restrictTo('col', ref)}/${fid()}`;
+		this.write(path, data, { exists: false, ...options });
+		return this.db.ref(path);
 	}
 
-	/**
-	 * Adds a write operation to the transaction, will create a document if
-	 * it didn't exist before, and merge the data if it does exist.
-	 */
-	update(ref: ref, data: any) {
-		const transforms = [];
-		const doc = this.handleArguments(ref, data, transforms as []);
+	set(ref: Ref, data: any, options: CrudOptions = {}) {
+		restrictTo('doc', ref);
+		this.write(ref, data, options);
+	}
 
-		this.writes.push({
-			update: doc,
-			updateMask: { fieldPaths: getKeyPaths(data) },
-			currentDocument: this.preconditions[doc.name] || { exists: true }
-		});
-
-		if (transforms.length !== 0)
-			this.writes.push({
-				transform: {
-					document: doc.name,
-					fieldTransforms: transforms
-				}
-			});
+	update(ref: Ref, data: any, options: CrudOptions = {}) {
+		restrictTo('doc', ref);
+		this.write(ref, data, { exists: true, updateMask: true, ...options });
 	}
 
 	/**
 	 * Adds a delete operation to the transaction.
 	 */
-	delete(ref: ref) {
-		const name = this.handleArguments(ref).name;
+	delete(ref: Ref, options: CrudOptions = {}) {
+		const name = `${this.db.rootPath}/${restrictTo('doc', ref)}`;
+
+		options = compileOptions(options);
+		// Check if there is any precondition created by getting a document
+		// as part of this transaction, and if there is then use it.
+		this.preconditions[name] &&
+			(options.currentDocument = this.preconditions[name]);
 
 		this.writes.push({
 			delete: name,
-			currentDocument: this.preconditions[name]
+			...options
 		});
 	}
 

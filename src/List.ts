@@ -1,5 +1,5 @@
-import { Document, FirebaseDocument } from './Document';
-import Reference from './Reference';
+import { Document, FirebaseDocument } from './Document.js';
+import { Reference } from './Reference.js';
 
 interface FirebaseList {
 	documents: FirebaseDocument[];
@@ -46,6 +46,23 @@ export class List {
 
 	/** Fetches the next page in the query */
 	getNextPage() {
-		return this.ref.get(this.options) as Promise<List>;
+		return this.ref.list(this.options);
+	}
+
+	[Symbol.iterator]() {
+		// Use a new index for each iterator. This makes multiple
+		// iterations over the iterable safe for non-trivial cases,
+		// such as use of break or nested looping over the same iterable.
+		let index = 0;
+
+		return {
+			next: () => {
+				if (index < this.documents.length) {
+					return { value: this.documents[index++], done: false };
+				} else {
+					return { done: true };
+				}
+			}
+		};
 	}
 }

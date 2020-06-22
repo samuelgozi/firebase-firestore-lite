@@ -1,8 +1,8 @@
 import { Document } from '../src/Document.ts';
-import Reference from '../src/Reference.ts';
+import { Reference } from '../src/Reference.ts';
 import { List } from '../src/List.ts';
-import Query from '../src/Query.ts';
-import Database from '../src/mod.ts';
+import { Query } from '../src/Query.ts';
+import { Database } from '../src/Database.ts';
 import Transform from '../src/Transform.ts';
 
 const db = new Database({ projectId: 'projectId' });
@@ -13,11 +13,15 @@ const rawDoc = JSON.stringify({
 	updateTime: '2019-10-10T14:44:42.885653Z'
 });
 
+beforeEach(() => {
+	fetch.resetMocks();
+});
+
 describe('Constructor', () => {
-	test('Throws if database is missing', () => {
+	test('Throws if path is not a string', () => {
 		expect(() => {
-			new Reference('test');
-		}).toThrow('Argument "db" is required but missing');
+			new Reference(32);
+		}).toThrow('The "path" argument should be a string');
 	});
 
 	test('Path is normalized correctly', () => {
@@ -66,11 +70,11 @@ describe('Static properties', () => {
 		expect(new Reference('col/doc', db).isRoot).toEqual(false);
 	});
 
-	describe('Parent', () => {
+	describe('parent', () => {
 		test('Throws when reference point to root', () => {
 			expect(() => {
 				new Reference('/', db).parent;
-			}).toThrow();
+			}).toThrow("Can't get the parent of root");
 		});
 
 		test('Return reference to parent', () => {
@@ -83,7 +87,13 @@ describe('Static properties', () => {
 		});
 	});
 
-	describe('ParentCollection', () => {
+	describe('parentCollection', () => {
+		test('Throws when reference point to root', () => {
+			expect(() => {
+				new Reference('/', db).parentCollection;
+			}).toThrow("Can't get parent of a root collection");
+		});
+
 		test('Returns a reference to parent collection from a collection', () => {
 			const ref = new Reference('/col/doc/col/doc/col/doc/col', db);
 
@@ -105,7 +115,7 @@ describe('Static properties', () => {
 		});
 	});
 
-	test('IsCollection', () => {
+	test('isCollection', () => {
 		const ref = new Reference('/col/doc/col/doc/col/doc', db);
 		const ref2 = new Reference('/col/doc/col', db);
 		const ref3 = new Reference('/col/doc', db);
@@ -120,7 +130,7 @@ describe('Static properties', () => {
 	});
 });
 
-describe('Child', () => {
+describe('child()', () => {
 	test('Returns a reference', () => {
 		const ref = new Reference('/', db);
 		expect(ref.child('/')).toBeInstanceOf(Reference);
@@ -142,320 +152,225 @@ describe('Child', () => {
 	});
 });
 
-describe('Get', () => {
-	describe('Document', () => {
-		test('Requests the correct endpoint', async () => {
-			fetch.mockResponse(rawDoc);
-
-			await new Reference('/col/doc', db).get();
-			await new Reference('/col/doc/col/doc', db).get();
-
-			const endpoint = fetch.mock.calls[0][0];
-			const endpoint2 = fetch.mock.calls[1][0];
-
-			expect(endpoint).toEqual(`${db.endpoint}/col/doc`);
-			expect(endpoint2).toEqual(`${db.endpoint}/col/doc/col/doc`);
-		});
-
-		test('Returns an instance of Document', async () => {
-			const ref = new Reference('/col/doc', db);
-			fetch.mockResponse(rawDoc);
-			const doc = await ref.get();
-
-			expect(doc).toBeInstanceOf(Document);
-		});
+describe('list()', () => {
+	const mockFirestoreList = JSON.stringify({
+		documents: [JSON.parse(rawDoc)],
+		nextPageToken: 'token'
 	});
 
-	describe('Collection', () => {
-		const mockFirestoreList = JSON.stringify({
-			documents: [JSON.parse(rawDoc)],
-			nextPageToken: 'token'
-		});
+	test('throws when called on a document', async () => {
+		await expect(new Reference('col/doc', db).list()).rejects.toThrow(
+			'You are trying to access a method reserved for Collections with a Document'
+		);
+	});
 
-		test('Requests the correct endpoint', async () => {
-			fetch.resetMocks();
-			fetch.mockResponse(mockFirestoreList);
+	test('endpoint', async () => {
+		fetch.mockResponse(mockFirestoreList);
+		await new Reference('/col', db).list();
+		expect(fetch.mock.calls.length).toEqual(1);
+		expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}/col`);
+	});
 
-			await new Reference('/col', db).get();
-			await new Reference('/col/doc/col', db).get();
+	test('body', async () => {
+		fetch.mockResponse(mockFirestoreList);
+		await new Reference('/col', db).list();
+		expect(fetch.mock.calls[0][1]).toEqual(undefined);
+	});
 
-			const endpoint = fetch.mock.calls[0][0];
-			const endpoint2 = fetch.mock.calls[1][0];
-
-			expect(endpoint).toEqual(`${db.endpoint}/col`);
-			expect(endpoint2).toEqual(`${db.endpoint}/col/doc/col`);
-		});
-
-		test('Returns an instance of List', async () => {
-			const col = await new Reference('/col', db).get();
-			const col2 = await new Reference('/col/doc/col', db).get();
-
-			expect(col).toBeInstanceOf(List);
-			expect(col2).toBeInstanceOf(List);
-		});
+	test('returns an instance of List', async () => {
+		fetch.mockResponse(mockFirestoreList);
+		const col = await new Reference('/col', db).list();
+		expect(col).toBeInstanceOf(List);
 	});
 });
 
-describe('Set', () => {
-	describe('Requests the correct endpoint', () => {
-		test('Throws when no argument is provided', async () => {
-			await expect(new Reference('col/doc', db).set()).rejects.toThrow(
-				'"set" received no arguments'
-			);
-		});
-
-		test('New document(collection endpoint)', async () => {
-			fetch.resetMocks();
-			fetch.mockResponse(rawDoc);
-
-			await new Reference('col/doc/col', db).set({});
-			const mockCall = fetch.mock.calls[0];
-
-			expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc/col`);
-			expect(mockCall[1].method).toEqual('POST');
-		});
-
-		test('Patching a document', async () => {
-			fetch.resetMocks();
-			fetch.mockResponse(rawDoc);
-
-			await new Reference('col/doc', db).set({});
-			const mockCall = fetch.mock.calls[0];
-
-			expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc`);
-			expect(mockCall[1].method).toEqual('PATCH');
-		});
+describe('get()', () => {
+	test('throws when called on a collection', async () => {
+		await expect(new Reference('col', db).get()).rejects.toThrow(
+			'You are trying to access a method reserved for Documents with a Collection'
+		);
 	});
 
-	describe('Requests body includes the encoded object', () => {
-		test('New document(collection endpoint)', async () => {
-			fetch.resetMocks();
-			fetch.mockResponse(rawDoc);
+	test('endpoint', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col/doc', db).get();
 
-			await new Reference('col/doc', db).set({ one: 'one' });
-			const body = fetch.mock.calls[0][1].body;
+		/* Todo: add test with options */
 
-			expect(body).toEqual('{"fields":{"one":{"stringValue":"one"}}}');
-		});
-
-		test('Patching a document', async () => {
-			fetch.resetMocks();
-			fetch.mockResponse(rawDoc);
-
-			await new Reference('col/doc/col', db).set({ one: 'one' });
-			const body = fetch.mock.calls[0][1].body;
-
-			expect(body).toEqual('{"fields":{"one":{"stringValue":"one"}}}');
-		});
+		expect(fetch.mock.calls.length).toEqual(1);
+		expect(fetch.mock.calls[0][1]).toEqual(undefined);
+		expect(fetch.mock.calls[0][0]).toEqual(`${db.endpoint}/col/doc`);
 	});
 
-	describe('Transforms', () => {
-		test('Throws when called on collection with a Transform', async () => {
-			fetch.resetMocks();
-			fetch.mockResponses('{}', rawDoc);
+	test('body', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col/doc', db).get();
 
-			const promise = new Reference('col', db).set({
-				one: 'one',
-				two: 'two',
-				tran: new Transform('serverTimestamp')
-			});
+		expect(fetch.mock.calls[0][1]).toEqual(undefined);
+	});
 
-			await expect(promise).rejects.toThrow(
-				"Transforms can't be used when creating documents with server generated IDs"
-			);
-		});
+	test('Returns an instance of Document', async () => {
+		fetch.mockResponse(rawDoc);
+		const doc = await new Reference('col/doc', db).get();
 
-		test('Makes the correct requests', async () => {
-			fetch.resetMocks();
-			fetch.mockResponses('{}', rawDoc);
+		expect(doc).toBeInstanceOf(Document);
+	});
+});
 
-			await new Reference('col/doc', db).set({
-				one: 'one',
-				two: 'two',
-				tran: new Transform('serverTimestamp')
-			});
+describe('add()', () => {
+	test('throws when called on a document', async () => {
+		await expect(new Reference('col/doc', db).add()).rejects.toThrow(
+			'You are trying to access a method reserved for Collections with a Document'
+		);
+	});
 
-			expect(fetch.mock.calls.length).toEqual(2);
-			expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
-		});
+	test('endpoint', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col', db).add({ test: 'test' });
 
-		test('Transaction includes correct body', async () => {
-			fetch.resetMocks();
-			fetch.mockResponses('{}', rawDoc);
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
+	});
 
-			const ref = new Reference('col/doc', db);
+	test('body', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col', db).add({ test: 'test' });
 
-			await ref.set({
-				one: 'one',
-				two: 'two',
-				tran: new Transform('serverTimestamp')
-			});
-
-			const given = JSON.parse(fetch.mock.calls[0][1].body);
-			const expected = {
+		expect(fetch.mock.calls[0][1].body).toEqual(
+			JSON.stringify({
 				writes: [
 					{
 						update: {
-							name: ref.name,
-							fields: {
-								one: {
-									stringValue: 'one'
-								},
-								two: {
-									stringValue: 'two'
-								}
-							}
-						}
-					},
-					{
-						transform: {
-							document: ref.name,
-							fieldTransforms: [
-								{
-									fieldPath: 'tran',
-									setToServerValue: 'REQUEST_TIME'
-								}
-							]
-						}
+							fields: { test: { stringValue: 'test' } },
+							name:
+								'projects/projectId/databases/(default)/documents/col/abcdefghijklmnopqrst'
+						},
+						currentDocument: { exists: false }
 					}
 				]
-			};
-
-			expect(given).toEqual(expected);
-		});
+			})
+		);
 	});
 });
 
-describe('Update', () => {
-	test('Throws when no argument is provided', async () => {
-		await expect(new Reference('col/doc', db).update()).rejects.toThrow(
-			'"update" received no arguments'
+describe('set()', () => {
+	test('throws when called on a collection', async () => {
+		await expect(new Reference('col', db).set()).rejects.toThrow(
+			'You are trying to access a method reserved for Documents with a Collection'
 		);
 	});
 
-	test('Throws when the reference points to a collection', async () => {
-		await expect(new Reference('/col', db).update({})).rejects.toThrow(
-			"Can't update a collection"
+	test('throws when there are missing arguments', async () => {
+		await expect(new Reference('col/doc', db).set()).rejects.toThrow(
+			'The data argument is missing'
 		);
 	});
 
-	test('Requests the correct endpoint', async () => {
-		fetch.resetMocks();
+	test('endpoint', async () => {
 		fetch.mockResponse(rawDoc);
+		await new Reference('col', db).add({ test: 'test' });
 
-		await new Reference('/col/doc', db).update({});
-		await new Reference('/col/doc', db).update({ one: 'one', two: 'two' });
-
-		expect(fetch.mock.calls[0][0]).toEqual(
-			`${db.endpoint}/col/doc?currentDocument.exists=true`
-		);
-		expect(fetch.mock.calls[0][1].method).toEqual('PATCH');
-		expect(fetch.mock.calls[1][0]).toEqual(
-			`${db.endpoint}/col/doc?updateMask.fieldPaths=one&updateMask.fieldPaths=two&currentDocument.exists=true`
-		);
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
 	});
 
-	test('Requests body includes the encoded object', async () => {
-		fetch.resetMocks();
+	test('body', async () => {
 		fetch.mockResponse(rawDoc);
+		await new Reference('col/doc', db).set({ test: 'test' });
 
-		await new Reference('col/doc', db).update({ one: 'one' });
-		const body = fetch.mock.calls[0][1].body;
-
-		expect(body).toEqual(
+		expect(fetch.mock.calls[0][1].body).toEqual(
 			JSON.stringify({
-				fields: {
-					one: { stringValue: 'one' }
-				}
+				writes: [
+					{
+						update: {
+							fields: { test: { stringValue: 'test' } },
+							name: 'projects/projectId/databases/(default)/documents/col/doc'
+						}
+					}
+				]
+			})
+		);
+	});
+});
+
+describe('update()', () => {
+	test('throws when called on a collection', async () => {
+		await expect(new Reference('col', db).update()).rejects.toThrow(
+			'You are trying to access a method reserved for Documents with a Collection'
+		);
+	});
+
+	test('throws when there are missing arguments', async () => {
+		await expect(new Reference('col/doc', db).update()).rejects.toThrow(
+			'The data argument is missing'
+		);
+	});
+
+	test('endpoint', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col', db).add({ test: 'test' });
+
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
+	});
+
+	test('body', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col/doc', db).update({ test: 'test' });
+
+		expect(fetch.mock.calls[0][1].body).toEqual(
+			JSON.stringify({
+				writes: [
+					{
+						update: {
+							fields: { test: { stringValue: 'test' } },
+							name: 'projects/projectId/databases/(default)/documents/col/doc'
+						},
+						currentDocument: { exists: true },
+						updateMask: { fieldPaths: ['test'] }
+					}
+				]
+			})
+		);
+	});
+});
+
+describe('delete()', () => {
+	test('throws when called on a collection', async () => {
+		await expect(new Reference('col', db).delete()).rejects.toThrow(
+			'You are trying to access a method reserved for Documents with a Collection'
+		);
+	});
+
+	test('endpoint', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col', db).add({ test: 'test' });
+
+		expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
+		expect(fetch.mock.calls[0][1].method).toEqual('POST');
+	});
+
+	test('body', async () => {
+		fetch.mockResponse(rawDoc);
+		await new Reference('col/doc', db).delete({ test: 'test' });
+
+		expect(fetch.mock.calls[0][1].body).toEqual(
+			JSON.stringify({
+				writes: [
+					{
+						delete: 'projects/projectId/databases/(default)/documents/col/doc',
+						test: 'test'
+					}
+				]
 			})
 		);
 	});
 
-	describe('Transforms', () => {
-		test('Makes the correct requests', async () => {
-			fetch.resetMocks();
-			fetch.mockResponses('{}', rawDoc);
-
-			await new Reference('col/doc', db).update({
-				one: 'one',
-				two: 'two',
-				tran: new Transform('serverTimestamp')
-			});
-
-			expect(fetch.mock.calls.length).toEqual(2);
-			expect(fetch.mock.calls[0][0]).toEqual(db.endpoint + ':commit');
-		});
-
-		test('Transaction includes correct body', async () => {
-			fetch.resetMocks();
-			fetch.mockResponses('{}', rawDoc);
-
-			const ref = new Reference('col/doc', db);
-
-			await ref.update({
-				one: 'one',
-				two: 'two',
-				tran: new Transform('serverTimestamp')
-			});
-
-			const given = JSON.parse(fetch.mock.calls[0][1].body);
-			const expected = {
-				writes: [
-					{
-						update: {
-							name: ref.name,
-							fields: {
-								one: {
-									stringValue: 'one'
-								},
-								two: {
-									stringValue: 'two'
-								}
-							}
-						},
-						currentDocument: {
-							exists: true
-						},
-						updateMask: {
-							fieldPaths: ['one', 'two']
-						}
-					},
-					{
-						transform: {
-							document: ref.name,
-							fieldTransforms: [
-								{
-									fieldPath: 'tran',
-									setToServerValue: 'REQUEST_TIME'
-								}
-							]
-						}
-					}
-				]
-			};
-
-			expect(given).toEqual(expected);
-		});
-	});
-});
-
-describe('Remove', () => {
-	test('Throws when the reference points to a collection', () => {
-		expect(() => {
-			new Reference('/col', db).delete();
-		}).toThrow("Can't delete a collection");
-	});
-
-	test('Requests the correct endpoint', async () => {
-		fetch.resetMocks();
+	test('Returns nothing', async () => {
 		fetch.mockResponse('{}');
+		const ref = new Reference('col/doc', db);
 
-		await new Reference('/col/doc', db).delete();
-
-		const mockCall = fetch.mock.calls[0];
-
-		expect(mockCall[0]).toEqual(`${db.endpoint}/col/doc`);
-		expect(mockCall[1].method).toEqual('DELETE');
+		expect(await ref.delete()).toEqual(undefined);
 	});
 });
 
