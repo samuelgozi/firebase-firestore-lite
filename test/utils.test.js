@@ -64,46 +64,6 @@ describe('isPath()', () => {
 	});
 });
 
-describe('isRawDocument', () => {
-	test('Returns false when object is not a firebase doc', () => {
-		expect(
-			isRawDocument({
-				hi: 'there!'
-			})
-		).toEqual(false);
-
-		expect(
-			isRawDocument({
-				name: 'testing'
-			})
-		).toEqual(false);
-
-		expect(isRawDocument(new Date())).toEqual(false);
-		expect(isRawDocument([])).toEqual(false);
-		expect(isRawDocument('string')).toEqual(false);
-		expect(isRawDocument(123)).toEqual(false);
-	});
-
-	test('Returns true when the object has the required props', () => {
-		expect(
-			isRawDocument({
-				name: 'test',
-				createTime: 'test',
-				updateTime: 'test'
-			})
-		).toEqual(true);
-
-		expect(
-			isRawDocument({
-				name: 'test',
-				fields: '',
-				createTime: 'test',
-				updateTime: 'test'
-			})
-		).toEqual(true);
-	});
-});
-
 describe('isRef()', () => {
 	test('Documents', () => {
 		// random types.

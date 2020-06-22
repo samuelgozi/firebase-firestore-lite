@@ -25,16 +25,6 @@ const rawDoc = {
 };
 
 describe('Document instance', () => {
-	test('Throws with invalid documents', () => {
-		expect(() => new Document({}, db)).toThrow('Invalid Firestore Document');
-
-		const partialDoc = { name: 'one' };
-
-		expect(() => new Document(partialDoc, db)).toThrow(
-			'Invalid Firestore Document'
-		);
-	});
-
 	test('Throws when db is missing', () => {
 		expect(() => new Document(rawDoc)).toThrow(
 			'Argument "db" is required but missing'

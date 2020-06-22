@@ -86,23 +86,6 @@ export function restrictTo(type: RefType, ref: Ref) {
 }
 
 /**
- * Returns true if an object is a "raw" firebase document
- * @private
- */
-export function isRawDocument(document: any): boolean {
-	if (typeof document !== 'object') return false;
-
-	// A Firestore document must have these three keys.
-	// The fields key is optional.
-	// https://firebase.google.com/docs/firestore/reference/rest/v1beta1/projects.databases.documents
-	for (const fieldName of ['name', 'createTime', 'updateTime']) {
-		if (!(fieldName in document)) return false;
-	}
-
-	return true;
-}
-
-/**
  * Checks if a value is a number that is not negative and is an integer
  * @private
  */

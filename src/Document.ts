@@ -1,4 +1,4 @@
-import { isRawDocument, decode } from './utils.js';
+import { decode } from './utils.js';
 import { Database } from './Database.js';
 
 export interface FirebaseMap {
@@ -49,7 +49,6 @@ export class Document {
 
 	constructor(rawDoc: FirebaseDocument, db: Database) {
 		if (db === undefined) throw Error('Argument "db" is required but missing');
-		if (!isRawDocument(rawDoc)) throw Error('Invalid Firestore Document');
 
 		const { name, createTime, updateTime } = rawDoc;
 		const meta = {
