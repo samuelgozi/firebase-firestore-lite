@@ -10,12 +10,12 @@ jobs:
           node-version: '14'
       - name: Build with typescript
         run: |
-          npm install
-          npm run build
+          yarn install
+          yarn tsc
       - name: Generate coverage report
         run: |
-          npm i codecov -g
-          npm run test
+          yarn global add codecov
+          yarn test
           codecov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1.0.2
