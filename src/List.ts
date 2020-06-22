@@ -1,5 +1,5 @@
-import { Document, FirebaseDocument } from './Document';
-import { Reference } from './Reference';
+import { Document, FirebaseDocument } from './Document.js';
+import { Reference } from './Reference.js';
 
 interface FirebaseList {
 	documents: FirebaseDocument[];

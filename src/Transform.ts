@@ -1,4 +1,4 @@
-import { encodeValue } from './utils';
+import { encodeValue } from './utils.js';
 
 /** @private */
 function isNumber(v: any) {

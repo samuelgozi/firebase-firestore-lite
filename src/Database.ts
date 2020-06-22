@@ -1,7 +1,7 @@
-import { Reference } from './Reference';
-import { Document } from './Document';
-import { isPath, isRef, getPathFromRef, restrictTo } from './utils';
-import { Transaction } from './Transaction';
+import { Reference } from './Reference.js';
+import { Document } from './Document.js';
+import { isPath, isRef, getPathFromRef, restrictTo } from './utils.js';
+import { Transaction } from './Transaction.js';
 
 /** @private */
 async function handleApiResponse(res: Response) {

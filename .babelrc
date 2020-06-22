@@ -1,24 +1,14 @@
 {
-	"env": {
-		"development": {
-			"presets": ["@babel/preset-typescript"],
-			"plugins": [
-				"babel-plugin-add-import-extension",
-				"@babel/plugin-proposal-class-properties"
-			]
-		},
-		"test": {
-			"presets": [
-				[
-					"@babel/preset-env",
-					{
-						"targets": {
-							"node": "current"
-						}
-					}
-				],
-				"@babel/preset-typescript"
-			]
-		}
-	}
+	"presets": [
+		"@babel/preset-typescript",
+		[
+			"@babel/preset-env",
+			{
+				"targets": {
+					"node": "current"
+				}
+			}
+		]
+	],
+	"plugins": [["import-rename", { "js$": "ts" }]]
 }

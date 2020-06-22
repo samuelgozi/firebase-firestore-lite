@@ -5,11 +5,11 @@ import {
 	getPathFromRef,
 	Ref,
 	restrictTo
-} from './utils';
-import { Document, FirebaseDocument } from './Document';
-import { Reference, CrudOptions } from './Reference';
-import { Database } from './Database';
-import Transform from './Transform';
+} from './utils.js';
+import { Document, FirebaseDocument } from './Document.js';
+import { Reference, CrudOptions } from './Reference.js';
+import { Database } from './Database.js';
+import Transform from './Transform.js';
 
 export class Transaction {
 	writes: any[] = [];

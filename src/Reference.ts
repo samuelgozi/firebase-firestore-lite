@@ -1,8 +1,8 @@
-import { Database } from './Database';
-import { Query } from './Query';
-import { Document } from './Document';
-import { List } from './List';
-import { trimPath, isPath, objectToQuery, restrictTo } from './utils';
+import { Database } from './Database.js';
+import { Query } from './Query.js';
+import { Document } from './Document.js';
+import { List } from './List.js';
+import { trimPath, isPath, objectToQuery, restrictTo } from './utils.js';
 
 export interface CrudOptions {
 	[key: string]: any;
