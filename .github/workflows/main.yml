@@ -8,12 +8,9 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: '14'
-      - name: Build with typescript
-        run: |
-          yarn install
-          yarn tsc
       - name: Generate coverage report
         run: |
+          yarn
           yarn global add codecov
           yarn test
           codecov
