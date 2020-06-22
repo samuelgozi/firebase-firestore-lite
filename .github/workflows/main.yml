@@ -11,12 +11,8 @@ jobs:
       - name: TypeScript Error Reporter
         uses: andoshin11/typescript-error-reporter-action@v1.0.2
       - name: Generate coverage report
-      - name: Build with typescript
         run: |
           npm install
-          npm run tsc
-      - name: Generate coverage report
-        run: |
           npm i codecov -g
           npm run test
           codecov
