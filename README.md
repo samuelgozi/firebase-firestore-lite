@@ -1,5 +1,5 @@
 <p align="center">
-<img src="logo.png" alt="logo" width="400"/>
+<img src="https://raw.githubusercontent.com/samuelgozi/firebase-firestore-lite/master/logo.png" alt="logo" width="400"/>
 
 [![codecov](https://codecov.io/gh/samuelgozi/firebase-firestore-lite/branch/master/graph/badge.svg)](https://codecov.io/gh/samuelgozi/firebase-firestore-lite) ![bundlephobia](https://badgen.net/bundlephobia/minzip/firebase-auth-lite)
 
