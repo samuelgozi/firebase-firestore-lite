@@ -92,3 +92,6 @@ firebaseConfig.js
 
 # build directory
 dist
+
+# mac stuff
+.DS_Store
