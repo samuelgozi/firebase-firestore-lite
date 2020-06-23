@@ -12,13 +12,17 @@ of kilobytes without any app logic](https://github.com/samuelgozi/firebase-fires
 
 [Our Alternative SDK performs in average 13 times better and is 27 times smaller than the official ones](https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks).
 
-## Whats the catch?
+## What am I giving up by using this?
 
 No realtime support(yet*) and no out of the box offline support*. You should also transpile and polyfill the code yourself for your target browsers. I don't try to support old browsers(ehm... IE), but it is possible and was done by some of the community.
 
 \* Realtime is planned, but will take some time because of lack of documentation on how the API works.
 
 \* Offline support will be available in the future, but probably as a third party addition, and is currently not a high priority.
+
+## API Reference
+
+You can access the full API Reference here: https://samuelgozi.github.io/firebase-firestore-lite/
 
 ## Getting started
 
