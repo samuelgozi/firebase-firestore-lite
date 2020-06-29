@@ -206,7 +206,7 @@ This method will return an array of `Document` instances.
 
 Transactions allow us to perform batch reads, or reads and writes. All of the operations done as a part of a transaction are atomic; Either all of them succeed, or none of them are applied.
 
-Transactions are subject to the , so make sure you read them.
+They are subject to the [Quotas and Limits of Firestore](https://firebase.google.com/docs/firestore/quotas#writes_and_transactions), so make sure you read them.
 
 Let's start with a batch write. First, we create a transaction:
 
