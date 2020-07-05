@@ -1,9 +1,8 @@
-import { Document } from '../src/Document.ts';
-import { Reference } from '../src/Reference.ts';
-import { List } from '../src/List.ts';
-import { Query } from '../src/Query.ts';
-import { Database } from '../src/Database.ts';
-import Transform from '../src/Transform.ts';
+import { Document } from '../src/Document';
+import { Reference } from '../src/Reference';
+import { List } from '../src/List';
+import { Query } from '../src/Query';
+import { Database } from '../src/Database';
 
 const db = new Database({ projectId: 'projectId' });
 const rawDoc = JSON.stringify({

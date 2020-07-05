@@ -1,4 +1,4 @@
-import Transform from '../src/Transform.ts';
+import Transform from '../src/Transform';
 
 describe('Transform', () => {
 	test('Invalid transform names', () => {

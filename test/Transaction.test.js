@@ -1,6 +1,6 @@
-import { Transaction } from '../src/Transaction.ts';
-import { Reference } from '../src/Reference.ts';
-import { Database } from '../src/Database.ts';
+import { Transaction } from '../src/Transaction';
+import { Reference } from '../src/Reference';
+import { Database } from '../src/Database';
 import batchGetResponse from './mockBatchGetResponse.json';
 
 const db = new Database({ projectId: 'projectId' });

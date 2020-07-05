@@ -1,7 +1,7 @@
-import { Document } from './Document.js';
-import { Reference } from './Reference.js';
-import { Database } from './Database.js';
-import { isRef, isPositiveInteger, encodeValue } from './utils.js';
+import { Document } from './Document';
+import { Reference } from './Reference';
+import { Database } from './Database';
+import { isRef, isPositiveInteger, encodeValue } from './utils';
 
 interface FromOption {
 	/** Reference to the collection */
@@ -310,7 +310,7 @@ export class Query {
 	}
 
 	async run() {
-		const results = await this.db.fetch(
+		let results = await this.db.fetch(
 			this.parentDocument.endpoint + ':runQuery',
 			{
 				method: 'POST',
@@ -318,7 +318,7 @@ export class Query {
 			}
 		);
 
-		if (results.length === 1 && !results[0].document) return [];
+		results[0]?.document || results.splice(0, 1);
 		return results.map((result: any) => new Document(result.document, this.db));
 	}
 

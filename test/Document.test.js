@@ -1,4 +1,4 @@
-import { Document } from '../src/Document.ts';
+import { Document } from '../src/Document';
 
 // Mock database instance
 const db = {

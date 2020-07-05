@@ -1,7 +1,7 @@
-import { Database } from '../src/Database.ts';
-import { Query } from '../src/Query.ts';
-import { Reference } from '../src/Reference.ts';
-import { Document } from '../src/Document.ts';
+import { Database } from '../src/Database';
+import { Query } from '../src/Query';
+import { Reference } from '../src/Reference';
+import { Document } from '../src/Document';
 
 const db = new Database({ projectId: 'projectId' });
 const colRef = db.ref('col');
@@ -542,6 +542,39 @@ describe('Query', () => {
 			}).run();
 
 			expect(response).toEqual([]);
+		});
+
+		test('Returns array of documents when using an offset', async () => {
+			const mockResponse = [
+				{
+					readTime: '2020-07-05T07:23:57.037160Z',
+					skippedResults: 1
+				},
+				{
+					document: {
+						name: 'projects/projectId/databases/(default)/documents/col/AKoa',
+						fields: {},
+						createTime: '2019-10-17T16:33:41.217487Z',
+						updateTime: '2019-12-04T10:18:57.882392Z'
+					},
+					readTime: '2020-03-29T00:17:46.518749Z'
+				}
+			];
+
+			fetch.resetMocks();
+			fetch.mockResponse(JSON.stringify(mockResponse));
+
+			/*
+			 * When results return starting from an offset,
+			 * the first result object will not be a document,
+			 * but an object with a "skippedResults" prop.
+			 */
+			const response = await new Query({
+				from: colRef,
+				offset: 1
+			}).run();
+
+			expect(response).toEqual([new Document(mockResponse[1].document, db)]);
 		});
 	});
 });

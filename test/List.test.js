@@ -1,7 +1,7 @@
-import { List } from '../src/List.ts';
-import { Reference } from '../src/Reference.ts';
-import { Database } from '../src/Database.ts';
-import { Document } from '../src/Document.ts';
+import { List } from '../src/List';
+import { Reference } from '../src/Reference';
+import { Database } from '../src/Database';
+import { Document } from '../src/Document';
 
 const db = new Database({ projectId: 'projectId' });
 

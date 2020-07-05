@@ -2,17 +2,16 @@ import {
 	trimPath,
 	isPath,
 	isRef,
-	isRawDocument,
 	isPositiveInteger,
 	encodeValue,
 	encode,
 	decode,
 	objectToQuery,
 	compileOptions
-} from '../src/utils.ts';
-import { Reference } from '../src/Reference.ts';
-import GeoPoint from '../src/GeoPoint.ts';
-import Transform from '../src/Transform.ts';
+} from '../src/utils';
+import { Reference } from '../src/Reference';
+import GeoPoint from '../src/GeoPoint';
+import Transform from '../src/Transform';
 import firestoreDocument from './mockDocument.json';
 import decodedDocument from './decodedMockedDocument';
 

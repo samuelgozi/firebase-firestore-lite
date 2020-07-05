@@ -1,9 +1,9 @@
-import { Reference, CrudOptions } from './Reference.js';
-import GeoPoint from './GeoPoint.js';
-import Transform from './Transform.js';
-import { FirebaseDocument, FirebaseMap } from './Document.js';
-import { Database } from './Database.js';
-import { Document } from './Document.js';
+import { Reference, CrudOptions } from './Reference';
+import GeoPoint from './GeoPoint';
+import Transform from './Transform';
+import { FirebaseDocument, FirebaseMap } from './Document';
+import { Database } from './Database';
+import { Document } from './Document';
 
 /**
  * Used for generating random fids.

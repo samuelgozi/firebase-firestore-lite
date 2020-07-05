@@ -9,6 +9,5 @@
 				}
 			}
 		]
-	],
-	"plugins": [["import-rename", { "js$": "ts" }]]
+	]
 }

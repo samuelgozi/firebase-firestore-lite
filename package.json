@@ -36,8 +36,5 @@
 		"jest-fetch-mock": "^3.0.3",
 		"typedoc": "^0.17.7",
 		"typescript": "^3.9.3"
-	},
-	"dependencies": {
-		"babel-plugin-import-rename": "^1.0.1"
 	}
 }
