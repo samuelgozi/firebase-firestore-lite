@@ -58,7 +58,7 @@ export default class Transform {
 	 * @param value when applicable, the value will be used.
 	 * for example when using `increment` the value will be the number to increment by.
 	 */
-	constructor(name: TransformName, value: number | any[]) {
+	constructor(name: TransformName, value?: number | any[]) {
 		if (!(name in transformsMap))
 			throw Error(`Invalid transform name: "${name}"`);
 		const [transformName, validator] = transformsMap[name];
