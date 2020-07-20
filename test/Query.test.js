@@ -6,6 +6,23 @@ import { Document } from '../src/Document';
 const db = new Database({ projectId: 'projectId' });
 const colRef = db.ref('col');
 
+const rawDoc = {
+	name: 'projects/projectId/databases/(default)/documents/public/types',
+	fields: {
+		one: {
+			stringValue: 'Hi!'
+		},
+		two: {
+			booleanValue: false
+		},
+		three: {
+			integerValue: '42'
+		}
+	},
+	createTime: '2019-10-10T14:00:00.617973Z',
+	updateTime: '2019-10-10T14:44:42.885653Z'
+};
+
 describe('Query', () => {
 	describe('select', () => {
 		test('Valid arguments', () => {
@@ -382,18 +399,33 @@ describe('Query', () => {
 
 	describe('startAt', () => {
 		test('Valid arguments', () => {
-			const docRef = new Reference('col/doc', db);
-
 			const query = new Query({
 				from: colRef,
-				startAt: docRef
+				startAt: ['abc', 123]
 			});
 
 			const expected = {
 				values: [
-					{
-						referenceValue: docRef.name
-					}
+					{ stringValue: 'abc' },
+					{ integerValue: '123' }
+				],
+				before: true
+			};
+
+			expect(query.toJSON().structuredQuery.startAt).toEqual(expected);
+		});
+
+		test('Document as cursor', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: ['one', 'two'],
+				startAt: new Document(rawDoc, db)
+			});
+
+			const expected = {
+				values: [
+					{ stringValue: 'Hi!' },
+					{ booleanValue: false }
 				],
 				before: true
 			};
@@ -405,28 +437,113 @@ describe('Query', () => {
 			expect(() => {
 				new Query({
 					from: colRef,
-					startAt: 42
+					startAt: []
 				});
 			}).toThrow(
-				'Invalid argument "startAt": Expected a reference to a document'
+				'Invalid argument "startAt": Expected at least one value'
+			);
+		});
+
+		test('Document without orderBy', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					startAt: new Document(rawDoc, db)
+				});
+			}).toThrow(
+				'Invalid argument "startAt": Cannot use document for cursor without orderBy set'
+			);
+		});
+	});
+
+	describe('startAfter', () => {
+		test('Valid arguments', () => {
+			const query = new Query({
+				from: colRef,
+				startAfter: ['abc', 123]
+			});
+
+			const expected = {
+				values: [
+					{ stringValue: 'abc' },
+					{ integerValue: '123' }
+				],
+				before: false
+			};
+
+			expect(query.toJSON().structuredQuery.startAt).toEqual(expected);
+		});
+
+		test('Document as cursor', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: ['one', 'two'],
+				startAfter: new Document(rawDoc, db)
+			});
+
+			const expected = {
+				values: [
+					{ stringValue: 'Hi!' },
+					{ booleanValue: false }
+				],
+				before: false
+			};
+
+			expect(query.toJSON().structuredQuery.startAt).toEqual(expected);
+		});
+
+		test('Invalid arguments', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					startAfter: []
+				});
+			}).toThrow(
+				'Invalid argument "startAfter": Expected at least one value'
+			);
+		});
+
+		test('Document without orderBy', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					startAfter: new Document(rawDoc, db)
+				});
+			}).toThrow(
+				'Invalid argument "startAfter": Cannot use document for cursor without orderBy set'
 			);
 		});
 	});
 
 	describe('endAt', () => {
 		test('Valid arguments', () => {
-			const docRef = new Reference('col/doc', db);
-
 			const query = new Query({
 				from: colRef,
-				endAt: docRef
+				endAt: ['abc', 123]
 			});
 
 			const expected = {
 				values: [
-					{
-						referenceValue: docRef.name
-					}
+					{ stringValue: 'abc' },
+					{ integerValue: '123' }
+				],
+				before: true
+			};
+
+			expect(query.toJSON().structuredQuery.endAt).toEqual(expected);
+		});
+
+		test('Document as cursor', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: ['one', 'two'],
+				endAt: new Document(rawDoc, db)
+			});
+
+			const expected = {
+				values: [
+					{ stringValue: 'Hi!' },
+					{ booleanValue: false }
 				],
 				before: true
 			};
@@ -438,10 +555,80 @@ describe('Query', () => {
 			expect(() => {
 				new Query({
 					from: colRef,
-					endAt: 42
+					endAt: []
 				});
 			}).toThrow(
-				'Invalid argument "endAt": Expected a reference to a document'
+				'Invalid argument "endAt": Expected at least one value'
+			);
+		});
+
+		test('Document without orderBy', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					endAt: new Document(rawDoc, db)
+				});
+			}).toThrow(
+				'Invalid argument "endAt": Cannot use document for cursor without orderBy set'
+			);
+		});
+	});
+
+	describe('endAfter', () => {
+		test('Valid arguments', () => {
+			const query = new Query({
+				from: colRef,
+				endAfter: ['abc', 123]
+			});
+
+			const expected = {
+				values: [
+					{ stringValue: 'abc' },
+					{ integerValue: '123' }
+				],
+				before: false
+			};
+
+			expect(query.toJSON().structuredQuery.endAt).toEqual(expected);
+		});
+
+		test('Document as cursor', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: ['one', 'two'],
+				endAfter: new Document(rawDoc, db)
+			});
+
+			const expected = {
+				values: [
+					{ stringValue: 'Hi!' },
+					{ booleanValue: false }
+				],
+				before: false
+			};
+
+			expect(query.toJSON().structuredQuery.endAt).toEqual(expected);
+		});
+
+		test('Invalid arguments', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					endAfter: []
+				});
+			}).toThrow(
+				'Invalid argument "endAfter": Expected at least one value'
+			);
+		});
+
+		test('Document without orderBy', () => {
+			expect(() => {
+				new Query({
+					from: colRef,
+					endAfter: new Document(rawDoc, db)
+				});
+			}).toThrow(
+				'Invalid argument "endAfter": Cannot use document for cursor without orderBy set'
 			);
 		});
 	});

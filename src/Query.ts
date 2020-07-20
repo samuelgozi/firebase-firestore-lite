@@ -27,8 +27,8 @@ interface OrderOption {
 }
 
 interface CursorOption {
-	/** A reference to a document */
-	reference: Reference;
+	/** The values associated with the orderBy clause */
+	values: any[];
 	/** If the position is before or just after the given values */
 	before: boolean;
 }
@@ -43,10 +43,14 @@ interface QueryOptions {
 	where?: FilterOption[];
 	/** The field to use while ordering the results and direction */
 	orderBy?: string | OrderOption | Array<string | OrderOption>;
-	/** Reference to a document from which to start the query */
-	startAt?: Reference | CursorOption;
-	/** Reference to a document at which to end the query */
-	endAt?: Reference | CursorOption;
+	/** Values for the orderBy fields from which to start the query */
+	startAt?: any | any[] | Document;
+	/** Values for the orderBy fields from which to start the query after */
+	startAfter?: any | any[] | Document;
+	/** Values for the orderBy fields at which to end the query */
+	endAt?: any | any[] | Document;
+	/** Values for the orderBy fields at which to end the query after */
+	endAfter?: any | any[] | Document;
 	/** The number of results to skip */
 	offset?: number;
 	/** The max amount of documents to return */
@@ -135,19 +139,19 @@ const encoders = {
 		};
 	},
 
-	referenceToCursor(ref: Reference) {
+	encodeCursor(option: CursorOption) {
 		return {
-			values: [{ referenceValue: ref.name }],
-			before: true
+			values: option.values.map(value => encodeValue(value)),
+			before: option.before
 		};
 	},
 
-	startAt(ref: Reference) {
-		return this.referenceToCursor(ref);
+	startAt(option: CursorOption) {
+		return this.encodeCursor(option);
 	},
 
-	endAt(ref: Reference) {
-		return this.referenceToCursor(ref);
+	endAt(option: CursorOption) {
+		return this.encodeCursor(option);
 	}
 };
 
@@ -158,7 +162,9 @@ const queryOptions = [
 	'where',
 	'orderBy',
 	'startAt',
+	'startAfter',
 	'endAt',
+	'endAfter',
 	'offset',
 	'limit'
 ];
@@ -203,6 +209,17 @@ export class Query {
 							throw Error(`Invalid argument "${option}[${i}]": ${e.message}`);
 						}
 					});
+
+					continue;
+				}
+
+				const cursorFunction = ['startAt', 'startAfter', 'endAt', 'endAfter'];
+				if (cursorFunction.includes(option) && Array.isArray(optionValue)) {
+					try {
+						this[option](...optionValue);
+					} catch (e) {
+						throw Error(`Invalid argument "${option}": ${e.message}`);
+					}
 
 					continue;
 				}
@@ -283,15 +300,40 @@ export class Query {
 		return this;
 	}
 
-	startAt(ref: QueryOptions['startAt']) {
-		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
-		this.options.startAt = ref;
+	private cursorFrom(values: any[] | [Document], before: boolean) {
+		let orderByValues = values;
+		if (values.length === 1 && values[0] instanceof Document) {
+			if (this.options.orderBy.length === 0)
+				throw Error('Cannot use document for cursor without orderBy set');
+			const [doc] = values;
+			orderByValues = this.options.orderBy.map(
+				(orderBy: any) => doc[orderBy.field.fieldPath]
+			);
+		}
+		if (orderByValues.length === 0) throw Error('Expected at least one value');
+		return {
+			values: orderByValues,
+			before
+		};
+	}
+
+	startAt(...values: QueryOptions['startAt'][]) {
+		this.options.startAt = this.cursorFrom(values, true);
 		return this;
 	}
 
-	endAt(ref: QueryOptions['endAt']) {
-		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
-		this.options.endAt = ref;
+	startAfter(...values: QueryOptions['startAt'][]) {
+		this.options.startAt = this.cursorFrom(values, false);
+		return this;
+	}
+
+	endAt(...values: QueryOptions['endAt'][]) {
+		this.options.endAt = this.cursorFrom(values, true);
+		return this;
+	}
+
+	endAfter(...values: QueryOptions['endAt'][]) {
+		this.options.endAt = this.cursorFrom(values, false);
 		return this;
 	}
 

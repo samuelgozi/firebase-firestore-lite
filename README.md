@@ -347,8 +347,10 @@ All the query options can be seen in the [API reference for Query](https://githu
 - `where` Comparative operations for filtering the query.
 - `from` Set by default for you to eb the current collection of the reference.
 - `orderBy` The field and direction to order by.
-- `startAt` A reference to a specific document from which to start the query.
-- `endAt` A reference to a specific document at which to end the query.
+- `startAt` A specific document, or values corresponding to the `orderBy` clause, from which to start the query.
+- `startAfter` A specific document, or values corresponding to the `orderBy` clause, from which to start the query after.
+- `endAt` A specific document, or values corresponding to the `orderBy` clause, from which to end the query.
+- `endAfter` A specific document, or values corresponding to the `orderBy` clause, from which to end the query after.
 - `offset` Number of results to skip
 - `limit` The maximum number of documents to return.
 
