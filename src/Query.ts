@@ -14,7 +14,7 @@ type FilterOption = [
 	/** Property name */
 	string,
 	/** Operator */
-	'<' | '<=' | '>' | '>=' | '==' | 'contains',
+	'<' | '<=' | '>' | '>=' | '==' | 'contains' | 'contains-any' | 'in',
 	/** The value to compare against */
 	any
 ];
@@ -60,7 +60,9 @@ const operatorsMap = {
 	'>': 'GREATER_THAN',
 	'>=': 'GREATER_THAN_OR_EQUAL',
 	'==': 'EQUAL',
-	contains: 'ARRAY_CONTAINS'
+	contains: 'ARRAY_CONTAINS',
+	'contains-any': 'ARRAY_CONTAINS_ANY',
+	'in': 'IN'
 };
 
 /**
