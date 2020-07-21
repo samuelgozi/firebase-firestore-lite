@@ -301,6 +301,12 @@ describe('Query', () => {
 						fieldPath: 'field.path'
 					},
 					direction: 'DESCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'DESCENDING'
 				}
 			];
 
@@ -317,6 +323,12 @@ describe('Query', () => {
 				{
 					field: {
 						fieldPath: 'field.path'
+					},
+					direction: 'ASCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
 					},
 					direction: 'ASCENDING'
 				}
@@ -352,6 +364,12 @@ describe('Query', () => {
 						fieldPath: 'second.path'
 					},
 					direction: 'DESCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'DESCENDING'
 				}
 			];
 
@@ -374,6 +392,12 @@ describe('Query', () => {
 				{
 					field: {
 						fieldPath: 'second.path'
+					},
+					direction: 'ASCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
 					},
 					direction: 'ASCENDING'
 				}
@@ -425,7 +449,8 @@ describe('Query', () => {
 			const expected = {
 				values: [
 					{ stringValue: 'Hi!' },
-					{ booleanValue: false }
+					{ booleanValue: false },
+					{ referenceValue: rawDoc.name }
 				],
 				before: true
 			};
@@ -484,7 +509,8 @@ describe('Query', () => {
 			const expected = {
 				values: [
 					{ stringValue: 'Hi!' },
-					{ booleanValue: false }
+					{ booleanValue: false },
+					{ referenceValue: rawDoc.name }
 				],
 				before: false
 			};
@@ -543,7 +569,8 @@ describe('Query', () => {
 			const expected = {
 				values: [
 					{ stringValue: 'Hi!' },
-					{ booleanValue: false }
+					{ booleanValue: false },
+					{ referenceValue: rawDoc.name }
 				],
 				before: true
 			};
@@ -602,7 +629,8 @@ describe('Query', () => {
 			const expected = {
 				values: [
 					{ stringValue: 'Hi!' },
-					{ booleanValue: false }
+					{ booleanValue: false },
+					{ referenceValue: rawDoc.name }
 				],
 				before: false
 			};

@@ -139,11 +139,35 @@ const encoders = {
 		};
 	},
 
-	encodeCursor(option: CursorOption) {
-		return {
-			values: option.values.map(value => encodeValue(value)),
-			before: option.before
+	orderBy(options: OrderOption[]) {
+		const dirMap = {
+			asc: 'ASCENDING',
+			desc: 'DESCENDING'
 		};
+		const orderBy = options.map(option => ({
+			field: { fieldPath: option.field },
+			direction: dirMap[option.direction!]
+		}));
+		if (options.length > 0 && !options.some(({field}) => field === '__name__')) {
+			// Add implied sort by key name if we're sorting by something that doesn't have it
+			const direction = orderBy.length ? orderBy[orderBy.length - 1].direction : dirMap.asc;
+			orderBy.push({
+				field: { fieldPath: '__name__' },
+				direction
+			});
+		}
+		return orderBy;
+	},
+
+	encodeCursor(option: CursorOption) {
+        return {
+            values: option.values.map(value => {
+                if (value instanceof Document)
+                    return { referenceValue: value.__meta__.name };
+                return encodeValue(value)
+            }),
+            before: option.before
+        };
 	},
 
 	startAt(option: CursorOption) {
@@ -283,20 +307,14 @@ export class Query {
 		order: QueryOptions['orderBy'],
 		dir: OrderOption['direction'] = 'asc'
 	) {
-		const dirMap = {
-			asc: 'ASCENDING',
-			desc: 'DESCENDING'
-		};
+		let { field = order, direction = dir } = order as OrderOption;
 
-		let { field: fieldPath = order, direction = dir } = order as OrderOption;
-		direction = dirMap[direction] as 'asc' | 'desc';
-
-		if (typeof fieldPath !== 'string')
+		if (typeof field !== 'string')
 			throw Error('"field" property needs to be a string');
-		if (direction === undefined)
+		if (direction !== 'asc' && direction !== 'desc')
 			throw Error('"direction" property can only be "asc" or "desc"');
 
-		this.options.orderBy.push({ field: { fieldPath }, direction });
+		this.options.orderBy.push({ field, direction });
 		return this;
 	}
 
@@ -306,9 +324,21 @@ export class Query {
 			if (this.options.orderBy.length === 0)
 				throw Error('Cannot use document for cursor without orderBy set');
 			const [doc] = values;
+			let foundKeyField = false;
 			orderByValues = this.options.orderBy.map(
-				(orderBy: any) => doc[orderBy.field.fieldPath]
+				(orderBy: any) => {
+					if (orderBy.field === '__name__') {
+						// If the user sorted by key name, then use it
+						foundKeyField = true;
+						return doc;
+					}
+					return doc[orderBy.field];
+				}
 			);
+			if (!foundKeyField) {
+				// If the user did not sort by key name, append it to the end
+				orderByValues.push(doc);
+			}
 		}
 		if (orderByValues.length === 0) throw Error('Expected at least one value');
 		return {
