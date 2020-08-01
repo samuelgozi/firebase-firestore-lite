@@ -7,7 +7,13 @@ import { Transaction } from './Transaction';
 async function handleApiResponse(res: Response) {
 	if (!res.ok) {
 		const data = await res.json();
-		throw Array.isArray(data) ? data : Object.assign(new Error(), data.error);
+
+		if (Array.isArray(data))
+			throw data.length === 1
+				? Object.assign(new Error(), data[0].error)
+				: data;
+
+		throw Object.assign(new Error(), data.error);
 	}
 
 	return res.json();

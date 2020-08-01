@@ -1405,11 +1405,6 @@ babel-plugin-dynamic-import-node@^2.3.3:
   dependencies:
     object.assign "^4.1.0"
 
-babel-plugin-import-rename@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-import-rename/-/babel-plugin-import-rename-1.0.1.tgz#bd60618aa90a36dd944b186552da1dc389a449cf"
-  integrity sha1-vWBhiqkKNt2USxhlUtodw4mkSc8=
-
 babel-plugin-istanbul@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/babel-plugin-istanbul/-/babel-plugin-istanbul-6.0.0.tgz#e159ccdc9af95e0b570c75b4573b7c34d671d765"

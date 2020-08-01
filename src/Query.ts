@@ -26,13 +26,6 @@ interface OrderOption {
 	direction?: 'asc' | 'desc';
 }
 
-interface CursorOption {
-	/** A reference to a document */
-	reference: Reference;
-	/** If the position is before or just after the given values */
-	before: boolean;
-}
-
 interface QueryOptions {
 	[key: string]: any;
 	/** The fields to return, leave empty to return the whole doc. */
@@ -44,9 +37,9 @@ interface QueryOptions {
 	/** The field to use while ordering the results and direction */
 	orderBy?: string | OrderOption | Array<string | OrderOption>;
 	/** Reference to a document from which to start the query */
-	startAt?: Reference | CursorOption;
+	startAt?: Document;
 	/** Reference to a document at which to end the query */
-	endAt?: Reference | CursorOption;
+	endAt?: Document;
 	/** The number of results to skip */
 	offset?: number;
 	/** The max amount of documents to return */
@@ -135,19 +128,55 @@ const encoders = {
 		};
 	},
 
-	referenceToCursor(ref: Reference) {
+	/**
+	 * When a startAt or endAt cursor is used,
+	 * It is necessary to add a __name__ order at the end
+	 * in order to make sure we start from the right spot.
+	 */
+	orderBy(fields: any[], options: any) {
+		// Only add the __name__ order if a cursor was provided
+		// and if its is not already present.
+		if (
+			(options.startAt || options.endAt) &&
+			fields[fields.length - 1]?.field.fieldPath !== '__name__'
+		)
+			fields.push({
+				field: { fieldPath: '__name__' },
+				// Use the default order when there are no other fields,
+				// And if there are fields, use the order of the last one.
+				// This adheres to the spec at:
+				// https://firebase.google.com/docs/firestore/reference/rest/v1beta1/StructuredQuery
+				direction: fields[fields.length - 1]?.direction ?? 'ASCENDING'
+			});
+
+		return fields;
+	},
+
+	documentToCursor(doc: Document, options: any) {
+		const values: any[] = [];
+
+		for (let order of options.orderBy) {
+			if (order.field.fieldPath === '__name__') {
+				values.push({ referenceValue: doc.__meta__.name });
+				continue;
+			}
+
+			const value = doc[order.field.fieldPath];
+			value && values.push(encodeValue(value));
+		}
+
 		return {
-			values: [{ referenceValue: ref.name }],
+			values,
 			before: true
 		};
 	},
 
-	startAt(ref: Reference) {
-		return this.referenceToCursor(ref);
+	startAt(doc: Document, options: any) {
+		return this.documentToCursor(doc, options);
 	},
 
-	endAt(ref: Reference) {
-		return this.referenceToCursor(ref);
+	endAt(doc: Document, options: any) {
+		return this.startAt(doc, options);
 	}
 };
 
@@ -171,7 +200,7 @@ export class Query {
 
 	private db: Database;
 	private parentDocument: Reference;
-	private options: any = {
+	readonly options: any = {
 		select: [],
 		where: [],
 		orderBy: []
@@ -283,15 +312,15 @@ export class Query {
 		return this;
 	}
 
-	startAt(ref: QueryOptions['startAt']) {
-		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
-		this.options.startAt = ref;
+	startAt(doc: Document) {
+		if (!(doc instanceof Document)) throw Error('Expected a Document instance');
+		this.options.startAt = doc;
 		return this;
 	}
 
-	endAt(ref: QueryOptions['endAt']) {
-		if (!isRef('doc', ref)) throw Error('Expected a reference to a document');
-		this.options.endAt = ref;
+	endAt(doc: Document) {
+		if (!(doc instanceof Document)) throw Error('Expected a Document instance');
+		this.options.endAt = doc;
 		return this;
 	}
 
@@ -329,7 +358,7 @@ export class Query {
 			const optionValue = this.options[option];
 
 			if (option in encoders) {
-				encoded[option] = (encoders as any)[option](optionValue);
+				encoded[option] = (encoders as any)[option](optionValue, this.options);
 				continue;
 			}
 

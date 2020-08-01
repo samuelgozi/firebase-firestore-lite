@@ -2753,7 +2753,7 @@ img {
 			<a href="interfaces/crudoptions.html" class="tsd-kind-icon">Crud<wbr>Options</a>
 		</li>
 		<li class=" tsd-kind-interface tsd-is-external">
-			<a href="interfaces/cursoroption.html" class="tsd-kind-icon">Cursor<wbr>Option</a>
+			<a href="interfaces/cursor.html" class="tsd-kind-icon">Cursor</a>
 		</li>
 		<li class=" tsd-kind-interface tsd-is-external">
 			<a href="interfaces/databaseoptions.html" class="tsd-kind-icon">Database<wbr>Options</a>
@@ -2786,6 +2786,9 @@ img {
 			<a href="interfaces/updatefunction.html" class="tsd-kind-icon">Update<wbr>Function</a>
 		</li>
 		<li class=" tsd-kind-type-alias tsd-is-external">
+			<a href="globals.html#cursoroption" class="tsd-kind-icon">Cursor<wbr>Option</a>
+		</li>
+		<li class=" tsd-kind-type-alias tsd-is-external">
 			<a href="globals.html#filteroption" class="tsd-kind-icon">Filter<wbr>Option</a>
 		</li>
 		<li class=" tsd-kind-type-alias tsd-is-external">
@@ -2808,12 +2811,16 @@ img {
 				and if you include the Auth library as well, and <code>firebase/app</code>(which you have to), then it could <a href="https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks#sizes-and-loading-times">add up to hundreds
 			of kilobytes without any app logic</a>.</p>
 			<p><a href="https://github.com/samuelgozi/firebase-firestore-lite/wiki/Firebase-Alternative-SDK-Benchmarks">Our Alternative SDK performs in average 13 times better and is 27 times smaller than the official ones</a>.</p>
-			<a href="#whats-the-catch" id="whats-the-catch" style="color: inherit; text-decoration: none;">
-				<h2>Whats the catch?</h2>
+			<a href="#what-am-i-giving-up-by-using-this" id="what-am-i-giving-up-by-using-this" style="color: inherit; text-decoration: none;">
+				<h2>What am I giving up by using this?</h2>
 			</a>
 			<p>No realtime support(yet<em>) and no out of the box offline support</em>. You should also transpile and polyfill the code yourself for your target browsers. I don&#39;t try to support old browsers(ehm... IE), but it is possible and was done by some of the community.</p>
 			<p>* Realtime is planned, but will take some time because of lack of documentation on how the API works.</p>
 			<p>* Offline support will be available in the future, but probably as a third party addition, and is currently not a high priority.</p>
+			<a href="#api-reference" id="api-reference" style="color: inherit; text-decoration: none;">
+				<h2>API Reference</h2>
+			</a>
+			<p>You can access the full API Reference here: <a href="https://samuelgozi.github.io/firebase-firestore-lite/">https://samuelgozi.github.io/firebase-firestore-lite/</a></p>
 			<a href="#getting-started" id="getting-started" style="color: inherit; text-decoration: none;">
 				<h2>Getting started</h2>
 			</a>
@@ -3056,8 +3063,8 @@ tx.delete(doc3);</code></pre>
 				<li><code>where</code> Comparative operations for filtering the query.</li>
 				<li><code>from</code> Set by default for you to eb the current collection of the reference.</li>
 				<li><code>orderBy</code> The field and direction to order by.</li>
-				<li><code>startAt</code> A reference to a specific document from which to start the query.</li>
-				<li><code>endAt</code> A reference to a specific document at which to end the query.</li>
+				<li><code>startAt</code> A Document instance to start the query from.</li>
+				<li><code>endAt</code> A Document instance at which to end the query.</li>
 				<li><code>offset</code> Number of results to skip</li>
 				<li><code>limit</code> The maximum number of documents to return.</li>
 			</ul>
@@ -3075,7 +3082,7 @@ tx.delete(doc3);</code></pre>
     <span class="hljs-attr">host</span>: <span class="hljs-string">&#x27;localhost:8080&#x27;</span>,
     <span class="hljs-attr">ssl</span>: <span class="hljs-literal">false</span>
 });</code></pre>
-			<a href="#api-reference" id="api-reference" style="color: inherit; text-decoration: none;">
+			<a href="#api-reference-1" id="api-reference-1" style="color: inherit; text-decoration: none;">
 				<h2>API Reference</h2>
 			</a>
 			<p>The API will be changing up until version 1.0, so it won&#39;t always be up-to-date. If something is off, feel free to open an issue.
@@ -3108,7 +3115,7 @@ tx.delete(doc3);</code></pre>
 						<ul class="tsd-index-list">
 							<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/auth.html" class="tsd-kind-icon">Auth</a></li>
 							<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/crudoptions.html" class="tsd-kind-icon">Crud<wbr>Options</a></li>
-							<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/cursoroption.html" class="tsd-kind-icon">Cursor<wbr>Option</a></li>
+							<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/cursor.html" class="tsd-kind-icon">Cursor</a></li>
 							<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/databaseoptions.html" class="tsd-kind-icon">Database<wbr>Options</a></li>
 							<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/firebasedocument.html" class="tsd-kind-icon">Firebase<wbr>Document</a></li>
 							<li class="tsd-kind-interface tsd-is-external"><a href="interfaces/firebaselist.html" class="tsd-kind-icon">Firebase<wbr>List</a></li>
@@ -3124,6 +3131,7 @@ tx.delete(doc3);</code></pre>
 					<section class="tsd-index-section tsd-is-external">
 						<h3>Type aliases</h3>
 						<ul class="tsd-index-list">
+							<li class="tsd-kind-type-alias tsd-is-external"><a href="globals.html#cursoroption" class="tsd-kind-icon">Cursor<wbr>Option</a></li>
 							<li class="tsd-kind-type-alias tsd-is-external"><a href="globals.html#filteroption" class="tsd-kind-icon">Filter<wbr>Option</a></li>
 							<li class="tsd-kind-type-alias tsd-is-external"><a href="globals.html#ref" class="tsd-kind-icon">Ref</a></li>
 							<li class="tsd-kind-type-alias tsd-is-external"><a href="globals.html#transformname" class="tsd-kind-icon">Transform<wbr>Name</a></li>
@@ -3135,12 +3143,22 @@ tx.delete(doc3);</code></pre>
 		<section class="tsd-panel-group tsd-member-group tsd-is-external">
 			<h2>Type aliases</h2>
 			<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-is-external">
+				<a name="cursoroption" class="tsd-anchor"></a>
+				<h3>Cursor<wbr>Option</h3>
+				<div class="tsd-signature tsd-kind-icon">Cursor<wbr>Option<span class="tsd-signature-symbol">:</span> <a href="interfaces/cursor.html" class="tsd-signature-type">Cursor</a><span class="tsd-signature-symbol"> | </span><a href="classes/document.html" class="tsd-signature-type">Document</a></div>
+				<aside class="tsd-sources">
+					<ul>
+						<li>Defined in <a href="https://github.com/samuelgozi/firebase-firestore-lite/blob/f1e2069/src/Query.ts#L36">Query.ts:36</a></li>
+					</ul>
+				</aside>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-is-external">
 				<a name="filteroption" class="tsd-anchor"></a>
 				<h3>Filter<wbr>Option</h3>
 				<div class="tsd-signature tsd-kind-icon">Filter<wbr>Option<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">"&lt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&lt;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&gt;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"&#x3D;&#x3D;"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"contains"</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">]</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/samuelgozi/firebase-firestore-lite/blob/e436429/src/Query.ts#L13">Query.ts:13</a></li>
+						<li>Defined in <a href="https://github.com/samuelgozi/firebase-firestore-lite/blob/f1e2069/src/Query.ts#L13">Query.ts:13</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -3150,7 +3168,7 @@ tx.delete(doc3);</code></pre>
 				<div class="tsd-signature tsd-kind-icon">Ref<span class="tsd-signature-symbol">:</span> <a href="classes/reference.html" class="tsd-signature-type">Reference</a><span class="tsd-signature-symbol"> | </span><a href="classes/document.html" class="tsd-signature-type">Document</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/samuelgozi/firebase-firestore-lite/blob/e436429/src/utils.ts#L15">utils.ts:15</a></li>
+						<li>Defined in <a href="https://github.com/samuelgozi/firebase-firestore-lite/blob/f1e2069/src/utils.ts#L15">utils.ts:15</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -3160,7 +3178,7 @@ tx.delete(doc3);</code></pre>
 				<div class="tsd-signature tsd-kind-icon">Transform<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"serverTimestamp"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"increment"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"max"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"min"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"appendToArray"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"removeFromArray"</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/samuelgozi/firebase-firestore-lite/blob/e436429/src/Transform.ts#L26">Transform.ts:26</a></li>
+						<li>Defined in <a href="https://github.com/samuelgozi/firebase-firestore-lite/blob/f1e2069/src/Transform.ts#L26">Transform.ts:26</a></li>
 					</ul>
 				</aside>
 			</section>

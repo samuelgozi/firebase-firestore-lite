@@ -6,6 +6,27 @@ import { Document } from '../src/Document';
 const db = new Database({ projectId: 'projectId' });
 const colRef = db.ref('col');
 
+// Mock Firestore Document
+const mockDoc = new Document(
+	{
+		name: 'projects/projectId/databases/(default)/documents/public/types',
+		fields: {
+			one: {
+				stringValue: 'Hi!'
+			},
+			two: {
+				booleanValue: false
+			},
+			three: {
+				integerValue: '42'
+			}
+		},
+		createTime: '2019-10-10T14:00:00.617973Z',
+		updateTime: '2019-10-10T14:44:42.885653Z'
+	},
+	db
+);
+
 describe('Query', () => {
 	describe('select', () => {
 		test('Valid arguments', () => {
@@ -308,6 +329,59 @@ describe('Query', () => {
 			expect(query.toJSON().structuredQuery.orderBy).toEqual(expected);
 		});
 
+		test('Adds __name__ at the end when a cursor is used', () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: 'field.path',
+				startAt: mockDoc // The cursor
+			});
+
+			const expected = [
+				{
+					field: {
+						fieldPath: 'field.path'
+					},
+					direction: 'ASCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'ASCENDING'
+				}
+			];
+
+			expect(query.toJSON().structuredQuery.orderBy).toEqual(expected);
+		});
+
+		test("Added __name__'s direction is the same as the previous order field", () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: {
+					field: 'field.path',
+					direction: 'desc'
+				},
+				startAt: mockDoc // The cursor
+			});
+
+			const expected = [
+				{
+					field: {
+						fieldPath: 'field.path'
+					},
+					direction: 'DESCENDING'
+				},
+				{
+					field: {
+						fieldPath: '__name__'
+					},
+					direction: 'DESCENDING'
+				}
+			];
+
+			expect(query.toJSON().structuredQuery.orderBy).toEqual(expected);
+		});
+
 		test('Compound(array) full syntax', () => {
 			const query = new Query({
 				from: colRef,
@@ -382,17 +456,15 @@ describe('Query', () => {
 
 	describe('startAt', () => {
 		test('Valid arguments', () => {
-			const docRef = new Reference('col/doc', db);
-
 			const query = new Query({
 				from: colRef,
-				startAt: docRef
+				startAt: mockDoc
 			});
 
 			const expected = {
 				values: [
 					{
-						referenceValue: docRef.name
+						referenceValue: mockDoc.__meta__.name
 					}
 				],
 				before: true
@@ -407,25 +479,62 @@ describe('Query', () => {
 					from: colRef,
 					startAt: 42
 				});
-			}).toThrow(
-				'Invalid argument "startAt": Expected a reference to a document'
-			);
+			}).toThrow('Invalid argument "startAt": Expected a Document instance');
 		});
-	});
 
-	describe('endAt', () => {
-		test('Valid arguments', () => {
-			const docRef = new Reference('col/doc', db);
-
+		test('Adds fields from orderBy to the cursor', () => {
 			const query = new Query({
 				from: colRef,
-				endAt: docRef
+				orderBy: 'one',
+				startAt: mockDoc
 			});
 
 			const expected = {
 				values: [
 					{
-						referenceValue: docRef.name
+						stringValue: 'Hi!'
+					},
+					{
+						referenceValue: mockDoc.__meta__.name
+					}
+				],
+				before: true
+			};
+
+			expect(query.toJSON().structuredQuery.startAt).toEqual(expected);
+		});
+
+		test("Doesn't add missing fields from orderBy to the cursor", () => {
+			const query = new Query({
+				from: colRef,
+				orderBy: 'six',
+				startAt: mockDoc
+			});
+
+			const expected = {
+				values: [
+					{
+						referenceValue: mockDoc.__meta__.name
+					}
+				],
+				before: true
+			};
+
+			expect(query.toJSON().structuredQuery.startAt).toEqual(expected);
+		});
+	});
+
+	describe('endAt', () => {
+		test('Valid arguments', () => {
+			const query = new Query({
+				from: colRef,
+				endAt: mockDoc
+			});
+
+			const expected = {
+				values: [
+					{
+						referenceValue: mockDoc.__meta__.name
 					}
 				],
 				before: true
@@ -440,9 +549,7 @@ describe('Query', () => {
 					from: colRef,
 					endAt: 42
 				});
-			}).toThrow(
-				'Invalid argument "endAt": Expected a reference to a document'
-			);
+			}).toThrow('Invalid argument "endAt": Expected a Document instance');
 		});
 	});
 
