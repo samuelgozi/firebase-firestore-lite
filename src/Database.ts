@@ -41,7 +41,7 @@ export interface DatabaseOptions {
 }
 
 interface UpdateFunction {
-	(tx?: Transaction): Promise<void> | void;
+	(tx: Transaction): Promise<void> | void;
 }
 
 /** Database Instance */
