@@ -351,6 +351,34 @@ All the query options can be seen in the [API reference for Query](https://githu
 - `offset` Number of results to skip
 - `limit` The maximum number of documents to return.
 
+## Collection Group Queries
+
+Sometimes you want to query all collections with a certain name.
+Lets say for example that you have a collection called `users` which contains the users of your app.
+Each user document inside of that collection has a child collection called `posts`, at it contains all of the posts that user has published.
+
+What if I want to make a query that will search all the posts regardless of which user created it?
+Well, in order to do that you will want to query a "Collection Group", and this is done from the `Database` instance:
+
+```js
+const query = db.collectionGroup('posts');
+```
+
+This will return a query that will be performed on all collections called `posts`.
+
+But what if we want to narrow the scope of the query? For example, lets say that we have a `sections` collection,
+with the _documents_ `movies` and `songs`, which represent different type of content. Each one of them has a `posts` collection with `post` documents, and each of these has a `comments` collection with the comments on each `post`.
+
+If we only want to query the `comments` collection that are children of the `songs` _document_ we can do that by using one of the options of the `collectionGroup` method:
+
+```js
+const songsDoc = db.ref('sections/songs');
+const query = db.collectionGroup('comments', { parent: songsDoc });
+```
+
+The returned query will not include documents of the `comments` collection that are children of the `movies` document.
+_NOTE:_ The parent has to be a document, you will need to organize your data accordingly.
+
 ## Firestore emulator
 
 In order to configure the library to work with the Firestore emulator we need to change two settings when creating the Database instance.
