@@ -1,5 +1,5 @@
 import { Database } from './Database';
-import { Query } from './Query';
+import { Query, QueryOptions } from './Query';
 import { Document } from './Document';
 import { List } from './List';
 import { trimPath, isPath, objectToQuery, restrictTo } from './utils';
@@ -138,11 +138,13 @@ export class Reference {
 	}
 
 	/** Queries the child documents/collections of this reference. */
-	query(options = {}) {
+	query(options: QueryOptions = {}) {
 		restrictTo('col', this);
 
-		return new Query({
-			from: this,
+		return new Query(this.parent, {
+			from: {
+				collectionId: this.id
+			},
 			...options
 		});
 	}

@@ -1,7 +1,8 @@
 import { Reference } from './Reference';
 import { Document } from './Document';
-import { restrictTo } from './utils';
+import { isPath, restrictTo } from './utils';
 import { Transaction } from './Transaction';
+import { Query, QueryOptions } from './Query';
 
 /** @private */
 async function handleApiResponse(res: Response) {
@@ -147,5 +148,19 @@ export class Database {
 			}
 			attempts--;
 		}
+	}
+
+	/**
+	 * Query all all collections that match the given name that
+	 * also are descendants of a given document (or root by default).
+	 */
+	collectionGroup(collectionId: string, options: QueryOptions = {}) {
+		return new Query(this.ref('parent' in options ? options.parent : ''), {
+			from: {
+				collectionId,
+				allDescendants: true
+			},
+			...options
+		});
 	}
 }

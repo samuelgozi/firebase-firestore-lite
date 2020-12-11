@@ -1,13 +1,12 @@
 import { Document } from './Document';
 import { Reference } from './Reference';
-import { Database } from './Database';
-import { isRef, isPositiveInteger, encodeValue } from './utils';
+import { isPath, isRef, isPositiveInteger, encodeValue } from './utils';
 
 interface FromOption {
 	/** Reference to the collection */
-	collection: Reference;
+	collectionId: string;
 	/** Whether to make a compound query or not */
-	allDescendants: boolean;
+	allDescendants?: boolean;
 }
 
 type FilterOption = [
@@ -26,12 +25,12 @@ interface OrderOption {
 	direction?: 'asc' | 'desc';
 }
 
-interface QueryOptions {
+export interface QueryOptions {
 	[key: string]: any;
 	/** The fields to return, leave empty to return the whole doc. */
 	select?: string[];
 	/** The collection to query, Should be set automatically if you are using `ref.query()` */
-	from: Reference | FromOption;
+	from?: FromOption;
 	/** Filter used to select matching documents */
 	where?: FilterOption[];
 	/** The field to use while ordering the results and direction */
@@ -44,6 +43,7 @@ interface QueryOptions {
 	offset?: number;
 	/** The max amount of documents to return */
 	limit?: number;
+	/** Shortcut to from.allDescendants */
 }
 
 /** @private */
@@ -55,7 +55,7 @@ const operatorsMap = {
 	'==': 'EQUAL',
 	contains: 'ARRAY_CONTAINS',
 	'contains-any': 'ARRAY_CONTAINS_ANY',
-	'in': 'IN'
+	in: 'IN'
 };
 
 /**
@@ -200,15 +200,16 @@ const queryOptions = [
 export class Query {
 	[key: string]: any;
 
-	private db: Database;
-	private parentDocument: Reference;
 	readonly options: any = {
 		select: [],
 		where: [],
 		orderBy: []
 	};
 
-	constructor(init = {} as QueryOptions) {
+	constructor(public parent: Reference, init = {} as QueryOptions) {
+		if (!isRef('doc', parent))
+			throw Error('Expected parent to be a reference to a document');
+
 		// Loop through all the valid options, validate them and then save them.
 		for (const option of queryOptions) {
 			const optionValue = init[option];
@@ -247,12 +248,6 @@ export class Query {
 				}
 			}
 		}
-
-		// Validate that "from" is always passed.
-		if (!('from' in init))
-			throw Error('"from" is required when building a new query');
-		this.db = (init.from as Reference).db;
-		this.parentDocument = (init.from as Reference).parent;
 	}
 
 	select(fields: QueryOptions['select']) {
@@ -268,18 +263,17 @@ export class Query {
 	/**
 	 * Adds a collection to query.
 	 */
-	from(val: QueryOptions['from']) {
-		const collection = (val as FromOption).collection || val;
-		const { allDescendants } = val as FromOption;
+	from(from: FromOption) {
+		let { collectionId = from, allDescendants } = from;
 
-		if (!isRef('col', collection))
-			throw Error('Expected a reference to a collection');
+		if (typeof collectionId !== 'string')
+			throw Error('Expected "collectionId" to be a string');
 
 		if (allDescendants !== undefined && typeof allDescendants !== 'boolean')
-			throw Error('Expected the "allDescendants" argument to be a boolean');
+			throw Error('Expected the "allDescendants" to be a boolean');
 
 		this.options.from = {
-			collectionId: (collection as Reference).id,
+			collectionId,
 			allDescendants
 		};
 
@@ -341,8 +335,8 @@ export class Query {
 	}
 
 	async run() {
-		let results = await this.db.fetch(
-			this.parentDocument.endpoint + ':runQuery',
+		let results = await this.parent.db.fetch(
+			this.parent.endpoint + ':runQuery',
 			{
 				method: 'POST',
 				body: JSON.stringify(this)
@@ -350,7 +344,9 @@ export class Query {
 		);
 
 		results[0]?.document || results.splice(0, 1);
-		return results.map((result: any) => new Document(result.document, this.db));
+		return results.map(
+			(result: any) => new Document(result.document, this.parent.db)
+		);
 	}
 
 	toJSON() {

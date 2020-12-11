@@ -1,10 +1,9 @@
 import { Database } from '../src/Database';
 import { Query } from '../src/Query';
-import { Reference } from '../src/Reference';
 import { Document } from '../src/Document';
 
 const db = new Database({ projectId: 'projectId' });
-const colRef = db.ref('col');
+const parent = db.ref('');
 
 // Mock Firestore Document
 const mockDoc = new Document(
@@ -30,9 +29,9 @@ const mockDoc = new Document(
 describe('Query', () => {
 	describe('select', () => {
 		test('Valid arguments', () => {
-			const query = new Query({
+			const query = new Query(parent, {
 				select: ['path'],
-				from: colRef
+				from: 'col'
 			});
 
 			const expected = {
@@ -48,18 +47,18 @@ describe('Query', () => {
 
 		test('Invalid arguments', () => {
 			expect(() => {
-				new Query({
+				new Query(parent, {
 					select: 'path',
-					from: colRef
+					from: 'col'
 				});
 			}).toThrow(
 				'Invalid argument "select": Expected argument to be an array of field paths'
 			);
 
 			expect(() => {
-				new Query({
+				new Query(parent, {
 					select: [42],
-					from: colRef
+					from: 'col'
 				});
 			}).toThrow(
 				'Invalid argument "select": Field path at index [0] is not a string'
@@ -67,8 +66,8 @@ describe('Query', () => {
 		});
 
 		test('Is undefined when select arguments are empty', () => {
-			const query = new Query({
-				from: colRef
+			const query = new Query(parent, {
+				from: 'col'
 			});
 
 			expect(query.toJSON().structuredQuery.select).toEqual(undefined);
@@ -77,16 +76,16 @@ describe('Query', () => {
 
 	describe('from', () => {
 		test('Valid arguments', () => {
-			const query = new Query({
-				from: colRef
+			const query = new Query(parent, {
+				from: 'col'
 			});
 
-			const query2 = new Query({
-				from: db.ref('col2')
+			const query2 = new Query(parent, {
+				from: 'col2'
 			});
 
 			// Overwrite the from value.
-			query2.from(colRef);
+			query2.from('col');
 
 			const expected = {
 				collectionId: 'col',
@@ -99,27 +98,25 @@ describe('Query', () => {
 
 		test('Invalid arguments', () => {
 			expect(() => {
-				new Query({
-					from: db.ref('col/doc')
+				new Query(db.ref('col'), {
+					from: 'doc'
 				});
-			}).toThrow(
-				'Invalid argument "from": Expected a reference to a collection'
-			);
+			}).toThrow('Expected parent to be a reference to a document');
 
 			expect(() => {
-				new Query({
+				new Query(parent, {
 					from: 42
 				});
 			}).toThrow(
-				'Invalid argument "from": Expected a reference to a collection'
+				'Invalid argument "from": Expected "collectionId" to be a string'
 			);
 		});
 	});
 
 	describe('where', () => {
 		test('Compound(filters array) syntax', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				where: [['field.path', '>=', 11]]
 			});
 
@@ -139,8 +136,8 @@ describe('Query', () => {
 		});
 
 		test('Short(single filter) syntax', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				where: ['field.path', '>=', 11]
 			});
 
@@ -161,22 +158,22 @@ describe('Query', () => {
 
 		test('Invalid argument', () => {
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					where: [42, '>=', 11]
 				});
 			}).toThrow('Invalid argument "where": Invalid field path');
 
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					where: ['path', '===', 11]
 				});
 			}).toThrow('Invalid argument "where": Invalid operator');
 
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					where: ['path', '>=', null]
 				});
 			}).toThrow(
@@ -186,8 +183,8 @@ describe('Query', () => {
 
 		describe('Filter types', () => {
 			test('fieldFilter', () => {
-				const query = new Query({
-					from: colRef,
+				const query = new Query(parent, {
+					from: 'col',
 					where: ['field.path', '>=', 11]
 				});
 
@@ -207,13 +204,13 @@ describe('Query', () => {
 			});
 
 			test('unaryFilter', () => {
-				const queryNaN = new Query({
-					from: colRef,
+				const queryNaN = new Query(parent, {
+					from: 'col',
 					where: ['field.path', '==', NaN]
 				});
 
-				const queryNull = new Query({
-					from: colRef,
+				const queryNull = new Query(parent, {
+					from: 'col',
 					where: ['field.path', '==', null]
 				});
 
@@ -240,8 +237,8 @@ describe('Query', () => {
 			});
 
 			test('compositeFilter', () => {
-				const query = new Query({
-					from: colRef,
+				const query = new Query(parent, {
+					from: 'col',
 					where: [
 						['field.nan', '==', NaN],
 						['field.null', '==', null],
@@ -291,8 +288,8 @@ describe('Query', () => {
 
 	describe('orderBy', () => {
 		test('Full syntax', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: {
 					field: 'field.path',
 					direction: 'desc'
@@ -312,8 +309,8 @@ describe('Query', () => {
 		});
 
 		test('Short syntax', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: 'field.path'
 			});
 
@@ -330,8 +327,8 @@ describe('Query', () => {
 		});
 
 		test('Adds __name__ at the end when a cursor is used', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: 'field.path',
 				startAt: mockDoc // The cursor
 			});
@@ -355,8 +352,8 @@ describe('Query', () => {
 		});
 
 		test("Added __name__'s direction is the same as the previous order field", () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: {
 					field: 'field.path',
 					direction: 'desc'
@@ -383,8 +380,8 @@ describe('Query', () => {
 		});
 
 		test('Compound(array) full syntax', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: [
 					{
 						field: 'field.path',
@@ -416,8 +413,8 @@ describe('Query', () => {
 		});
 
 		test('Compound(array) short syntax', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: ['field.path', 'second.path']
 			});
 
@@ -441,8 +438,8 @@ describe('Query', () => {
 
 		test('Invalid direction', () => {
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					orderBy: {
 						field: 'field.path',
 						direction: 'whats up?'
@@ -456,8 +453,8 @@ describe('Query', () => {
 
 	describe('startAt', () => {
 		test('Valid arguments', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				startAt: mockDoc
 			});
 
@@ -475,16 +472,16 @@ describe('Query', () => {
 
 		test('Invalid arguments', () => {
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					startAt: 42
 				});
 			}).toThrow('Invalid argument "startAt": Expected a Document instance');
 		});
 
 		test('Adds fields from orderBy to the cursor', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: 'one',
 				startAt: mockDoc
 			});
@@ -505,8 +502,8 @@ describe('Query', () => {
 		});
 
 		test("Doesn't add missing fields from orderBy to the cursor", () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				orderBy: 'six',
 				startAt: mockDoc
 			});
@@ -526,8 +523,8 @@ describe('Query', () => {
 
 	describe('endAt', () => {
 		test('Valid arguments', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				endAt: mockDoc
 			});
 
@@ -545,8 +542,8 @@ describe('Query', () => {
 
 		test('Invalid arguments', () => {
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					endAt: 42
 				});
 			}).toThrow('Invalid argument "endAt": Expected a Document instance');
@@ -555,8 +552,8 @@ describe('Query', () => {
 
 	describe('offset', () => {
 		test('Valid argument', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				offset: 51
 			});
 
@@ -565,8 +562,8 @@ describe('Query', () => {
 
 		test('Invalid argument', () => {
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					offset: '51'
 				});
 			}).toThrow('Expected an integer that is greater than 0');
@@ -575,8 +572,8 @@ describe('Query', () => {
 
 	describe('limit', () => {
 		test('Valid argument', () => {
-			const query = new Query({
-				from: colRef,
+			const query = new Query(parent, {
+				from: 'col',
 				limit: 51
 			});
 
@@ -585,8 +582,8 @@ describe('Query', () => {
 
 		test('Invalid argument', () => {
 			expect(() => {
-				new Query({
-					from: colRef,
+				new Query(parent, {
+					from: 'col',
 					limit: '51'
 				});
 			}).toThrow('Expected an integer that is greater than 0');
@@ -598,14 +595,12 @@ describe('Query', () => {
 			fetch.resetMocks();
 			fetch.mockResponse('[]');
 
-			await new Query({
-				from: colRef
+			await new Query(parent, {
+				from: 'col'
 			}).run();
 
 			expect(fetch.mock.calls.length).toEqual(1);
-			expect(fetch.mock.calls[0][0]).toEqual(
-				colRef.parent.endpoint + ':runQuery'
-			);
+			expect(fetch.mock.calls[0][0]).toEqual(parent.endpoint + ':runQuery');
 		});
 
 		test('Returns array of documents', async () => {
@@ -631,8 +626,8 @@ describe('Query', () => {
 				}
 			]`);
 
-			const response = await new Query({
-				from: colRef
+			const response = await new Query(parent, {
+				from: 'col'
 			}).run();
 
 			response.map(doc => {
@@ -644,8 +639,8 @@ describe('Query', () => {
 			fetch.resetMocks();
 			fetch.mockResponse('[{"readTime": "2020-06-01T15:45:21.155041Z"}]');
 
-			const response = await new Query({
-				from: colRef
+			const response = await new Query(parent, {
+				from: 'col'
 			}).run();
 
 			expect(response).toEqual([]);
@@ -676,8 +671,8 @@ describe('Query', () => {
 			 * the first result object will not be a document,
 			 * but an object with a "skippedResults" prop.
 			 */
-			const response = await new Query({
-				from: colRef,
+			const response = await new Query(parent, {
+				from: 'col',
 				offset: 1
 			}).run();
 
