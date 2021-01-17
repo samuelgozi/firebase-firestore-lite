@@ -12,7 +12,7 @@ export interface CrudOptions {
 	 */
 	updateMask?: boolean;
 	/** An array of the key paths to return back after the operation */
-	mask?: string[];
+	mask?: { fieldPaths: string[] };
 	/**
 	 * When set to true, the target document must exist.
 	 * When set to false, the target document must not exist.
