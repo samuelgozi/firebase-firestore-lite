@@ -171,6 +171,9 @@ export function compileOptions(options: CrudOptions, obj?: any) {
 				if (!obj) break;
 				if (value) compiled.updateMask = { fieldPaths: getKeyPaths(obj) };
 				break;
+			case 'mask':
+				compiled.mask = { fieldPaths: value };
+				break;
 			default:
 				compiled[key] = value;
 		}

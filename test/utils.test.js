@@ -364,7 +364,8 @@ describe('compileOptions()', () => {
 			{
 				exists: false,
 				updateTime: 'utf-date-here',
-				updateMask: true
+				updateMask: true,
+				mask: ['one', 'two', 'three']
 			},
 			{ one: '1', two: null, three: undefined }
 		);
@@ -375,6 +376,9 @@ describe('compileOptions()', () => {
 				updateTime: 'utf-date-here'
 			},
 			updateMask: {
+				fieldPaths: ['one', 'two', 'three']
+			},
+			mask: {
 				fieldPaths: ['one', 'two', 'three']
 			}
 		};

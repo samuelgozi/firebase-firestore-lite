@@ -2,7 +2,13 @@ import { Database } from './Database';
 import { Query, QueryOptions } from './Query';
 import { Document } from './Document';
 import { List } from './List';
-import { trimPath, isPath, objectToQuery, restrictTo } from './utils';
+import {
+	trimPath,
+	isPath,
+	objectToQuery,
+	restrictTo,
+	compileOptions
+} from './utils';
 
 export interface CrudOptions {
 	[key: string]: any;
@@ -94,10 +100,12 @@ export class Reference {
 	}
 
 	/** Returns all documents in the collection */
-	async list(options?: object) {
+	async list(options: any = {}) {
 		restrictTo('col', this);
 		return new List(
-			await this.db.fetch(this.endpoint + objectToQuery(options)),
+			await this.db.fetch(
+				this.endpoint + objectToQuery(compileOptions(options))
+			),
 			this,
 			options
 		);
@@ -108,7 +116,9 @@ export class Reference {
 		restrictTo('doc', this);
 
 		return new Document(
-			await this.db.fetch(this.endpoint + objectToQuery(options)),
+			await this.db.fetch(
+				this.endpoint + objectToQuery(compileOptions(options))
+			),
 			this.db
 		);
 	}
