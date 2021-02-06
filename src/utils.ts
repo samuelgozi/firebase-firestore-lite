@@ -125,21 +125,24 @@ export function objectToQuery(obj: any = {}, parentProp?: string): string {
 }
 
 /**
- * Returns an array of keyPaths of an object but skips over arrays values
+ * Returns an array of keyPaths of an object but skips over array's values
  * @private
  */
 export function getKeyPaths(object: any, parentPath?: string): string[] {
 	let mask: string[] = [];
 
 	for (const key in object) {
-		const keyPath = parentPath ? `${parentPath}.${key}` : key;
-
 		if (object[key] instanceof Transform) continue;
 
+		const keyPath = parentPath ? `${parentPath}.${key}` : key;
+
+		// Only check child props if the value is an object,
+		// but not null or arrays.
 		if (
 			object[key] !== null &&
 			typeof object[key] === 'object' &&
-			!Array.isArray(object[key])
+			!Array.isArray(object[key]) &&
+			!(object[key] instanceof Date)
 		) {
 			mask = mask.concat(getKeyPaths(object[key], keyPath));
 			continue;

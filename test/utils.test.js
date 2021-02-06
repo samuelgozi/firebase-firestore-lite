@@ -7,7 +7,8 @@ import {
 	encode,
 	decode,
 	objectToQuery,
-	compileOptions
+	compileOptions,
+	getKeyPaths
 } from '../src/utils';
 import { Reference } from '../src/Reference';
 import GeoPoint from '../src/GeoPoint';
@@ -356,6 +357,18 @@ describe('encode', () => {
 		expect(encode(given, transforms)).toEqual(expectedDoc);
 		expect(transforms).toMatchObject(expectedTransforms);
 	});
+});
+
+test('getKeyPaths', () => {
+	const given = getKeyPaths({
+		string: 'hello world!',
+		number: 42,
+		date: new Date(),
+		object: { one: 'one' },
+		array: ['one']
+	});
+
+	expect(given).toEqual(['string', 'number', 'date', 'object.one', 'array']);
 });
 
 describe('compileOptions()', () => {
